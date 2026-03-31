@@ -1,0 +1,42 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using AvaloniaRobotApp.Services;
+using Avalonia;
+using System.Threading.Tasks;
+
+namespace AvaloniaRobotApp.ViewModels;
+
+public partial class SettingsViewModel : ViewModelBase
+{
+    private readonly StorageService _storageService;
+
+    [ObservableProperty]
+    private string _dbPath;
+
+    public SettingsViewModel(StorageService storageService)
+    {
+        _storageService = storageService;
+        _dbPath = _storageService.GetCurrentDbPath();
+    }
+
+    [RelayCommand]
+    private async Task BrowsePath()
+    {
+        var topLevel = (Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        if (topLevel == null) return;
+
+        var storageProvider = topLevel.StorageProvider;
+        var folder = await storageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
+        {
+            Title = "Select Database Folder",
+            AllowMultiple = false
+        });
+
+        if (folder.Count > 0)
+        {
+            var newDir = folder[0].Path.LocalPath;
+            DbPath = System.IO.Path.Combine(newDir, "toolkit.db");
+            _storageService.ChangeDatabasePath(DbPath);
+        }
+    }
+}

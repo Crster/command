@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaRobotApp.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="AvaloniaRobotApp.Views.AIReaderView"
+             x:DataType="vm:AIReaderViewModel">
+    
+    <Panel Background="#1e1e2e">
+        <ScrollViewer>
+            <StackPanel Margin="40" Spacing="25">
+                <TextBlock Text="AI Screen Reader" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Use Gemini AI to analyze and read your screen." Foreground="#a6adc8"/>
+
+                <Border Background="#313244" CornerRadius="12" Padding="25">
+                    <StackPanel Spacing="20">
+                        <Button Command="{Binding AnalyzeScreenCommand}" 
+                                Classes="Primary"
+                                IsEnabled="{Binding !IsProcessing}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <ic:SymbolIcon Symbol="BrainCircuit"/>
+                                <TextBlock Text="Capture &amp; Analyze Screen"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsProcessing}"/>
+                        
+                        <Image Source="{Binding LastAnalysisImage}" MaxHeight="300" Stretch="Uniform"/>
+                        
+                        <Border Background="#181825" CornerRadius="8" Padding="15">
+                            <TextBox Text="{Binding AiResult}" 
+                                     IsReadOnly="True"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="#cdd6f4" 
+                                     TextWrapping="Wrap"
+                                     FontSize="15"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+                
+                <TextBlock Text="Note: Requires a valid Gemini API Key in AIService.cs" 
+                           FontSize="12" 
+                           Foreground="#f38ba8" 
+                           FontStyle="Italic"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Panel>
+</UserControl>

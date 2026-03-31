@@ -1,0 +1,88 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ic="using:FluentIcons.Avalonia"
+        x:Class="AvaloniaRobotApp.Views.CaptureOverlayWindow"
+        Title="Capture Overlay"
+        SystemDecorations="None"
+        Topmost="True"
+        WindowState="FullScreen"
+        Background="Black"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome">
+    
+    <Panel Name="MainPanel">
+        <Image Name="BackgroundImage" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <Canvas Name="DrawingCanvas" Background="Transparent" />
+        
+        <!-- Toolbar -->
+        <Border Background="#313244" 
+                CornerRadius="12" 
+                Padding="12,8" 
+                Margin="20" 
+                VerticalAlignment="Top" 
+                HorizontalAlignment="Center"
+                BoxShadow="0 8 20 0 #000000">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Name="RectButton" Classes="tool" ToolTip.Tip="Box">
+                    <ic:SymbolIcon Symbol="Square" FontSize="20"/>
+                </Button>
+                <Button Name="ArrowButton" Classes="tool" ToolTip.Tip="Arrow">
+                    <ic:SymbolIcon Symbol="ArrowUpRight" FontSize="20"/>
+                </Button>
+                <Button Name="TextButton" Classes="tool" ToolTip.Tip="Text">
+                    <ic:SymbolIcon Symbol="TextT" FontSize="20"/>
+                </Button>
+                <Button Name="CropButton" Classes="tool" ToolTip.Tip="Crop Area">
+                    <ic:SymbolIcon Symbol="Crop" FontSize="20"/>
+                </Button>
+                
+                <Separator Background="#45475a" Width="1" Height="25" Margin="5,0"/>
+                
+                <Button Name="UndoButton" Background="#fab387" Foreground="#11111b" ToolTip.Tip="Undo">
+                    <ic:SymbolIcon Symbol="ArrowUndo" FontSize="20"/>
+                </Button>
+                <Button Name="CopyButton" Background="#89b4fa" Foreground="#11111b" ToolTip.Tip="Copy to Clipboard">
+                    <ic:SymbolIcon Symbol="Copy" FontSize="20"/>
+                </Button>
+                <Button Name="SaveButton" Background="#a6e3a1" Foreground="#11111b" ToolTip.Tip="Save Image">
+                    <ic:SymbolIcon Symbol="Save" FontSize="20"/>
+                </Button>
+                <Button Name="CloseButton" Background="#f38ba8" Foreground="#11111b" ToolTip.Tip="Cancel (Esc)">
+                    <ic:SymbolIcon Symbol="Dismiss" FontSize="20"/>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Panel>
+
+    <Window.Styles>
+        <Style Selector="Button.tool.Active">
+            <Setter Property="Background" Value="#f9e2af"/>
+            <Setter Property="Foreground" Value="#11111b"/>
+            <Setter Property="BorderBrush" Value="White"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Strip ALL theme styling from annotation TextBox (including focus/hover states) -->
+        <Style Selector="TextBox.annotation">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="CaretBrush" Value="White"/>
+        </Style>
+        <Style Selector="TextBox.annotation:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="TextBox.annotation:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="TextBox.annotation /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </Window.Styles>
+</Window>

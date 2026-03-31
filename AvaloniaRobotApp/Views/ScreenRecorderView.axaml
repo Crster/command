@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvaloniaRobotApp.ViewModels"
+             xmlns:conv="using:AvaloniaRobotApp.Converters"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="AvaloniaRobotApp.Views.ScreenRecorderView"
+             x:DataType="vm:ScreenRecorderViewModel">
+    
+    <UserControl.Resources>
+        <conv:RecordingBrushConverter x:Key="RecordingBrushConverter"/>
+        <conv:RecordingTextConverter x:Key="RecordingTextConverter"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.Recording">
+            <Setter Property="Background" Value="#f38ba8"/>
+            <Setter Property="BorderBrush" Value="#f38ba8"/>
+            <Style.Animations>
+                <Animation Duration="0:0:1" IterationCount="Infinite">
+                    <KeyFrame KeyTime="0:0:0">
+                        <Setter Property="Opacity" Value="1.0"/>
+                    </KeyFrame>
+                    <KeyFrame KeyTime="0:0:0.5">
+                        <Setter Property="Opacity" Value="0.6"/>
+                    </KeyFrame>
+                    <KeyFrame KeyTime="0:0:1">
+                        <Setter Property="Opacity" Value="1.0"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </UserControl.Styles>
+
+    <Panel Background="#1e1e2e">
+        <ScrollViewer>
+            <StackPanel Margin="40" Spacing="25">
+                <TextBlock Text="Screen Recorder" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Capture your screen and audio into MP4 format." Foreground="#a6adc8"/>
+
+                <Border Background="#313244" CornerRadius="12" Padding="25">
+                    <StackPanel Spacing="20" HorizontalAlignment="Center">
+                        <Ellipse Width="100" Height="100" Fill="{Binding IsRecording, Converter={StaticResource RecordingBrushConverter}}" 
+                                 Effect="blur(10)"/>
+                        
+                        <Button Command="{Binding ToggleRecordingCommand}" 
+                                FontSize="20" FontWeight="Bold"
+                                Width="250" Height="60"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Classes.Recording="{Binding IsRecording}">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <ic:SymbolIcon Symbol="Record" IsVisible="{Binding !IsRecording}"/>
+                                <ic:SymbolIcon Symbol="Stop" IsVisible="{Binding IsRecording}"/>
+                                <TextBlock Text="{Binding IsRecording, Converter={StaticResource RecordingTextConverter}}"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="#bac2de" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Note: This feature requires FFmpeg to be installed in your system PATH." 
+                           FontSize="12" Foreground="#f38ba8" FontStyle="Italic"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Panel>
+</UserControl>
