@@ -1,9 +1,0 @@
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\linux-x64\AvaloniaRobotApp.pdb
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\linux-x64\osx.os
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\linux-x64\osx_arm.os
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\linux-x64\x11.os
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\linux-x64\libHarfBuzzSharp.so
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\linux-x64\libonnxruntime.so
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\linux-x64\libonnxruntime_providers_shared.so
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\linux-x64\libSkiaSharp.so
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\linux-x64\AvaloniaRobotApp

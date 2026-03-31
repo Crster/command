@@ -1,8 +1,0 @@
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\osx-x64\AvaloniaRobotApp.pdb
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\osx-x64\osx.os
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\osx-x64\osx_arm.os
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\osx-x64\x11.os
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\osx-x64\libAvaloniaNative.dylib
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\osx-x64\libHarfBuzzSharp.dylib
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\osx-x64\libSkiaSharp.dylib
-X:\Crster Site\Projects\crster-command\AvaloniaRobotApp\publish\osx-x64\AvaloniaRobotApp
