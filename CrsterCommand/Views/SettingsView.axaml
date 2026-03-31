@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CrsterCommand.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="CrsterCommand.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+    
+    <Panel Background="#1e1e2e">
+        <ScrollViewer>
+            <StackPanel Margin="40" Spacing="25">
+                <TextBlock Text="Settings" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Configure your toolkit preferences." Foreground="#a6adc8"/>
+
+                <Border Background="#313244" CornerRadius="12" Padding="25">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <ic:SymbolIcon Symbol="Database" Foreground="#89b4fa" FontSize="20"/>
+                            <TextBlock Text="Database Configuration" FontSize="18" FontWeight="SemiBold" Foreground="#89b4fa" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Set the location of your LiteDB file. Default is your Documents folder." 
+                                   FontSize="14" Foreground="#bac2de" TextWrapping="Wrap"/>
+                        
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <TextBox Text="{Binding DbPath}" IsReadOnly="True" Watermark="Path to toolkit.db..."/>
+                            <Button Grid.Column="1" Command="{Binding BrowsePathCommand}" Classes="Primary">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <ic:SymbolIcon Symbol="FolderOpen"/>
+                                    <TextBlock Text="Browse"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#313244" CornerRadius="12" Padding="25">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <ic:SymbolIcon Symbol="Bot" Foreground="#fab387" FontSize="20"/>
+                            <TextBlock Text="AI Configuration" FontSize="18" FontWeight="SemiBold" Foreground="#fab387" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Select your AI provider and configure settings." 
+                                   FontSize="14" Foreground="#bac2de" TextWrapping="Wrap"/>
+                        
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="AI Service Provider" Foreground="#bac2de" FontSize="12"/>
+                            <ComboBox ItemsSource="{Binding AiServiceProviders}" 
+                                      SelectedItem="{Binding AiServiceProvider}" 
+                                      HorizontalAlignment="Stretch"/>
+
+                            <TextBlock Text="Model Name" Foreground="#bac2de" FontSize="12"/>
+                            <TextBox Text="{Binding AiModel}" Watermark="e.g., gemini-2.5-flash-lite, llama3, gpt-4o..."/>
+
+                            <TextBlock Text="API Key" Foreground="#bac2de" FontSize="12"/>
+                            <TextBox Text="{Binding AiApiKey}" 
+                                     PasswordChar="*" 
+                                     Watermark="Enter your API Key..."/>
+
+                            <TextBlock Text="Endpoint (Optional/Local)" Foreground="#bac2de" FontSize="12"/>
+                            <TextBox Text="{Binding AiEndPoint}" Watermark="e.g., http://localhost:11434..."/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <TextBlock Text="Note: Settings are saved automatically upon change." 
+                           FontSize="12" Foreground="#89b4fa" FontStyle="Italic"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Panel>
+</UserControl>

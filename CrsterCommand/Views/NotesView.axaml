@@ -1,0 +1,159 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CrsterCommand.ViewModels"
+             xmlns:models="using:CrsterCommand.Models"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="CrsterCommand.Views.NotesView"
+             x:DataType="vm:NotesViewModel">
+    
+    <Panel Background="#1e1e2e">
+        <TabControl Padding="20">
+            <!-- Todo Tab -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:SymbolIcon Symbol="List"/>
+                        <TextBlock Text="Todo List"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <StackPanel Spacing="15">
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                        <TextBox Text="{Binding NewTodoTask}" Watermark="New task..."/>
+                        <Button Grid.Column="1" Command="{Binding AddTodoCommand}" Classes="Primary">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ic:SymbolIcon Symbol="Add"/>
+                                <TextBlock Text="Add Task"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    
+                    <ListBox ItemsSource="{Binding Todos}" Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:TodoItem">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <CheckBox IsChecked="{Binding IsDone}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Task}" VerticalAlignment="Center" Margin="10,0"/>
+                                    <Button Grid.Column="2" 
+                                            Command="{Binding $parent[UserControl].((vm:NotesViewModel)DataContext).DeleteTodoCommand}" 
+                                            CommandParameter="{Binding}"
+                                            Background="#f38ba8">
+                                        <ic:SymbolIcon Symbol="Delete" FontSize="16"/>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Memory Bank Tab -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:SymbolIcon Symbol="BrainCircuit"/>
+                        <TextBlock Text="Memory Bank"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid ColumnDefinitions="250, *" ColumnSpacing="20" Margin="0,20,0,0">
+                    <StackPanel Spacing="10">
+                        <TextBox Text="{Binding SearchQuery}" Watermark="Semantic Search..."/>
+                        <Button Command="{Binding SemanticSearchCommand}" HorizontalAlignment="Stretch" Classes="Secondary">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ic:SymbolIcon Symbol="Wand"/>
+                                <TextBlock Text="Search by Meaning"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Separator Background="#45475a" Height="1" Margin="0,5"/>
+                        
+                        <Button Command="{Binding AddNoteCommand}" HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ic:SymbolIcon Symbol="NoteAdd"/>
+                                <TextBlock Text="New Note"/>
+                            </StackPanel>
+                        </Button>
+                        <ListBox ItemsSource="{Binding MemoryNotes}" 
+                                 SelectedItem="{Binding SelectedNote}"
+                                 Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:MemoryNote">
+                                    <TextBlock Text="{Binding Title}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                    
+                    <Border Grid.Column="1" Background="#313244" CornerRadius="12" Padding="20">
+                        <StackPanel Spacing="15">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBox Text="{Binding SelectedNote.Title, FallbackValue=''}" 
+                                         Watermark="Title" FontSize="18" FontWeight="Bold"/>
+                                <Button Grid.Column="1" Command="{Binding SaveNoteCommand}" 
+                                        Background="#a6e3a1" Foreground="#11111b"
+                                        Margin="10,0,0,0">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <ic:SymbolIcon Symbol="Save"/>
+                                        <TextBlock Text="Save"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <TextBox Text="{Binding SelectedNote.Content, FallbackValue=''}" 
+                                     Watermark="Content..." AcceptsReturn="True" Height="400"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- File Vault Tab -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:SymbolIcon Symbol="FolderZip"/>
+                        <TextBlock Text="File Vault"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <StackPanel Spacing="15">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Command="{Binding UploadFileCommand}" Classes="Primary">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ic:SymbolIcon Symbol="DocumentAdd"/>
+                                <TextBlock Text="Upload File"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding AttachClipboardCommand}" Classes="Secondary">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ic:SymbolIcon Symbol="ClipboardPaste"/>
+                                <TextBlock Text="Attach Clipboard"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    
+                    <ListBox ItemsSource="{Binding AttachedFiles}" Background="Transparent">
+                        <!-- ... rest of template ... -->
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#313244" CornerRadius="8" Padding="10" Margin="0,5">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" Foreground="#cdd6f4"/>
+                                        <Button Grid.Column="1" Content="Remove" 
+                                                Background="#f38ba8" Padding="10,5"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Secure Vault -->
+            <TabItem Header="Secure Vault">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+                    <TextBlock Text="Locked" FontSize="48" HorizontalAlignment="Center"/>
+                    <TextBlock Text="The vault is currently locked." Foreground="#a6adc8"/>
+                    <TextBox Watermark="Enter Master Password..." PasswordChar="*" Width="250"/>
+                    <Button Content="Unlock Vault" Classes="Primary" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Panel>
+</UserControl>

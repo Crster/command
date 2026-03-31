@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CrsterCommand.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="CrsterCommand.Views.AIReaderView"
+             x:DataType="vm:AIReaderViewModel">
+    
+    <Panel Background="#1e1e2e">
+        <ScrollViewer>
+            <StackPanel Margin="40" Spacing="25">
+                <TextBlock Text="AI Screen Reader" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Use Gemini AI to analyze and read your screen." Foreground="#a6adc8"/>
+
+                <Border Background="#313244" CornerRadius="12" Padding="25">
+                    <StackPanel Spacing="20">
+                        <Button Command="{Binding AnalyzeScreenCommand}" 
+                                Classes="Primary"
+                                IsEnabled="{Binding !IsProcessing}"
+                                HorizontalAlignment="Center"
+                                Padding="30,12">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <ic:SymbolIcon Symbol="BrainCircuit" FontSize="18"/>
+                                <TextBlock Text="Capture &amp; Analyze Screen" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsProcessing}"/>
+                        
+                        <Image Source="{Binding LastAnalysisImage}" 
+                               MaxHeight="300" 
+                               Stretch="Uniform" 
+                               IsVisible="{Binding LastAnalysisImage, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                        
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Analysis Results" Foreground="#fab387" IsVisible="{Binding LastAnalysisImage, Converter={x:Static ObjectConverters.IsNotNull}}" FontSize="14" FontWeight="SemiBold"/>
+                            <Border Background="#181825" CornerRadius="8" Padding="15">
+                                <TextBox Text="{Binding AiResult}" 
+                                         IsReadOnly="True"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Foreground="#cdd6f4" 
+                                         TextWrapping="Wrap"
+                                         FontSize="15"/>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+            </StackPanel>
+        </ScrollViewer>
+    </Panel>
+</UserControl>
