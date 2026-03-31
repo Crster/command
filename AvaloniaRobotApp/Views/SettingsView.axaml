@@ -31,8 +31,23 @@
                         </Grid>
                     </StackPanel>
                 </Border>
+
+                <Border Background="#313244" CornerRadius="12" Padding="25">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <ic:SymbolIcon Symbol="Bot" Foreground="#fab387" FontSize="20"/>
+                            <TextBlock Text="AI Configuration" FontSize="18" FontWeight="SemiBold" Foreground="#fab387" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Input your Gemini or AI API key here to enable intelligent features." 
+                                   FontSize="14" Foreground="#bac2de" TextWrapping="Wrap"/>
+                        
+                        <TextBox Text="{Binding AiApiKey}" 
+                                 PasswordChar="*" 
+                                 Watermark="Enter your API Key..."/>
+                    </StackPanel>
+                </Border>
                 
-                <TextBlock Text="Note: Changing the path will reconnect the database immediately." 
+                <TextBlock Text="Note: Settings are saved automatically upon change." 
                            FontSize="12" Foreground="#89b4fa" FontStyle="Italic"/>
             </StackPanel>
         </ScrollViewer>

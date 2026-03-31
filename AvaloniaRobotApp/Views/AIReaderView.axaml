@@ -16,35 +16,36 @@
                         <Button Command="{Binding AnalyzeScreenCommand}" 
                                 Classes="Primary"
                                 IsEnabled="{Binding !IsProcessing}"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center">
+                                HorizontalAlignment="Center"
+                                Padding="30,12">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <ic:SymbolIcon Symbol="BrainCircuit"/>
-                                <TextBlock Text="Capture &amp; Analyze Screen"/>
+                                <ic:SymbolIcon Symbol="BrainCircuit" FontSize="18"/>
+                                <TextBlock Text="Capture &amp; Analyze Screen" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         
                         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsProcessing}"/>
                         
-                        <Image Source="{Binding LastAnalysisImage}" MaxHeight="300" Stretch="Uniform"/>
+                        <Image Source="{Binding LastAnalysisImage}" 
+                               MaxHeight="300" 
+                               Stretch="Uniform" 
+                               IsVisible="{Binding LastAnalysisImage, Converter={x:Static ObjectConverters.IsNotNull}}"/>
                         
-                        <Border Background="#181825" CornerRadius="8" Padding="15">
-                            <TextBox Text="{Binding AiResult}" 
-                                     IsReadOnly="True"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Foreground="#cdd6f4" 
-                                     TextWrapping="Wrap"
-                                     FontSize="15"/>
-                        </Border>
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Analysis Results" Foreground="#fab387" IsVisible="{Binding LastAnalysisImage, Converter={x:Static ObjectConverters.IsNotNull}}" FontSize="14" FontWeight="SemiBold"/>
+                            <Border Background="#181825" CornerRadius="8" Padding="15">
+                                <TextBox Text="{Binding AiResult}" 
+                                         IsReadOnly="True"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Foreground="#cdd6f4" 
+                                         TextWrapping="Wrap"
+                                         FontSize="15"/>
+                            </Border>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
                 
-                <TextBlock Text="Note: Requires a valid Gemini API Key in AIService.cs" 
-                           FontSize="12" 
-                           Foreground="#f38ba8" 
-                           FontStyle="Italic"
-                           HorizontalAlignment="Center"/>
             </StackPanel>
         </ScrollViewer>
     </Panel>

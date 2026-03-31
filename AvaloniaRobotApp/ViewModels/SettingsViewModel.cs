@@ -13,10 +13,19 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _dbPath;
 
+    [ObservableProperty]
+    private string? _aiApiKey;
+
     public SettingsViewModel(StorageService storageService)
     {
         _storageService = storageService;
         _dbPath = _storageService.GetCurrentDbPath();
+        _aiApiKey = _storageService.GetAiApiKey();
+    }
+
+    partial void OnAiApiKeyChanged(string? value)
+    {
+        _storageService.SetAiApiKey(value);
     }
 
     [RelayCommand]
