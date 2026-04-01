@@ -1,0 +1,172 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ic="using:FluentIcons.Avalonia">
+
+    <!-- ═══════════════════════════════════════
+         BUTTON
+    ═══════════════════════════════════════ -->
+    <Style Selector="Button">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="Padding" Value="16,0"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.Primary">
+        <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppAccentForegroundBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.Secondary">
+        <Setter Property="Background" Value="{DynamicResource AppSecondaryAccentBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppAccentForegroundBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.Success">
+        <Setter Property="Background" Value="{DynamicResource AppSuccessBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppSuccessForegroundBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.Danger">
+        <Setter Property="Background" Value="{DynamicResource AppDangerBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppDangerForegroundBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- ═══════════════════════════════════════
+         TEXTBOX
+    ═══════════════════════════════════════ -->
+    <Style Selector="TextBox">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="Background" Value="{DynamicResource AppInputBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AppInputBorderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ═══════════════════════════════════════
+         NUMERICUPDOWN
+    ═══════════════════════════════════════ -->
+    <Style Selector="NumericUpDown">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="Background" Value="{DynamicResource AppInputBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AppInputBorderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <!-- ═══════════════════════════════════════
+         COMBOBOX
+    ═══════════════════════════════════════ -->
+    <Style Selector="ComboBox">
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="Background" Value="{DynamicResource AppInputBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AppInputBorderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <!-- ═══════════════════════════════════════
+         PROGRESSBAR
+    ═══════════════════════════════════════ -->
+    <Style Selector="ProgressBar">
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="MinHeight" Value="8"/>
+        <Setter Property="Background" Value="{DynamicResource AppInputBorderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppAccentBrush}"/>
+    </Style>
+
+    <!-- ═══════════════════════════════════════
+         CARD BORDER
+    ═══════════════════════════════════════ -->
+    <Style Selector="Border.Card">
+        <Setter Property="Background" Value="{DynamicResource AppCardBrush}"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="24"/>
+        <Setter Property="BoxShadow" Value="0 4 24 0 #28000020"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AppCardBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <!-- ═══════════════════════════════════════
+         STATUS BAR BORDER
+    ═══════════════════════════════════════ -->
+    <Style Selector="Border.StatusBar">
+        <Setter Property="Background" Value="{DynamicResource AppStatusBarBrush}"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="14,10"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AppInputBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <!-- ═══════════════════════════════════════
+         SIDEBAR LISTBOX
+    ═══════════════════════════════════════ -->
+    <Style Selector="ListBox.NavList">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="8,0"/>
+    </Style>
+    <Style Selector="ListBox.NavList ListBoxItem">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Margin" Value="0,2"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="MinHeight" Value="52"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ListBox.NavList ListBoxItem:selected /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppSidebarActiveItemBrush}"/>
+    </Style>
+    <Style Selector="ListBox.NavList ListBoxItem:pointerover:not(:selected) /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppSidebarHoverItemBrush}"/>
+    </Style>
+    <Style Selector="ListBox.NavList ListBoxItem ic|SymbolIcon">
+        <Setter Property="Foreground" Value="{DynamicResource AppSidebarIconBrush}"/>
+    </Style>
+    <Style Selector="ListBox.NavList ListBoxItem:selected ic|SymbolIcon">
+        <Setter Property="Foreground" Value="{DynamicResource AppSidebarActiveIconBrush}"/>
+    </Style>
+
+    <!-- ═══════════════════════════════════════
+         TYPOGRAPHY HELPERS
+    ═══════════════════════════════════════ -->
+    <Style Selector="TextBlock.PageTitle">
+        <Setter Property="FontSize" Value="26"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+    </Style>
+    <Style Selector="TextBlock.PageSubtitle">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppSecondaryTextBrush}"/>
+    </Style>
+    <Style Selector="TextBlock.Label">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppSecondaryTextBrush}"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+    <Style Selector="TextBlock.SectionHeader">
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ═══════════════════════════════════════
+         TABCONTROL
+    ═══════════════════════════════════════ -->
+    <Style Selector="TabItem">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="16,10"/>
+    </Style>
+
+</Styles>

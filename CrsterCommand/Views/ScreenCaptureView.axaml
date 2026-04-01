@@ -4,29 +4,43 @@
              xmlns:ic="using:FluentIcons.Avalonia"
              x:Class="CrsterCommand.Views.ScreenCaptureView"
              x:DataType="vm:ScreenCaptureViewModel">
-    
-    <Panel Background="#1e1e2e">
-        <StackPanel Margin="40" Spacing="20">
-            <TextBlock Text="Screen Capture &amp; Annotation" FontSize="28" FontWeight="Bold" Foreground="White"/>
-            <TextBlock Text="Capture any part of your screen and add annotations." Foreground="#a6adc8"/>
-            
-            <Border Background="#313244" CornerRadius="12" Padding="30">
+
+    <ScrollViewer Background="Transparent">
+        <StackPanel Margin="32" Spacing="20">
+
+            <!-- Header -->
+            <StackPanel Spacing="4">
+                <TextBlock Classes="PageTitle"    Text="Screen Capture"/>
+                <TextBlock Classes="PageSubtitle" Text="Capture any part of your screen and add annotations"/>
+            </StackPanel>
+
+            <!-- Capture Card -->
+            <Border Classes="Card">
                 <StackPanel Spacing="20" HorizontalAlignment="Center">
-                    <Button Command="{Binding StartCaptureCommand}" 
+
+                    <Button Command="{Binding StartCaptureCommand}"
                             Classes="Primary"
-                            Width="250"
+                            Width="260"
+                            Height="44"
                             HorizontalContentAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <ic:SymbolIcon Symbol="CameraAdd"/>
-                            <TextBlock Text="New Screen Capture"/>
+                            <ic:SymbolIcon Symbol="CameraAdd" FontSize="18"/>
+                            <TextBlock Text="New Screen Capture" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    
-                    <TextBlock Text="Recent Captures will appear here" FontStyle="Italic" Foreground="#6c7086" HorizontalAlignment="Center"/>
+
+                    <TextBlock Text="Recent captures will appear here"
+                               FontStyle="Italic"
+                               FontSize="13"
+                               Foreground="{DynamicResource AppSecondaryTextBrush}"
+                               HorizontalAlignment="Center"/>
+
                 </StackPanel>
             </Border>
 
             <Image Source="{Binding CapturedImage}" MaxHeight="300" Stretch="Uniform"/>
+
         </StackPanel>
-    </Panel>
+    </ScrollViewer>
+
 </UserControl>

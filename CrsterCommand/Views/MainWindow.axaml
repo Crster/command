@@ -4,39 +4,65 @@
         xmlns:ic="using:FluentIcons.Avalonia"
         x:Class="CrsterCommand.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="Desktop Robot Commander"
-        Background="#1e1e2e"
-        Width="1000" Height="700"
+        Title="Crster Command"
+        Width="1040" Height="700"
+        MinWidth="800" MinHeight="500"
         WindowStartupLocation="CenterScreen">
 
-    <SplitView IsPaneOpen="True"
-               DisplayMode="CompactInline"
-               OpenPaneLength="250"
-               Background="#1e1e2e"
-               PaneBackground="#181825">
-        <SplitView.Pane>
-            <StackPanel Spacing="5" Margin="10">
-                <TextBlock Text="COMMANDER" 
-                           FontSize="24" 
-                           FontWeight="Bold" 
-                           Foreground="#89b4fa" 
-                           Margin="10,20"/>
-                
-                <ListBox ItemsSource="{Binding NavigationItems}"
-                         SelectedItem="{Binding SelectedListItem}"
-                         Background="Transparent">
+    <Grid ColumnDefinitions="64,*">
+
+        <!-- ══════════════════════════════════
+             SIDEBAR
+        ══════════════════════════════════ -->
+        <Border Grid.Column="0" Background="{DynamicResource AppSidebarBrush}">
+            <DockPanel>
+
+                <!-- Brand icon -->
+                <Border DockPanel.Dock="Top" Height="68"
+                        HorizontalAlignment="Stretch">
+                    <ic:SymbolIcon Symbol="Bot"
+                                   FontSize="30"
+                                   Foreground="{DynamicResource AppSidebarActiveIconBrush}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Navigation items (icon only) -->
+                <ListBox Classes="NavList"
+                         ItemsSource="{Binding NavigationItems}"
+                         SelectedItem="{Binding SelectedListItem}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:NavigationItem">
-                            <StackPanel Orientation="Horizontal" Spacing="15" Margin="5">
-                                <ic:SymbolIcon Symbol="{Binding Icon}" FontSize="20" Foreground="#cdd6f4"/>
-                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="16" Foreground="#cdd6f4"/>
-                            </StackPanel>
+                            <ic:SymbolIcon Symbol="{Binding Icon}"
+                                           FontSize="22"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-            </StackPanel>
-        </SplitView.Pane>
 
-        <TransitioningContentControl Content="{Binding CurrentPage}" />
-    </SplitView>
+            </DockPanel>
+        </Border>
+
+        <!-- ══════════════════════════════════
+             CONTENT AREA  (gradient bg)
+        ══════════════════════════════════ -->
+        <Panel Grid.Column="1">
+
+            <!-- Gradient background layer -->
+            <Border IsHitTestVisible="False">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="{DynamicResource AppBgStartColor}" Offset="0"/>
+                        <GradientStop Color="{DynamicResource AppBgEndColor}"   Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <!-- Page content -->
+            <TransitioningContentControl Content="{Binding CurrentPage}"/>
+
+        </Panel>
+
+    </Grid>
 </Window>

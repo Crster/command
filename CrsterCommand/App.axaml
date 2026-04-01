@@ -3,13 +3,90 @@
              x:Class="CrsterCommand.App"
              xmlns:local="using:CrsterCommand"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
-  
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+
+                <!-- ══════════════ DARK THEME ══════════════ -->
+                <ResourceDictionary x:Key="Dark">
+                    <!-- Sidebar -->
+                    <SolidColorBrush x:Key="AppSidebarBrush"               Color="#0c0d1a"/>
+                    <SolidColorBrush x:Key="AppSidebarIconBrush"            Color="#4a5270"/>
+                    <SolidColorBrush x:Key="AppSidebarActiveIconBrush"      Color="#7ca8ff"/>
+                    <SolidColorBrush x:Key="AppSidebarActiveItemBrush"      Color="#1a1f3d"/>
+                    <SolidColorBrush x:Key="AppSidebarHoverItemBrush"       Color="#141830"/>
+                    <!-- Background gradient stops -->
+                    <Color x:Key="AppBgStartColor">#111228</Color>
+                    <Color x:Key="AppBgEndColor">#1a1633</Color>
+                    <!-- Cards -->
+                    <SolidColorBrush x:Key="AppCardBrush"                   Color="#181a30"/>
+                    <SolidColorBrush x:Key="AppCardBorderBrush"             Color="#252848"/>
+                    <!-- Text -->
+                    <SolidColorBrush x:Key="AppPrimaryTextBrush"            Color="#dde4f8"/>
+                    <SolidColorBrush x:Key="AppSecondaryTextBrush"          Color="#5e6888"/>
+                    <SolidColorBrush x:Key="AppSubtleTextBrush"             Color="#3a4060"/>
+                    <!-- Inputs -->
+                    <SolidColorBrush x:Key="AppInputBackgroundBrush"        Color="#0e0f20"/>
+                    <SolidColorBrush x:Key="AppInputBorderBrush"            Color="#222540"/>
+                    <!-- Status bar -->
+                    <SolidColorBrush x:Key="AppStatusBarBrush"              Color="#12142a"/>
+                    <!-- Accent palette -->
+                    <SolidColorBrush x:Key="AppAccentBrush"                 Color="#5b8af0"/>
+                    <SolidColorBrush x:Key="AppAccentForegroundBrush"       Color="#ffffff"/>
+                    <SolidColorBrush x:Key="AppSecondaryAccentBrush"        Color="#8b6cf0"/>
+                    <SolidColorBrush x:Key="AppSuccessBrush"                Color="#3dba72"/>
+                    <SolidColorBrush x:Key="AppSuccessForegroundBrush"      Color="#ffffff"/>
+                    <SolidColorBrush x:Key="AppDangerBrush"                 Color="#e85555"/>
+                    <SolidColorBrush x:Key="AppDangerForegroundBrush"       Color="#ffffff"/>
+                    <SolidColorBrush x:Key="AppWarningBrush"                Color="#f08040"/>
+                </ResourceDictionary>
+
+                <!-- ══════════════ LIGHT THEME ══════════════ -->
+                <ResourceDictionary x:Key="Light">
+                    <!-- Sidebar stays dark for design consistency -->
+                    <SolidColorBrush x:Key="AppSidebarBrush"               Color="#1a2055"/>
+                    <SolidColorBrush x:Key="AppSidebarIconBrush"            Color="#7a8fc0"/>
+                    <SolidColorBrush x:Key="AppSidebarActiveIconBrush"      Color="#ffffff"/>
+                    <SolidColorBrush x:Key="AppSidebarActiveItemBrush"      Color="#2a3578"/>
+                    <SolidColorBrush x:Key="AppSidebarHoverItemBrush"       Color="#222d68"/>
+                    <!-- Background gradient stops -->
+                    <Color x:Key="AppBgStartColor">#eef1fd</Color>
+                    <Color x:Key="AppBgEndColor">#e4eaff</Color>
+                    <!-- Cards -->
+                    <SolidColorBrush x:Key="AppCardBrush"                   Color="#ffffff"/>
+                    <SolidColorBrush x:Key="AppCardBorderBrush"             Color="#d8dff5"/>
+                    <!-- Text -->
+                    <SolidColorBrush x:Key="AppPrimaryTextBrush"            Color="#181c3a"/>
+                    <SolidColorBrush x:Key="AppSecondaryTextBrush"          Color="#5a6490"/>
+                    <SolidColorBrush x:Key="AppSubtleTextBrush"             Color="#9099c0"/>
+                    <!-- Inputs -->
+                    <SolidColorBrush x:Key="AppInputBackgroundBrush"        Color="#f5f7ff"/>
+                    <SolidColorBrush x:Key="AppInputBorderBrush"            Color="#c4cae8"/>
+                    <!-- Status bar -->
+                    <SolidColorBrush x:Key="AppStatusBarBrush"              Color="#edf0ff"/>
+                    <!-- Accent palette -->
+                    <SolidColorBrush x:Key="AppAccentBrush"                 Color="#2f55e8"/>
+                    <SolidColorBrush x:Key="AppAccentForegroundBrush"       Color="#ffffff"/>
+                    <SolidColorBrush x:Key="AppSecondaryAccentBrush"        Color="#6d3ae0"/>
+                    <SolidColorBrush x:Key="AppSuccessBrush"                Color="#18995a"/>
+                    <SolidColorBrush x:Key="AppSuccessForegroundBrush"      Color="#ffffff"/>
+                    <SolidColorBrush x:Key="AppDangerBrush"                 Color="#cc2828"/>
+                    <SolidColorBrush x:Key="AppDangerForegroundBrush"       Color="#ffffff"/>
+                    <SolidColorBrush x:Key="AppWarningBrush"                Color="#d0650a"/>
+                </ResourceDictionary>
+
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://CrsterCommand/Styles/AppStyles.axaml"/>
     </Application.Styles>
+
 </Application>
