@@ -3,6 +3,11 @@ using CommunityToolkit.Mvvm.Input;
 using CrsterCommand.Services;
 using Avalonia;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System;
+using System.Diagnostics;
+using Google.GenAI;
 
 namespace CrsterCommand.ViewModels;
 
@@ -16,31 +21,164 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string? _aiApiKey;
 
-    public string[] AiServiceProviders { get; } = ["Gemini", "Ollama", "OpenAI", "HuggingFace"];
-
-    [ObservableProperty]
-    private string? _aiServiceProvider;
-
     [ObservableProperty]
     private string? _aiModel;
 
     [ObservableProperty]
-    private string? _aiEndPoint;
+    private ObservableCollection<string> _aiModelOptions = new();
+
+    [ObservableProperty]
+    private bool _isLoadingModels;
+
+    [ObservableProperty]
+    private bool _isFfmpegInstalled;
+
+    [ObservableProperty]
+    private string _ffmpegVersion = string.Empty;
+
+    [ObservableProperty]
+    private bool _isCheckingFfmpeg;
+
+    public bool HasApiKey => !string.IsNullOrEmpty(AiApiKey);
 
     public SettingsViewModel(StorageService storageService)
     {
         _storageService = storageService;
         _dbPath = _storageService.GetCurrentDbPath();
         _aiApiKey = _storageService.GetAiApiKey();
-        _aiServiceProvider = _storageService.GetAiServiceProvider();
         _aiModel = _storageService.GetAiModel();
-        _aiEndPoint = _storageService.GetAiEndPoint();
+        
+        if (!string.IsNullOrEmpty(_aiApiKey))
+        {
+            _ = Task.Run(async () => await FetchModelsAsync());
+        }
+
+        _ = Task.Run(async () => await CheckFfmpegAsync());
     }
 
-    partial void OnAiApiKeyChanged(string? value) => _storageService.SetAiApiKey(value);
-    partial void OnAiServiceProviderChanged(string? value) => _storageService.SetAiServiceProvider(value);
-    partial void OnAiModelChanged(string? value) => _storageService.SetAiModel(value);
-    partial void OnAiEndPointChanged(string? value) => _storageService.SetAiEndPoint(value);
+    partial void OnAiApiKeyChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasApiKey));
+        _storageService.SetAiApiKey(value);
+        if (!string.IsNullOrEmpty(value))
+        {
+            _ = Task.Run(async () => await FetchModelsAsync());
+        }
+        else
+        {
+            AiModelOptions.Clear();
+        }
+    }
+
+    partial void OnAiModelChanged(string? value)
+    {
+        if (value != null) _storageService.SetAiModel(value);
+    }
+
+    [RelayCommand]
+    public async Task FetchModelsAsync()
+    {
+        if (string.IsNullOrEmpty(AiApiKey)) return;
+
+        IsLoadingModels = true;
+        try
+        {
+            var sdkClient = new Client(apiKey: AiApiKey);
+            var pager = await sdkClient.Models.ListAsync();
+
+            var models = new System.Collections.Generic.List<string>();
+            await foreach (var m in pager)
+            {
+                if (m.Name != null)
+                    models.Add(m.Name.StartsWith("models/") ? m.Name.Substring(7) : m.Name);
+            }
+            models.Sort((a, b) => string.Compare(b, a, StringComparison.Ordinal));
+
+            // Use Dispatcher if necessary, but since this is bound to UI it might need to be on main thread.
+            // Avalonia's observable properties usually handle this if updated from non-UI thread if they are bound properly?
+            // Actually, better to use Avalonia.Threading.Dispatcher
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                AiModelOptions.Clear();
+                foreach (var model in models)
+                {
+                    AiModelOptions.Add(model);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to fetch models: {ex.Message}");
+        }
+        finally
+        {
+            IsLoadingModels = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task CheckFfmpegAsync()
+    {
+        IsCheckingFfmpeg = true;
+        try
+        {
+            var ffmpegPath = await Task.Run(() => ScreenRecorderService.ResolveFfmpegPath());
+
+            if (ffmpegPath == null)
+            {
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    IsFfmpegInstalled = false;
+                    FfmpegVersion = string.Empty;
+                });
+                return;
+            }
+
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = ffmpegPath,
+                    Arguments = "-version",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+
+            // ffmpeg -version writes to stderr
+            var stderr = await process.StandardError.ReadLineAsync();
+            var stdout = await process.StandardOutput.ReadLineAsync();
+            await process.WaitForExitAsync();
+
+            var version = (!string.IsNullOrEmpty(stderr) ? stderr : stdout) ?? string.Empty;
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsFfmpegInstalled = true;
+                FfmpegVersion = version;
+            });
+        }
+        catch
+        {
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsFfmpegInstalled = false;
+                FfmpegVersion = string.Empty;
+            });
+        }
+        finally
+        {
+            IsCheckingFfmpeg = false;
+        }
+    }
+
+    [RelayCommand]
+    private void OpenFfmpegDownload()
+    {
+        Process.Start(new ProcessStartInfo("https://ffmpeg.org/download.html") { UseShellExecute = true });
+    }
 
     [RelayCommand]
     private async Task BrowsePath()

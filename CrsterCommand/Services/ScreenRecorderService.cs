@@ -13,9 +13,34 @@ public class ScreenRecorderService
 
     public bool IsRecording => _ffmpegProcess != null && !_ffmpegProcess.HasExited;
 
+    public static string? ResolveFfmpegPath()
+    {
+        var currentPath = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+        var userPath = Microsoft.Win32.Registry.GetValue(
+            @"HKEY_CURRENT_USER\Environment", "PATH", null) as string ?? string.Empty;
+        var machinePath = Microsoft.Win32.Registry.GetValue(
+            @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "PATH", null) as string ?? string.Empty;
+
+        var allPaths = string.Join(";", currentPath, machinePath, userPath);
+        foreach (var dir in allPaths.Split(';', StringSplitOptions.RemoveEmptyEntries))
+        {
+            try
+            {
+                var expanded = Environment.ExpandEnvironmentVariables(dir.Trim());
+                var full = Path.Combine(expanded, "ffmpeg.exe");
+                if (File.Exists(full)) return full;
+            }
+            catch { }
+        }
+        return null;
+    }
+
     public async Task StartRecordingAsync(string outputPath)
     {
         if (IsRecording) return;
+
+        var ffmpegPath = ResolveFfmpegPath()
+            ?? throw new FileNotFoundException("FFmpeg not found. Please install FFmpeg and add it to your system PATH.");
 
         _currentOutputFile = outputPath;
         var arguments = GetPlatformArguments(outputPath);
@@ -24,7 +49,7 @@ public class ScreenRecorderService
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = "ffmpeg",
+                FileName = ffmpegPath,
                 Arguments = arguments,
                 UseShellExecute = false,
                 CreateNoWindow = true,

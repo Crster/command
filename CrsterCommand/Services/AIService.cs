@@ -2,11 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Extensions.AI;
-using OpenAI;
-using OllamaSharp;
-using System.ClientModel;
-using System.Linq;
+using Google.GenAI;
+using Google.GenAI.Types;
 
 namespace CrsterCommand.Services;
 
@@ -19,57 +16,18 @@ public class AIService
         _storageService = storageService;
     }
 
-    private IChatClient GetChatClient()
-    {
-        var provider = _storageService.GetAiServiceProvider() ?? "Gemini";
-        var model = _storageService.GetAiModel() ?? "gemini-2.5-flash-lite";
-        var apiKey = _storageService.GetAiApiKey() ?? "";
-        var endpoint = _storageService.GetAiEndPoint();
-
-        switch (provider)
-        {
-            case "Gemini":
-                // Gemini has an OpenAI-compatible endpoint
-                return new OpenAIClient(new ApiKeyCredential(apiKey), new OpenAIClientOptions 
-                { 
-                    Endpoint = new Uri("https://generativelanguage.googleapis.com/v1beta/openai/") 
-                }).AsChatClient(model);
-
-            case "OpenAI":
-                if (!string.IsNullOrEmpty(endpoint))
-                {
-                    return new OpenAIClient(new ApiKeyCredential(apiKey), new OpenAIClientOptions 
-                    { 
-                        Endpoint = new Uri(endpoint) 
-                    }).AsChatClient(model);
-                }
-                return new OpenAIClient(new ApiKeyCredential(apiKey)).AsChatClient(model);
-
-            case "Ollama":
-                var ollamaUri = new Uri(string.IsNullOrEmpty(endpoint) ? "http://localhost:11434" : endpoint);
-                return new OllamaApiClient(ollamaUri, model);
-
-            case "HuggingFace":
-                if (!string.IsNullOrEmpty(endpoint))
-                {
-                    return new OpenAIClient(new ApiKeyCredential(apiKey), new OpenAIClientOptions 
-                    { 
-                        Endpoint = new Uri(endpoint) 
-                    }).AsChatClient(model);
-                }
-                throw new Exception("HuggingFace requires an endpoint configured.");
-
-            default:
-                throw new Exception($"Unsupported AI provider: {provider}");
-        }
-    }
-
     public async Task<string> ExplainImageAsync(byte[] imageBytes)
     {
+        var apiKey = _storageService.GetAiApiKey();
+        var modelName = _storageService.GetAiModel() ?? "gemini-1.5-flash";
+
+        if (string.IsNullOrEmpty(apiKey))
+            return "Please provide a valid Gemini API Key in the Settings page.";
+
         try
         {
-            var client = GetChatClient();
-            
+            var client = new Client(apiKey: apiKey);
+
             var prompt = "Classify: FORM, TEXT, IMAGE.\n" +
                          "1. FORM: If labels + inputs/boxes detected (mandatory priority). Map {label: value}.\n" +
                          "2. TEXT: Only for pure text/doc blocks. Read all.\n" +
@@ -77,20 +35,37 @@ public class AIService
                          "Output RAW JSON ONLY: { \"type\": \"FORM\"|\"TEXT\"|\"IMAGE\", \"result\": string|object|null }.\n" +
                          "No markdown code blocks.";
 
-            var message = new ChatMessage(ChatRole.User, prompt);
-            message.Contents.Add(new DataContent(imageBytes, "image/png"));
+            var response = await client.Models.GenerateContentAsync(
+                model: modelName,
+                contents: new List<Content>
+                {
+                    new Content
+                    {
+                        Role = "user",
+                        Parts = new List<Part>
+                        {
+                            new Part { Text = prompt },
+                            new Part 
+                            { 
+                                InlineData = new Blob 
+                                { 
+                                    MimeType = "image/png", 
+                                    Data = imageBytes 
+                                } 
+                            }
+                        }
+                    }
+                }
+            );
 
-            var response = await client.GetResponseAsync([message]);
-            
-            // Try to find the message in the response
-            var responseText = response.Messages.FirstOrDefault()?.Text?.Trim() ?? "{\"type\": \"UNKNOWN\", \"result\": null}";
+            var json = response.Text?.Trim() ?? "{\"type\": \"UNKNOWN\", \"result\": null}";
             
             // Clean up possible markdown backticks
-            if (responseText.StartsWith("```json")) responseText = responseText.Substring(7).Trim();
-            if (responseText.StartsWith("```")) responseText = responseText.Substring(3).Trim();
-            if (responseText.EndsWith("```")) responseText = responseText.Substring(0, responseText.Length - 3).Trim();
+            if (json.StartsWith("```json")) json = json.Substring(7).Trim();
+            if (json.StartsWith("```")) json = json.Substring(3).Trim();
+            if (json.EndsWith("```")) json = json.Substring(0, json.Length - 3).Trim();
             
-            return responseText;
+            return json;
         }
         catch (Exception ex)
         {

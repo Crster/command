@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,7 +16,29 @@ public partial class ScreenRecorderViewModel : ViewModelBase
     private bool _isRecording;
 
     [ObservableProperty]
-    private string _statusMessage = "Ready to record.";
+    private string _statusMessage = "Checking FFmpeg...";
+
+    [ObservableProperty]
+    private bool _isFfmpegAvailable;
+
+    [ObservableProperty]
+    private string? _savedFolderPath;
+
+    public bool HasSavedFile => SavedFolderPath != null;
+
+    public ScreenRecorderViewModel()
+    {
+        CheckFfmpeg();
+    }
+
+    private void CheckFfmpeg()
+    {
+        var path = ScreenRecorderService.ResolveFfmpegPath();
+        IsFfmpegAvailable = path != null;
+        StatusMessage = IsFfmpegAvailable
+            ? "Ready to record."
+            : "FFmpeg is not installed. Please install FFmpeg and add it to your system PATH.";
+    }
 
     [RelayCommand]
     private async Task ToggleRecording()
@@ -46,6 +69,8 @@ public partial class ScreenRecorderViewModel : ViewModelBase
             {
                 await _recorderService.StopRecordingAsync();
                 StatusMessage = "Recording saved to Videos folder.";
+                SavedFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+                OnPropertyChanged(nameof(HasSavedFile));
             }
             finally
             {
@@ -53,5 +78,12 @@ public partial class ScreenRecorderViewModel : ViewModelBase
                 IsRecording = false;
             }
         }
+    }
+
+    [RelayCommand]
+    private void OpenSavedFolder()
+    {
+        if (SavedFolderPath == null) return;
+        Process.Start(new ProcessStartInfo(SavedFolderPath) { UseShellExecute = true });
     }
 }

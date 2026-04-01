@@ -17,6 +17,8 @@ public partial class AIReaderCropWindow : Window
     private Rectangle? _cropShape;
     private bool _isDragging;
 
+    public AIReaderCropWindow() { InitializeComponent(); }
+
     public AIReaderCropWindow(Bitmap screenshot)
     {
         InitializeComponent();

@@ -29,7 +29,6 @@ public class StorageService : IDisposable
     {
         var configPath = GetConfigPath();
         
-        // Attempt to load from JSON config
         if (File.Exists(configPath))
         {
             try
@@ -38,10 +37,9 @@ public class StorageService : IDisposable
                 var settings = System.Text.Json.JsonSerializer.Deserialize<UserSettings>(json);
                 if (settings != null) return settings;
             }
-            catch { /* Ignore and return default */ }
+            catch { }
         }
 
-        // Migrate from old config.txt if it exists
         var oldConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CrsterCommand", "config.txt");
         var dbPath = GetDefaultDbPath();
         if (File.Exists(oldConfigPath))
@@ -74,14 +72,11 @@ public class StorageService : IDisposable
             if (directory != null && !Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            // Use Connection=Shared to allow multiple processes (or OneDrive) to access the file
             var connectionString = $"Filename={dbPath};Connection=shared";
             _db = new LiteDatabase(connectionString);
         }
         catch (IOException ex)
         {
-            // If the file is strictly locked, we can't do much but maybe notify the user or 
-            // fallback to a temporary in-memory DB or just let it bubble up with a better message.
             throw new Exception($"Could not access database at {_settings.DbPath}. Please ensure it is not open in another program.", ex);
         }
     }
@@ -101,24 +96,10 @@ public class StorageService : IDisposable
         SaveSettings(_settings);
     }
 
-    public string? GetAiServiceProvider() => _settings.AiServiceProvider;
-    public void SetAiServiceProvider(string? provider)
-    {
-        _settings.AiServiceProvider = provider;
-        SaveSettings(_settings);
-    }
-
     public string? GetAiModel() => _settings.AiModel;
     public void SetAiModel(string? model)
     {
         _settings.AiModel = model;
-        SaveSettings(_settings);
-    }
-
-    public string? GetAiEndPoint() => _settings.AiEndPoint;
-    public void SetAiEndPoint(string? endpoint)
-    {
-        _settings.AiEndPoint = endpoint;
         SaveSettings(_settings);
     }
 

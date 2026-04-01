@@ -53,7 +53,7 @@ public partial class ScreenCaptureViewModel : ViewModelBase
             
             var overlay = new Views.CaptureOverlayWindow(avaloniaBitmap);
             // Now we can use the re-shown MainWindow as the owner safely
-            var result = await overlay.ShowDialog<Avalonia.Media.Imaging.Bitmap?>((Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow);
+            var result = await overlay.ShowDialog<Avalonia.Media.Imaging.Bitmap?>((Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow!);
             
             if (result != null)
             {

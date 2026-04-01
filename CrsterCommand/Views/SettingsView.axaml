@@ -36,32 +36,81 @@
                     <StackPanel Spacing="15">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <ic:SymbolIcon Symbol="Bot" Foreground="#fab387" FontSize="20"/>
-                            <TextBlock Text="AI Configuration" FontSize="18" FontWeight="SemiBold" Foreground="#fab387" VerticalAlignment="Center"/>
+                            <TextBlock Text="Gemini AI Configuration" FontSize="18" FontWeight="SemiBold" Foreground="#fab387" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <TextBlock Text="Select your AI provider and configure settings." 
+                        <TextBlock Text="Configure your native Gemini AI settings for intelligent features." 
                                    FontSize="14" Foreground="#bac2de" TextWrapping="Wrap"/>
                         
                         <StackPanel Spacing="10">
-                            <TextBlock Text="AI Service Provider" Foreground="#bac2de" FontSize="12"/>
-                            <ComboBox ItemsSource="{Binding AiServiceProviders}" 
-                                      SelectedItem="{Binding AiServiceProvider}" 
-                                      HorizontalAlignment="Stretch"/>
-
-                            <TextBlock Text="Model Name" Foreground="#bac2de" FontSize="12"/>
-                            <TextBox Text="{Binding AiModel}" Watermark="e.g., gemini-2.5-flash-lite, llama3, gpt-4o..."/>
-
                             <TextBlock Text="API Key" Foreground="#bac2de" FontSize="12"/>
-                            <TextBox Text="{Binding AiApiKey}" 
-                                     PasswordChar="*" 
-                                     Watermark="Enter your API Key..."/>
+                            <TextBox Text="{Binding AiApiKey}"
+                                     PasswordChar="*"
+                                     Watermark="Enter your Gemini API Key..."/>
 
-                            <TextBlock Text="Endpoint (Optional/Local)" Foreground="#bac2de" FontSize="12"/>
-                            <TextBox Text="{Binding AiEndPoint}" Watermark="e.g., http://localhost:11434..."/>
+                            <TextBlock Text="Select Model" Foreground="#bac2de" FontSize="12"/>
+                            <ComboBox ItemsSource="{Binding AiModelOptions}"
+                                      SelectedItem="{Binding AiModel}"
+                                      IsEnabled="{Binding HasApiKey}"
+                                      HorizontalAlignment="Stretch"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
                 
-                <TextBlock Text="Note: Settings are saved automatically upon change." 
+                <Border Background="#313244" CornerRadius="12" Padding="25">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <ic:SymbolIcon Symbol="Video" Foreground="#a6e3a1" FontSize="20"/>
+                            <TextBlock Text="FFmpeg (Screen Recorder)" FontSize="18" FontWeight="SemiBold" Foreground="#a6e3a1" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="FFmpeg is required for the Screen Recorder feature to capture and encode video."
+                                   FontSize="14" Foreground="#bac2de" TextWrapping="Wrap"/>
+
+                        <!-- Installed state -->
+                        <Border Background="#1e3a2f" CornerRadius="8" Padding="15" IsVisible="{Binding IsFfmpegInstalled}">
+                            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+                                <ic:SymbolIcon Grid.Column="0" Symbol="CheckmarkCircle" Foreground="#a6e3a1" FontSize="22" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="FFmpeg is installed" FontSize="14" FontWeight="SemiBold" Foreground="#a6e3a1"/>
+                                    <TextBlock Text="{Binding FfmpegVersion}" FontSize="12" Foreground="#a6adc8"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" Command="{Binding CheckFfmpegCommand}" IsEnabled="{Binding !IsCheckingFfmpeg}" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <ic:SymbolIcon Symbol="ArrowSync" FontSize="14"/>
+                                        <TextBlock Text="Re-check" IsVisible="{Binding !IsCheckingFfmpeg}"/>
+                                        <TextBlock Text="Checking..." IsVisible="{Binding IsCheckingFfmpeg}"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- Not installed state -->
+                        <Border Background="#3a1e1e" CornerRadius="8" Padding="15" IsVisible="{Binding !IsFfmpegInstalled}">
+                            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+                                <ic:SymbolIcon Grid.Column="0" Symbol="DismissCircle" Foreground="#f38ba8" FontSize="22" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="FFmpeg not found" FontSize="14" FontWeight="SemiBold" Foreground="#f38ba8"/>
+                                    <TextBlock Text="Install FFmpeg and add it to your system PATH." FontSize="12" Foreground="#a6adc8"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" Command="{Binding CheckFfmpegCommand}" IsEnabled="{Binding !IsCheckingFfmpeg}" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <ic:SymbolIcon Symbol="ArrowSync" FontSize="14"/>
+                                        <TextBlock Text="Re-check" IsVisible="{Binding !IsCheckingFfmpeg}"/>
+                                        <TextBlock Text="Checking..." IsVisible="{Binding IsCheckingFfmpeg}"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <Button Command="{Binding OpenFfmpegDownloadCommand}" IsVisible="{Binding !IsFfmpegInstalled}" Classes="Primary">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ic:SymbolIcon Symbol="Open"/>
+                                <TextBlock Text="Download FFmpeg"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Note: Settings are saved automatically upon change."
                            FontSize="12" Foreground="#89b4fa" FontStyle="Italic"/>
             </StackPanel>
         </ScrollViewer>

@@ -33,6 +33,8 @@ public partial class CaptureOverlayWindow : Window
     private DateTime _lastEscapeTime = DateTime.MinValue;
     private const int DoubleTapMs = 500;
 
+    public CaptureOverlayWindow() { InitializeComponent(); }
+
     public CaptureOverlayWindow(Bitmap screenshot)
     {
         InitializeComponent();

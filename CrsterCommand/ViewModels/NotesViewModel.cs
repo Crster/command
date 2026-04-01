@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using CrsterCommand.Models;
 using CrsterCommand.Services;
 using Avalonia;
+using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using System.Collections.Generic;
 
@@ -146,7 +147,7 @@ public partial class NotesViewModel : ViewModelBase
         var clipboard = (Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow?.Clipboard;
         if (clipboard == null) return;
 
-        var text = await clipboard.GetTextAsync();
+        var text = await ((Avalonia.Input.IAsyncDataTransfer)clipboard).TryGetTextAsync();
         if (!string.IsNullOrEmpty(text))
         {
             var fileId = $"clipboard_{DateTime.Now:yyyyMMdd_HHmmss}.txt";

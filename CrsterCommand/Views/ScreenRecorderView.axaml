@@ -9,6 +9,7 @@
     <UserControl.Resources>
         <conv:RecordingBrushConverter x:Key="RecordingBrushConverter"/>
         <conv:RecordingTextConverter x:Key="RecordingTextConverter"/>
+        <conv:FfmpegStatusBrushConverter x:Key="FfmpegStatusBrushConverter"/>
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -42,7 +43,8 @@
                         <Ellipse Width="100" Height="100" Fill="{Binding IsRecording, Converter={StaticResource RecordingBrushConverter}}" 
                                  Effect="blur(10)"/>
                         
-                        <Button Command="{Binding ToggleRecordingCommand}" 
+                        <Button Command="{Binding ToggleRecordingCommand}"
+                                IsEnabled="{Binding IsFfmpegAvailable}"
                                 FontSize="20" FontWeight="Bold"
                                 Width="250" Height="60"
                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
@@ -54,12 +56,19 @@
                             </StackPanel>
                         </Button>
                         
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="#bac2de" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding StatusMessage}" HorizontalAlignment="Center"
+                                   Foreground="{Binding IsFfmpegAvailable, Converter={StaticResource FfmpegStatusBrushConverter}}"
+                                   IsVisible="{Binding !HasSavedFile}"/>
+                        <Button Command="{Binding OpenSavedFolderCommand}" IsVisible="{Binding HasSavedFile}"
+                                Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <ic:SymbolIcon Symbol="FolderOpen" Foreground="#89b4fa" FontSize="14"/>
+                                <TextBlock Text="{Binding StatusMessage}" Foreground="#89b4fa"
+                                           TextDecorations="Underline"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Border>
-
-                <TextBlock Text="Note: This feature requires FFmpeg to be installed in your system PATH." 
-                           FontSize="12" Foreground="#f38ba8" FontStyle="Italic"/>
             </StackPanel>
         </ScrollViewer>
     </Panel>
