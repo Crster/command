@@ -1,0 +1,87 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ic="using:FluentIcons.Avalonia"
+        x:Class="CrsterCommand.Views.RecordingOverlayWindow"
+        Title="Recording"
+        Width="160" Height="44"
+        SystemDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="AcrylicBlur"
+        Topmost="True"
+        ShowInTaskbar="False"
+        CanResize="False"
+        WindowStartupLocation="Manual">
+
+    <Window.Styles>
+        <Style Selector="Button.StopBtn">
+            <Setter Property="Background" Value="#f38ba8"/>
+            <Setter Property="Foreground" Value="#1e1e2e"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.StopBtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#eba4b8"/>
+        </Style>
+    </Window.Styles>
+
+    <Border Background="#1e1e2e"
+            BorderBrush="#45475a"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="10,8"
+            PointerPressed="OnDragStart"
+            PointerMoved="OnDragMove"
+            PointerReleased="OnDragEnd">
+        <DockPanel LastChildFill="True">
+            <!-- Recording indicator dot -->
+            <Ellipse Width="10" Height="10"
+                     Fill="#f38ba8"
+                     VerticalAlignment="Center"
+                     Margin="0,0,8,0"
+                     DockPanel.Dock="Left">
+                <Ellipse.Styles>
+                    <Style Selector="Ellipse">
+                        <Style.Animations>
+                            <Animation Duration="0:0:1" IterationCount="Infinite">
+                                <KeyFrame KeyTime="0:0:0">
+                                    <Setter Property="Opacity" Value="1.0"/>
+                                </KeyFrame>
+                                <KeyFrame KeyTime="0:0:0.5">
+                                    <Setter Property="Opacity" Value="0.2"/>
+                                </KeyFrame>
+                                <KeyFrame KeyTime="0:0:1">
+                                    <Setter Property="Opacity" Value="1.0"/>
+                                </KeyFrame>
+                            </Animation>
+                        </Style.Animations>
+                    </Style>
+                </Ellipse.Styles>
+            </Ellipse>
+
+            <!-- Stop button -->
+            <Button Classes="StopBtn"
+                    DockPanel.Dock="Right"
+                    Click="OnStopClick">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <ic:SymbolIcon Symbol="Stop" FontSize="12" Foreground="#1e1e2e"/>
+                    <TextBlock Text="Stop" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Timer -->
+            <TextBlock x:Name="TimerText"
+                       Text="00:00"
+                       Foreground="White"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       FontFamily="Consolas,Monospace"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left"
+                       Margin="0,0,8,0"/>
+        </DockPanel>
+    </Border>
+</Window>

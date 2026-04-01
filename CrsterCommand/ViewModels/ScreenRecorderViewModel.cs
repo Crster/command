@@ -2,15 +2,18 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CrsterCommand.Services;
+using CrsterCommand.Views;
 
 namespace CrsterCommand.ViewModels;
 
 public partial class ScreenRecorderViewModel : ViewModelBase
 {
     private readonly ScreenRecorderService _recorderService = new();
+    private RecordingOverlayWindow? _overlayWindow;
 
     [ObservableProperty]
     private bool _isRecording;
@@ -56,6 +59,7 @@ public partial class ScreenRecorderViewModel : ViewModelBase
                 await _recorderService.StartRecordingAsync(path);
                 IsRecording = true;
                 StatusMessage = $"Recording to: {fileName}";
+                await ShowOverlayAsync();
             }
             catch (Exception ex)
             {
@@ -67,6 +71,7 @@ public partial class ScreenRecorderViewModel : ViewModelBase
         {
             try
             {
+                await HideOverlayAsync();
                 await _recorderService.StopRecordingAsync();
                 StatusMessage = "Recording saved to Videos folder.";
                 SavedFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
@@ -78,6 +83,33 @@ public partial class ScreenRecorderViewModel : ViewModelBase
                 IsRecording = false;
             }
         }
+    }
+
+    private async Task ShowOverlayAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _overlayWindow = new RecordingOverlayWindow(async () =>
+            {
+                // Stop recording from the overlay button
+                await ToggleRecording();
+            });
+            _overlayWindow.Show();
+            _overlayWindow.StartTimer();
+        });
+    }
+
+    private async Task HideOverlayAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (_overlayWindow != null)
+            {
+                _overlayWindow.StopTimer();
+                _overlayWindow.Close();
+                _overlayWindow = null;
+            }
+        });
     }
 
     [RelayCommand]
