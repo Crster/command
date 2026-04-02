@@ -176,16 +176,23 @@
                                          FontFamily="Cascadia Code,Consolas,Menlo,Monaco,DejaVu Sans Mono,Courier New,monospace"
                                          VerticalContentAlignment="Top"/>
                             </Border>
-                            <Border Grid.Row="1" Background="{DynamicResource AppStatusBarBrush}" 
-                                    CornerRadius="8" Padding="12" BorderThickness="1" 
-                                    BorderBrush="{DynamicResource AppInputBorderBrush}">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <ic:SymbolIcon Symbol="Info" FontSize="16" Foreground="{DynamicResource AppAccentBrush}"/>
-                                    <TextBlock Text="Encrypted via Manual Master Password" 
-                                               FontSize="11" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                            <StackPanel Grid.Row="1" Spacing="16">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Description (Visible)" Classes="Label"/>
+                                    <TextBox x:Name="VaultDescription" 
+                                             Watermark="Private information (default)"/>
                                 </StackPanel>
-                            </Border>
+                                <Border Background="{DynamicResource AppStatusBarBrush}" 
+                                        CornerRadius="8" Padding="12" BorderThickness="1" 
+                                        BorderBrush="{DynamicResource AppInputBorderBrush}">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <ic:SymbolIcon Symbol="Info" FontSize="16" Foreground="{DynamicResource AppAccentBrush}"/>
+                                        <TextBlock Text="Encrypted via Manual Master Password" 
+                                                   FontSize="11" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
                         </Grid>
                     </Panel>
                 </TabItem>
@@ -199,11 +206,6 @@
                         </StackPanel>
                     </TabItem.Header>
                     <StackPanel Spacing="20" Margin="0,20,0,0">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Description" Classes="Label"/>
-                            <TextBox x:Name="FileDescription" Watermark="What is this file for?"/>
-                        </StackPanel>
-                        
                         <Button HorizontalAlignment="Stretch" Height="100" 
                                 Click="SelectFile_Click" Classes="Secondary">
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
@@ -235,5 +237,16 @@
                 </TabItem>
             </TabControl>
         </DockPanel>
+
+        <!-- Loading Overlay -->
+        <Border Background="#AA000000" IsVisible="{Binding IsProcessing}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{DynamicResource AppAccentBrush}"/>
+                <TextBlock Text="AI is generating description &amp; embeddings..." 
+                           HorizontalAlignment="Center" 
+                           Foreground="White" 
+                           FontWeight="SemiBold"/>
+            </StackPanel>
+        </Border>
     </Panel>
 </Window>

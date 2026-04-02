@@ -17,7 +17,8 @@ namespace CrsterCommand.ViewModels;
 public partial class NotesViewModel : ViewModelBase
 {
     public readonly StorageService StorageService;
-    private readonly EmbeddingService _embeddingService = new();
+    public readonly AIService AIService;
+    public readonly EmbeddingService EmbeddingService;
 
     public ObservableCollection<BaseNoteItem> AllNotes { get; } = new();
     
@@ -30,6 +31,8 @@ public partial class NotesViewModel : ViewModelBase
     public NotesViewModel(StorageService storageService)
     {
         StorageService = storageService;
+        AIService = new AIService(storageService);
+        EmbeddingService = new EmbeddingService();
         LoadAll();
     }
 
@@ -64,21 +67,21 @@ public partial class NotesViewModel : ViewModelBase
             return;
         }
 
-        var queryVector = await _embeddingService.GetEmbeddingAsync(SearchQuery);
+        var queryVector = await EmbeddingService.GetEmbeddingAsync(SearchQuery);
         
         var todos = StorageService.GetTodos().FindAll();
         var notes = StorageService.GetMemoryNotes().FindAll();
         var vault = StorageService.GetVaultItems().FindAll();
         var files = StorageService.GetFileItems().FindAll();
-
+ 
         var allItems = new List<BaseNoteItem>();
         allItems.AddRange(todos);
         allItems.AddRange(notes);
         allItems.AddRange(vault);
         allItems.AddRange(files);
-
+ 
         var scoredItems = allItems
-            .Select(n => new { Item = n, Score = n.Embedding != null ? _embeddingService.CalculateSimilarity(queryVector, n.Embedding) : 0 })
+            .Select(n => new { Item = n, Score = n.Embedding != null ? EmbeddingService.CalculateSimilarity(queryVector, n.Embedding) : 0 })
             .OrderByDescending(x => x.Score)
             .Where(x => x.Score > 0.2) // Lower threshold for broader search
             .Select(x => x.Item)
@@ -91,8 +94,6 @@ public partial class NotesViewModel : ViewModelBase
     [RelayCommand]
     private async Task AddTodo(TodoItem todo)
     {
-        todo.LastModified = DateTime.Now;
-        todo.Embedding = await _embeddingService.GetEmbeddingAsync(todo.Summary);
         StorageService.GetTodos().Insert(todo);
         AllNotes.Insert(0, todo);
     }
@@ -100,8 +101,6 @@ public partial class NotesViewModel : ViewModelBase
     [RelayCommand]
     private async Task AddMemory(MemoryNote note)
     {
-        note.LastModified = DateTime.Now;
-        note.Embedding = await _embeddingService.GetEmbeddingAsync($"{note.Content}");
         StorageService.GetMemoryNotes().Insert(note);
         AllNotes.Insert(0, note);
     }
@@ -109,8 +108,6 @@ public partial class NotesViewModel : ViewModelBase
     [RelayCommand]
     private async Task AddVault(VaultItem vault)
     {
-        vault.LastModified = DateTime.Now;
-        vault.Embedding = await _embeddingService.GetEmbeddingAsync(vault.Label);
         StorageService.GetVaultItems().Insert(vault);
         AllNotes.Insert(0, vault);
     }
@@ -118,8 +115,6 @@ public partial class NotesViewModel : ViewModelBase
     [RelayCommand]
     private async Task AddFile(FileItem file)
     {
-        file.LastModified = DateTime.Now;
-        file.Embedding = await _embeddingService.GetEmbeddingAsync(file.FileName);
         StorageService.GetFileItems().Insert(file);
         AllNotes.Insert(0, file);
     }
@@ -127,15 +122,6 @@ public partial class NotesViewModel : ViewModelBase
     [RelayCommand]
     public async Task UpdateItem(BaseNoteItem item)
     {
-        if (item is MemoryNote memory)
-            item.Embedding = await _embeddingService.GetEmbeddingAsync(memory.Content);
-        else if (item is TodoItem todo)
-            item.Embedding = await _embeddingService.GetEmbeddingAsync(todo.Summary);
-        else if (item is VaultItem vault)
-            item.Embedding = await _embeddingService.GetEmbeddingAsync(vault.Label);
-        else if (item is FileItem file)
-             item.Embedding = await _embeddingService.GetEmbeddingAsync(file.FileName);
-
         switch (item.Type)
         {
             case NoteType.Todo: StorageService.GetTodos().Update((TodoItem)item); break;

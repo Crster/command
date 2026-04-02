@@ -48,17 +48,20 @@
         </Border>
 
         <!-- Main Listing -->
-        <ScrollViewer Grid.Row="1" Padding="32,0,32,32">
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
             <ListBox ItemsSource="{Binding AllNotes}" 
                      Background="Transparent" 
                      BorderThickness="0"
+                     Margin="32,0,32,32"
                      SelectedItem="{Binding SelectedNote}"
-                     DoubleTapped="NotesList_DoubleTapped">
+                     DoubleTapped="NotesList_DoubleTapped"
+                     HorizontalAlignment="Stretch">
                 <ListBox.Styles>
                     <Style Selector="ListBoxItem">
                         <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Margin" Value="0,0,0,12"/>
+                        <Setter Property="Margin" Value="0,0,0,3"/>
                         <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                     </Style>
                     <Style Selector="ListBoxItem:pointerover Border.Card">
                         <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
@@ -104,14 +107,24 @@
                                 </Border>
 
                                 <!-- Content Summary -->
-                                <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Stretch">
                                     <TextBlock Text="{Binding Summary}" 
-                                               FontSize="15" 
-                                               FontWeight="SemiBold"
+                                               FontSize="16" 
+                                               FontWeight="Bold"
                                                Foreground="{DynamicResource AppPrimaryTextBrush}"
                                                TextWrapping="Wrap"
-                                               MaxLines="2"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                               HorizontalAlignment="Stretch"/>
+                                    
+                                    <TextBlock Text="{Binding Description}" 
+                                               FontSize="13" 
+                                               Foreground="{DynamicResource AppSecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               MaxLines="4"
+                                               LineHeight="18"
+                                               HorizontalAlignment="Stretch"
+                                               IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
                                         <TextBlock Text="{Binding Type}" 
                                                    FontSize="12" 
                                                    FontWeight="Medium"

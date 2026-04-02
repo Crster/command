@@ -21,6 +21,8 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
     public BaseNoteItem? Result { get; private set; }
     private string? _selectedFilePath;
     private readonly StorageService? _storageService;
+    private readonly AIService? _aiService;
+    private readonly EmbeddingService? _embeddingService;
 
     public ObservableCollection<TodoSubTask> TodoList { get; } = new();
 
@@ -29,6 +31,13 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
     {
         get => _hasVaultPassword;
         set => SetField(ref _hasVaultPassword, value);
+    }
+
+    private bool _isProcessing;
+    public bool IsProcessing
+    {
+        get => _isProcessing;
+        set => SetField(ref _isProcessing, value);
     }
 
     private bool _isEditMode;
@@ -59,11 +68,13 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
         set => SetField(ref _saveButtonText, value);
     }
 
-    public AddNoteDialog() : this(null) { }
+    public AddNoteDialog() : this(null, null, null) { }
 
-    public AddNoteDialog(StorageService? storageService)
+    public AddNoteDialog(StorageService? storageService, AIService? aiService, EmbeddingService? embeddingService)
     {
         _storageService = storageService;
+        _aiService = aiService;
+        _embeddingService = embeddingService;
         InitializeComponent();
         
         HasVaultPassword = !string.IsNullOrEmpty(_storageService?.GetVaultPassword());
@@ -126,10 +137,11 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
         else if (item is FileItem file)
         {
             TabControl.SelectedIndex = 3;
-            FileDescription.Text = file.Description;
             _selectedFilePath = file.FilePath;
             SelectedFileName.Text = file.FileName;
         }
+        
+        VaultDescription.Text = item.Description;
         
         UpdateSaveButtonText(TabControl.SelectedIndex);
     }
@@ -239,43 +251,31 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
         }
     }
 
-    private void Add_Click(object? sender, RoutedEventArgs e)
+    private async void Add_Click(object? sender, RoutedEventArgs e)
     {
+        if (IsProcessing) return;
+        
         int selectedIndex = TabControl.SelectedIndex;
+        BaseNoteItem? itemToProcess = null;
+        Stream? fileStreamToProcess = null;
 
         switch (selectedIndex)
         {
             case 0: // Memory
                 if (!string.IsNullOrWhiteSpace(MemoryContent.Text))
                 {
-                    if (Result is MemoryNote memory)
-                    {
-                        memory.Content = MemoryContent.Text;
-                        memory.LastModified = DateTime.Now;
-                    }
-                    else
-                    {
-                        Result = new MemoryNote { Content = MemoryContent.Text, LastModified = DateTime.Now };
-                    }
+                    var memory = Result as MemoryNote ?? new MemoryNote();
+                    memory.Content = MemoryContent.Text;
+                    itemToProcess = memory;
                 }
                 break;
 
             case 1: // Todo
                 if (TodoList.Any())
                 {
-                    if (Result is TodoItem todo)
-                    {
-                        todo.Tasks = TodoList.ToList();
-                        todo.LastModified = DateTime.Now;
-                    }
-                    else
-                    {
-                        Result = new TodoItem 
-                        { 
-                            Tasks = TodoList.ToList(), 
-                            LastModified = DateTime.Now 
-                        };
-                    }
+                    var todo = Result as TodoItem ?? new TodoItem();
+                    todo.Tasks = TodoList.ToList();
+                    itemToProcess = todo;
                 }
                 break;
 
@@ -284,21 +284,10 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
                 if (!string.IsNullOrWhiteSpace(VaultContent.Text) && !string.IsNullOrEmpty(password))
                 {
                     string encrypted = SecurityService.Encrypt(VaultContent.Text, password);
-                    
-                    if (Result is VaultItem vault)
-                    {
-                        vault.EncryptedContent = encrypted;
-                        vault.LastModified = DateTime.Now;
-                    }
-                    else
-                    {
-                        Result = new VaultItem 
-                        { 
-                            Label = "Encrypted Vault Item",
-                            EncryptedContent = encrypted, 
-                            LastModified = DateTime.Now 
-                        };
-                    }
+                    var vault = Result as VaultItem ?? new VaultItem { Label = "Encrypted Vault Item" };
+                    vault.EncryptedContent = encrypted;
+                    vault.Description = string.IsNullOrWhiteSpace(VaultDescription.Text) ? "Private information" : VaultDescription.Text;
+                    itemToProcess = vault;
                 }
                 break;
 
@@ -309,15 +298,11 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
                     bool isNewSelection = true;
                     
                     if (Result is FileItem oldFile && oldFile.FilePath == _selectedFilePath && !string.IsNullOrEmpty(oldFile.FileId))
-                    {
                         isNewSelection = false;
-                    }
 
                     if (isNewSelection && File.Exists(_selectedFilePath))
                     {
-                        // Cleanup old
                         if (!string.IsNullOrEmpty(currentFileId)) _storageService?.DeleteFile(currentFileId);
-
                         currentFileId = Guid.NewGuid().ToString();
                         using (var stream = File.OpenRead(_selectedFilePath))
                         {
@@ -325,34 +310,54 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
                         }
                     }
 
-                    if (Result is FileItem file)
+                    var file = Result as FileItem ?? new FileItem();
+                    file.FileName = Path.GetFileName(_selectedFilePath);
+                    file.FilePath = _selectedFilePath;
+                    file.FileId = currentFileId ?? "";
+                    file.FileType = Path.GetExtension(_selectedFilePath);
+                    
+                    itemToProcess = file;
+                    if (File.Exists(_selectedFilePath))
                     {
-                        file.FileName = Path.GetFileName(_selectedFilePath);
-                        file.FilePath = _selectedFilePath;
-                        file.FileId = currentFileId ?? "";
-                        file.Description = FileDescription.Text ?? "";
-                        file.FileType = Path.GetExtension(_selectedFilePath);
-                        file.LastModified = DateTime.Now;
-                    }
-                    else
-                    {
-                        Result = new FileItem 
-                        { 
-                            FileName = Path.GetFileName(_selectedFilePath), 
-                            FilePath = _selectedFilePath, 
-                            FileId = currentFileId ?? "",
-                            Description = FileDescription.Text ?? "",
-                            FileType = Path.GetExtension(_selectedFilePath),
-                            LastModified = DateTime.Now 
-                        };
+                        fileStreamToProcess = File.OpenRead(_selectedFilePath);
                     }
                 }
                 break;
         }
 
-        if (Result != null)
+        if (itemToProcess != null)
         {
-            Close(Result);
+            IsProcessing = true;
+            try
+            {
+                itemToProcess.LastModified = DateTime.Now;
+                
+                // 1. Generate Description via AI (except Vault which is already set)
+                if (itemToProcess.Type != NoteType.Vault && _aiService != null)
+                {
+                    itemToProcess.Description = await _aiService.GenerateNoteDescriptionAsync(itemToProcess, fileStreamToProcess);
+                }
+
+                // 2. Generate Embedding
+                if (_embeddingService != null)
+                {
+                    // Use Description for embedding as requested
+                    itemToProcess.Embedding = await _embeddingService.GetEmbeddingAsync(itemToProcess.Description);
+                }
+
+                Result = itemToProcess;
+                Close(Result);
+            }
+            catch (Exception ex)
+            {
+                // Handle or show error
+                Debug.WriteLine($"Error processing note: {ex.Message}");
+                IsProcessing = false;
+            }
+            finally
+            {
+                fileStreamToProcess?.Dispose();
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ public partial class NotesView : UserControl
         var vm = DataContext as NotesViewModel;
         if (vm == null) return;
 
-        var dialog = new AddNoteDialog(vm.StorageService);
+        var dialog = new AddNoteDialog(vm.StorageService, vm.AIService, vm.EmbeddingService);
         var lifetime = Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
         var mainWindow = lifetime?.MainWindow;
         
@@ -43,7 +43,7 @@ public partial class NotesView : UserControl
         var vm = DataContext as NotesViewModel;
         if (vm == null || item == null) return;
 
-        var dialog = new AddNoteDialog(vm.StorageService);
+        var dialog = new AddNoteDialog(vm.StorageService, vm.AIService, vm.EmbeddingService);
         dialog.LoadItem(item);
         
         var lifetime = Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;

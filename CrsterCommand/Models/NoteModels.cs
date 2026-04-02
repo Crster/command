@@ -17,6 +17,7 @@ public abstract class BaseNoteItem
     public Guid Id { get; set; } = Guid.NewGuid();
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime LastModified { get; set; } = DateTime.Now;
+    public string Description { get; set; } = "";
     public float[]? Embedding { get; set; }
     public abstract NoteType Type { get; }
     public abstract string Summary { get; }
@@ -64,9 +65,8 @@ public class FileItem : BaseNoteItem
     public string FilePath { get; set; } = "";
     public string FileId { get; set; } = "";
     public string FileType { get; set; } = "";
-    public string Description { get; set; } = "";
     public override NoteType Type => NoteType.File;
-    public override string Summary => string.IsNullOrEmpty(Description) ? FileName : Description;
+    public override string Summary => string.IsNullOrEmpty(Description) ? FileName : (Description.Length > 50 ? Description.Substring(0, 50) + "..." : Description);
 }
 
 public class AppData
