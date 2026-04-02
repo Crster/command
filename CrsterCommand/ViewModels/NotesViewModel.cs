@@ -16,7 +16,7 @@ namespace CrsterCommand.ViewModels;
 
 public partial class NotesViewModel : ViewModelBase
 {
-    private readonly StorageService _storageService;
+    public readonly StorageService StorageService;
     private readonly EmbeddingService _embeddingService = new();
 
     public ObservableCollection<BaseNoteItem> AllNotes { get; } = new();
@@ -29,7 +29,7 @@ public partial class NotesViewModel : ViewModelBase
 
     public NotesViewModel(StorageService storageService)
     {
-        _storageService = storageService;
+        StorageService = storageService;
         LoadAll();
     }
 
@@ -37,10 +37,10 @@ public partial class NotesViewModel : ViewModelBase
     {
         AllNotes.Clear();
         
-        var todos = _storageService.GetTodos().FindAll();
-        var notes = _storageService.GetMemoryNotes().FindAll();
-        var vault = _storageService.GetVaultItems().FindAll();
-        var files = _storageService.GetFileItems().FindAll();
+        var todos = StorageService.GetTodos().FindAll();
+        var notes = StorageService.GetMemoryNotes().FindAll();
+        var vault = StorageService.GetVaultItems().FindAll();
+        var files = StorageService.GetFileItems().FindAll();
 
         var combined = new List<BaseNoteItem>();
         combined.AddRange(todos);
@@ -66,10 +66,10 @@ public partial class NotesViewModel : ViewModelBase
 
         var queryVector = await _embeddingService.GetEmbeddingAsync(SearchQuery);
         
-        var todos = _storageService.GetTodos().FindAll();
-        var notes = _storageService.GetMemoryNotes().FindAll();
-        var vault = _storageService.GetVaultItems().FindAll();
-        var files = _storageService.GetFileItems().FindAll();
+        var todos = StorageService.GetTodos().FindAll();
+        var notes = StorageService.GetMemoryNotes().FindAll();
+        var vault = StorageService.GetVaultItems().FindAll();
+        var files = StorageService.GetFileItems().FindAll();
 
         var allItems = new List<BaseNoteItem>();
         allItems.AddRange(todos);
@@ -89,11 +89,11 @@ public partial class NotesViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task AddTodo(string task)
+    private async Task AddTodo(TodoItem todo)
     {
-        var todo = new TodoItem { Task = task, LastModified = DateTime.Now };
+        todo.LastModified = DateTime.Now;
         todo.Embedding = await _embeddingService.GetEmbeddingAsync(todo.Summary);
-        _storageService.GetTodos().Insert(todo);
+        StorageService.GetTodos().Insert(todo);
         AllNotes.Insert(0, todo);
     }
 
@@ -101,8 +101,8 @@ public partial class NotesViewModel : ViewModelBase
     private async Task AddMemory(MemoryNote note)
     {
         note.LastModified = DateTime.Now;
-        note.Embedding = await _embeddingService.GetEmbeddingAsync($"{note.Title} {note.Content}");
-        _storageService.GetMemoryNotes().Insert(note);
+        note.Embedding = await _embeddingService.GetEmbeddingAsync($"{note.Content}");
+        StorageService.GetMemoryNotes().Insert(note);
         AllNotes.Insert(0, note);
     }
 
@@ -111,7 +111,7 @@ public partial class NotesViewModel : ViewModelBase
     {
         vault.LastModified = DateTime.Now;
         vault.Embedding = await _embeddingService.GetEmbeddingAsync(vault.Label);
-        _storageService.GetVaultItems().Insert(vault);
+        StorageService.GetVaultItems().Insert(vault);
         AllNotes.Insert(0, vault);
     }
 
@@ -120,8 +120,34 @@ public partial class NotesViewModel : ViewModelBase
     {
         file.LastModified = DateTime.Now;
         file.Embedding = await _embeddingService.GetEmbeddingAsync(file.FileName);
-        _storageService.GetFileItems().Insert(file);
+        StorageService.GetFileItems().Insert(file);
         AllNotes.Insert(0, file);
+    }
+
+    [RelayCommand]
+    public async Task UpdateItem(BaseNoteItem item)
+    {
+        if (item is MemoryNote memory)
+            item.Embedding = await _embeddingService.GetEmbeddingAsync(memory.Content);
+        else if (item is TodoItem todo)
+            item.Embedding = await _embeddingService.GetEmbeddingAsync(todo.Summary);
+        else if (item is VaultItem vault)
+            item.Embedding = await _embeddingService.GetEmbeddingAsync(vault.Label);
+        else if (item is FileItem file)
+             item.Embedding = await _embeddingService.GetEmbeddingAsync(file.FileName);
+
+        switch (item.Type)
+        {
+            case NoteType.Todo: StorageService.GetTodos().Update((TodoItem)item); break;
+            case NoteType.Memory: StorageService.GetMemoryNotes().Update((MemoryNote)item); break;
+            case NoteType.Vault: StorageService.GetVaultItems().Update((VaultItem)item); break;
+            case NoteType.File: StorageService.GetFileItems().Update((FileItem)item); break;
+        }
+
+        if (string.IsNullOrWhiteSpace(SearchQuery))
+            LoadAll();
+        else
+            await SemanticSearch();
     }
 
     [RelayCommand]
@@ -129,10 +155,14 @@ public partial class NotesViewModel : ViewModelBase
     {
         switch (item.Type)
         {
-            case NoteType.Todo: _storageService.GetTodos().Delete(item.Id); break;
-            case NoteType.Memory: _storageService.GetMemoryNotes().Delete(item.Id); break;
-            case NoteType.Vault: _storageService.GetVaultItems().Delete(item.Id); break;
-            case NoteType.File: _storageService.GetFileItems().Delete(item.Id); break;
+            case NoteType.Todo: StorageService.GetTodos().Delete(item.Id); break;
+            case NoteType.Memory: StorageService.GetMemoryNotes().Delete(item.Id); break;
+            case NoteType.Vault: StorageService.GetVaultItems().Delete(item.Id); break;
+            case NoteType.File: 
+                var fileItem = (FileItem)item;
+                if (!string.IsNullOrEmpty(fileItem.FileId)) StorageService.DeleteFile(fileItem.FileId);
+                StorageService.GetFileItems().Delete(item.Id); 
+                break;
         }
         AllNotes.Remove(item);
     }

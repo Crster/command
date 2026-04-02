@@ -21,10 +21,9 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel()
     {
-        NavigationItems.Add(new NavigationItem("Dashboard", Symbol.Home, new DashboardViewModel()));
+        NavigationItems.Add(new NavigationItem("Notes", Symbol.Notebook, new NotesViewModel(_storageService)));
         NavigationItems.Add(new NavigationItem("Capture", Symbol.Camera, new ScreenCaptureViewModel()));
         NavigationItems.Add(new NavigationItem("Recorder", Symbol.Video, new ScreenRecorderViewModel()));
-        NavigationItems.Add(new NavigationItem("Notes", Symbol.Notebook, new NotesViewModel(_storageService)));
         NavigationItems.Add(new NavigationItem("AI Reader", Symbol.Brain, new AIReaderViewModel(_storageService)));
         NavigationItems.Add(new NavigationItem("Macros", Symbol.Flash, new MacroManagerViewModel()));
         NavigationItems.Add(new NavigationItem("Settings", Symbol.Settings, new SettingsViewModel(_storageService)));

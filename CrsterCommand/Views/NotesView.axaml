@@ -52,12 +52,17 @@
             <ListBox ItemsSource="{Binding AllNotes}" 
                      Background="Transparent" 
                      BorderThickness="0"
-                     SelectedItem="{Binding SelectedNote}">
+                     SelectedItem="{Binding SelectedNote}"
+                     DoubleTapped="NotesList_DoubleTapped">
                 <ListBox.Styles>
                     <Style Selector="ListBoxItem">
                         <Setter Property="Padding" Value="0"/>
                         <Setter Property="Margin" Value="0,0,0,12"/>
                         <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                    <Style Selector="ListBoxItem:pointerover Border.Card">
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+                        <Setter Property="Cursor" Value="Hand"/>
                     </Style>
                     <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
                         <Setter Property="Background" Value="Transparent"/>

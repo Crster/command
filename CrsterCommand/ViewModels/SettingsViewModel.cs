@@ -25,6 +25,9 @@ public partial class SettingsViewModel : ViewModelBase
     private string? _aiModel;
 
     [ObservableProperty]
+    private string? _vaultPassword;
+
+    [ObservableProperty]
     private ObservableCollection<string> _aiModelOptions = new();
 
     [ObservableProperty]
@@ -47,6 +50,7 @@ public partial class SettingsViewModel : ViewModelBase
         _dbPath = _storageService.GetCurrentDbPath();
         _aiApiKey = _storageService.GetAiApiKey();
         _aiModel = _storageService.GetAiModel();
+        _vaultPassword = _storageService.GetVaultPassword();
         
         if (!string.IsNullOrEmpty(_aiApiKey))
         {
@@ -54,6 +58,11 @@ public partial class SettingsViewModel : ViewModelBase
         }
 
         _ = Task.Run(async () => await CheckFfmpegAsync());
+    }
+
+    partial void OnVaultPasswordChanged(string? value)
+    {
+        _storageService.SetVaultPassword(value);
     }
 
     partial void OnAiApiKeyChanged(string? value)

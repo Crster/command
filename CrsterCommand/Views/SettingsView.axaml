@@ -73,6 +73,31 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
+            
+            <!-- Vault Security Card -->
+            <Border Classes="Card">
+                <StackPanel Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <ic:SymbolIcon Symbol="ShieldLock"
+                                       Foreground="{DynamicResource AppAccentBrush}"
+                                       FontSize="20"/>
+                        <TextBlock Classes="SectionHeader"
+                                   Text="Vault Security"
+                                   Foreground="{DynamicResource AppAccentBrush}"/>
+                    </StackPanel>
+                    <TextBlock Text="Set a master password for your encrypted notes. This password is required to create or view Vault items."
+                               FontSize="13"
+                               Foreground="{DynamicResource AppSecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="Label" Text="Master Password"/>
+                        <TextBox Text="{Binding VaultPassword}"
+                                 PasswordChar="*"
+                                 Watermark="Enter vault master password..."/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
 
             <!-- FFmpeg Card -->
             <Border Classes="Card">

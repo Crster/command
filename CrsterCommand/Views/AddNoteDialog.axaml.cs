@@ -1,27 +1,177 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using CrsterCommand.Models;
+using CrsterCommand.Services;
 
 namespace CrsterCommand.Views;
 
-public partial class AddNoteDialog : Window
+public partial class AddNoteDialog : Window, INotifyPropertyChanged
 {
     public BaseNoteItem? Result { get; private set; }
     private string? _selectedFilePath;
+    private readonly StorageService? _storageService;
 
-    public AddNoteDialog()
+    public ObservableCollection<TodoSubTask> TodoList { get; } = new();
+
+    private bool _hasVaultPassword;
+    public bool HasVaultPassword
     {
+        get => _hasVaultPassword;
+        set => SetField(ref _hasVaultPassword, value);
+    }
+
+    private bool _isEditMode;
+    public bool IsEditMode
+    {
+        get => _isEditMode;
+        set => SetField(ref _isEditMode, value);
+    }
+
+    private string _headerText = "Create New Note";
+    public string HeaderText
+    {
+        get => _headerText;
+        set => SetField(ref _headerText, value);
+    }
+
+    private string _headerSubtitle = "Select a type and capture your thoughts.";
+    public string HeaderSubtitle
+    {
+        get => _headerSubtitle;
+        set => SetField(ref _headerSubtitle, value);
+    }
+
+    private string _saveButtonText = "Save Note";
+    public string SaveButtonText
+    {
+        get => _saveButtonText;
+        set => SetField(ref _saveButtonText, value);
+    }
+
+    public AddNoteDialog() : this(null) { }
+
+    public AddNoteDialog(StorageService? storageService)
+    {
+        _storageService = storageService;
         InitializeComponent();
+        
+        HasVaultPassword = !string.IsNullOrEmpty(_storageService?.GetVaultPassword());
+        UpdateSaveButtonText(0);
+        DataContext = this;
+    }
+
+    private void TabControl_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (TabControl != null)
+        {
+            UpdateSaveButtonText(TabControl.SelectedIndex);
+        }
+    }
+
+    private void UpdateSaveButtonText(int index)
+    {
+        string action = IsEditMode ? "Update" : "Save";
+        SaveButtonText = index switch
+        {
+            0 => $"{action} Memory",
+            1 => $"{action} Todo",
+            2 => $"{action} Vault",
+            3 => $"{action} File",
+            _ => $"{action} Note"
+        };
+    }
+
+    public void LoadItem(BaseNoteItem item)
+    {
+        IsEditMode = true;
+        Result = item;
+        HeaderText = "Edit Item";
+        HeaderSubtitle = "Update your note or memory details.";
+
+        if (item is MemoryNote memory)
+        {
+            TabControl.SelectedIndex = 0;
+            MemoryContent.Text = memory.Content;
+        }
+        else if (item is TodoItem todo)
+        {
+            TabControl.SelectedIndex = 1;
+            TodoList.Clear();
+            foreach (var task in todo.Tasks) TodoList.Add(task);
+        }
+        else if (item is VaultItem vault)
+        {
+            TabControl.SelectedIndex = 2;
+            var password = _storageService?.GetVaultPassword();
+            if (!string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(vault.EncryptedContent))
+            {
+                try {
+                    VaultContent.Text = SecurityService.Decrypt(vault.EncryptedContent, password);
+                } catch {
+                    VaultContent.Text = "[Decryption Failed]";
+                }
+            }
+        }
+        else if (item is FileItem file)
+        {
+            TabControl.SelectedIndex = 3;
+            FileDescription.Text = file.Description;
+            _selectedFilePath = file.FilePath;
+            SelectedFileName.Text = file.FileName;
+        }
+        
+        UpdateSaveButtonText(TabControl.SelectedIndex);
+    }
+
+    public new event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) => 
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
 
     private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void SetPassword_Click(object? sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(SetupVaultPassword.Text))
+        {
+            _storageService?.SetVaultPassword(SetupVaultPassword.Text);
+            HasVaultPassword = true;
+        }
+    }
+
+    private void ChangePasswordInSettings_Click(object? sender, RoutedEventArgs e)
+    {
+        // This could navigate or just show a message, but for simplicity we keep it hidden or use it to reset.
+    }
+
+    private void NewTodo_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && !string.IsNullOrWhiteSpace(NewTodoInput.Text))
+        {
+            TodoList.Add(new TodoSubTask { Todo = NewTodoInput.Text, IsDone = false });
+            NewTodoInput.Text = "";
+        }
     }
 
     private async void SelectFile_Click(object? sender, RoutedEventArgs e)
@@ -43,28 +193,161 @@ public partial class AddNoteDialog : Window
         }
     }
 
+    private async void OpenFile_Click(object? sender, RoutedEventArgs e)
+    {
+        if (Result is FileItem file && !string.IsNullOrEmpty(file.FileId))
+        {
+            try
+            {
+                string tempDir = Path.Combine(Path.GetTempPath(), "CrsterCommand");
+                if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
+                
+                string tempPath = Path.Combine(tempDir, file.FileName);
+                using (var stream = File.Create(tempPath))
+                {
+                    _storageService?.DownloadFile(file.FileId, stream);
+                }
+                
+                Process.Start(new ProcessStartInfo(tempPath) { UseShellExecute = true });
+            }
+            catch { }
+        }
+    }
+
+    private async void SaveFileAs_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = GetTopLevel(this);
+        if (topLevel == null || !(Result is FileItem file) || string.IsNullOrEmpty(file.FileId)) return;
+
+        var pickedFile = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save Copy As",
+            DefaultExtension = file.FileType,
+            SuggestedFileName = file.FileName
+        });
+
+        if (pickedFile != null)
+        {
+            try
+            {
+                using (var stream = await pickedFile.OpenWriteAsync())
+                {
+                    _storageService?.DownloadFile(file.FileId, stream);
+                }
+            }
+            catch { }
+        }
+    }
+
     private void Add_Click(object? sender, RoutedEventArgs e)
     {
-        var tabControl = this.FindControl<TabControl>("TabControl");
-        // Simplified way to get active tab content since TabControl doesn't natively expose SelectedIndex as an int easily in code-behind without casting
-        // Or I can just check the active tab by finding which input is visible or has data.
-        
-        // Let's use simple logic based on what's filled
-        if (!string.IsNullOrWhiteSpace(TodoTask.Text))
+        int selectedIndex = TabControl.SelectedIndex;
+
+        switch (selectedIndex)
         {
-            Result = new TodoItem { Task = TodoTask.Text, LastModified = DateTime.Now };
-        }
-        else if (!string.IsNullOrWhiteSpace(MemoryTitle.Text) || !string.IsNullOrWhiteSpace(MemoryContent.Text))
-        {
-            Result = new MemoryNote { Title = MemoryTitle.Text ?? "", Content = MemoryContent.Text ?? "", LastModified = DateTime.Now };
-        }
-        else if (!string.IsNullOrWhiteSpace(VaultLabel.Text) || !string.IsNullOrWhiteSpace(VaultContent.Text))
-        {
-            Result = new VaultItem { Label = VaultLabel.Text ?? "", EncryptedContent = VaultContent.Text ?? "", LastModified = DateTime.Now };
-        }
-        else if (!string.IsNullOrWhiteSpace(_selectedFilePath))
-        {
-            Result = new FileItem { FileName = Path.GetFileName(_selectedFilePath), FilePath = _selectedFilePath, LastModified = DateTime.Now };
+            case 0: // Memory
+                if (!string.IsNullOrWhiteSpace(MemoryContent.Text))
+                {
+                    if (Result is MemoryNote memory)
+                    {
+                        memory.Content = MemoryContent.Text;
+                        memory.LastModified = DateTime.Now;
+                    }
+                    else
+                    {
+                        Result = new MemoryNote { Content = MemoryContent.Text, LastModified = DateTime.Now };
+                    }
+                }
+                break;
+
+            case 1: // Todo
+                if (TodoList.Any())
+                {
+                    if (Result is TodoItem todo)
+                    {
+                        todo.Tasks = TodoList.ToList();
+                        todo.LastModified = DateTime.Now;
+                    }
+                    else
+                    {
+                        Result = new TodoItem 
+                        { 
+                            Tasks = TodoList.ToList(), 
+                            LastModified = DateTime.Now 
+                        };
+                    }
+                }
+                break;
+
+            case 2: // Vault
+                var password = _storageService?.GetVaultPassword();
+                if (!string.IsNullOrWhiteSpace(VaultContent.Text) && !string.IsNullOrEmpty(password))
+                {
+                    string encrypted = SecurityService.Encrypt(VaultContent.Text, password);
+                    
+                    if (Result is VaultItem vault)
+                    {
+                        vault.EncryptedContent = encrypted;
+                        vault.LastModified = DateTime.Now;
+                    }
+                    else
+                    {
+                        Result = new VaultItem 
+                        { 
+                            Label = "Encrypted Vault Item",
+                            EncryptedContent = encrypted, 
+                            LastModified = DateTime.Now 
+                        };
+                    }
+                }
+                break;
+
+            case 3: // File
+                if (!string.IsNullOrWhiteSpace(_selectedFilePath))
+                {
+                    string? currentFileId = (Result as FileItem)?.FileId;
+                    bool isNewSelection = true;
+                    
+                    if (Result is FileItem oldFile && oldFile.FilePath == _selectedFilePath && !string.IsNullOrEmpty(oldFile.FileId))
+                    {
+                        isNewSelection = false;
+                    }
+
+                    if (isNewSelection && File.Exists(_selectedFilePath))
+                    {
+                        // Cleanup old
+                        if (!string.IsNullOrEmpty(currentFileId)) _storageService?.DeleteFile(currentFileId);
+
+                        currentFileId = Guid.NewGuid().ToString();
+                        using (var stream = File.OpenRead(_selectedFilePath))
+                        {
+                            _storageService?.UploadFile(currentFileId, Path.GetFileName(_selectedFilePath), stream);
+                        }
+                    }
+
+                    if (Result is FileItem file)
+                    {
+                        file.FileName = Path.GetFileName(_selectedFilePath);
+                        file.FilePath = _selectedFilePath;
+                        file.FileId = currentFileId ?? "";
+                        file.Description = FileDescription.Text ?? "";
+                        file.FileType = Path.GetExtension(_selectedFilePath);
+                        file.LastModified = DateTime.Now;
+                    }
+                    else
+                    {
+                        Result = new FileItem 
+                        { 
+                            FileName = Path.GetFileName(_selectedFilePath), 
+                            FilePath = _selectedFilePath, 
+                            FileId = currentFileId ?? "",
+                            Description = FileDescription.Text ?? "",
+                            FileType = Path.GetExtension(_selectedFilePath),
+                            LastModified = DateTime.Now 
+                        };
+                    }
+                }
+                break;
         }
 
         if (Result != null)

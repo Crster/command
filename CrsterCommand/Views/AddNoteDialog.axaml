@@ -4,10 +4,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ic="using:FluentIcons.Avalonia"
         xmlns:models="using:CrsterCommand.Models"
-        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="550"
+        xmlns:views="using:CrsterCommand.Views"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="600"
         x:Class="CrsterCommand.Views.AddNoteDialog"
-        Title="Add New Item"
-        Width="450" Height="550"
+        x:DataType="views:AddNoteDialog"
+        Title="{Binding HeaderText}"
+        Width="450" Height="600"
         WindowStartupLocation="CenterOwner"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
@@ -25,78 +27,210 @@
         </ExperimentalAcrylicBorder>
 
         <DockPanel Margin="24">
-            <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,20">
-                <TextBlock Text="What would you like to add?" 
-                           FontSize="20" FontWeight="SemiBold"/>
-                <TextBlock Text="Choose a type and fill in the details." 
-                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+            <!-- Header -->
+            <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,24">
+                <TextBlock Text="{Binding HeaderText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AppPrimaryTextBrush}"/>
+                <TextBlock Text="{Binding HeaderSubtitle}" Foreground="{DynamicResource AppSecondaryTextBrush}" FontSize="13"/>
             </StackPanel>
 
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,20,0,0">
-                <Button Content="Cancel" Click="Cancel_Click" Classes="Secondary"/>
-                <Button Content="Add Item" Click="Add_Click" Classes="Primary"/>
+            <!-- Footer Actions -->
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
+                <Button Click="Cancel_Click" Classes="Secondary" Width="130" Height="42" HorizontalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:SymbolIcon Symbol="Dismiss" FontSize="18"/>
+                        <TextBlock Text="Cancel" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Click="Add_Click" Classes="Primary" Width="160" Height="42" HorizontalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:SymbolIcon Symbol="Save" FontSize="18"/>
+                        <TextBlock Text="{Binding SaveButtonText}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
-            <TabControl x:Name="TabControl" Theme="{StaticResource {x:Type TabControl}}" Padding="0">
+            <!-- Main Tabs -->
+            <TabControl x:Name="TabControl" Theme="{StaticResource {x:Type TabControl}}" 
+                        SelectionChanged="TabControl_SelectionChanged" 
+                        Padding="0">
                 <TabControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="4"/>
+                        <UniformGrid Columns="4" IsHitTestVisible="{Binding !IsEditMode}"/>
                     </ItemsPanelTemplate>
                 </TabControl.ItemsPanel>
 
-                <!-- Todo -->
+                <!-- 1. Memory -->
                 <TabItem>
                     <TabItem.Header>
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <ic:SymbolIcon Symbol="List" FontSize="20"/>
-                            <TextBlock Text="Todo" FontSize="12"/>
-                        </StackPanel>
-                    </TabItem.Header>
-                    <StackPanel Spacing="16" Margin="0,20">
-                        <TextBlock Text="Task Description" FontWeight="Medium"/>
-                        <TextBox x:Name="TodoTask" Watermark="What needs to be done?" AcceptsReturn="True" Height="150"/>
-                    </StackPanel>
-                </TabItem>
-
-                <!-- Memory -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4">
                             <ic:SymbolIcon Symbol="BrainCircuit" FontSize="20"/>
-                            <TextBlock Text="Memory" FontSize="12"/>
+                            <TextBlock Text="Memory" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <StackPanel Spacing="16" Margin="0,20">
-                        <TextBox x:Name="MemoryTitle" Watermark="Title" FontWeight="SemiBold"/>
-                        <TextBox x:Name="MemoryContent" Watermark="Details..." AcceptsReturn="True" Height="200"/>
-                    </StackPanel>
+                    <Grid RowDefinitions="*,Auto" Margin="0,20,0,0">
+                        <Border Grid.Row="0" Background="{DynamicResource AppInputBackgroundBrush}" 
+                                CornerRadius="12" BorderThickness="1" 
+                                BorderBrush="{DynamicResource AppInputBorderBrush}">
+                            <TextBox x:Name="MemoryContent" 
+                                     Watermark="Write something important to remember..." 
+                                     AcceptsReturn="True" 
+                                     TextWrapping="Wrap"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     Padding="16"
+                                     FontFamily="Cascadia Code,Consolas,Menlo,Monaco,DejaVu Sans Mono,Courier New,monospace"
+                                     VerticalContentAlignment="Top"/>
+                        </Border>
+                    </Grid>
                 </TabItem>
 
-                <!-- Vault -->
+                <!-- 2. Todo -->
                 <TabItem>
                     <TabItem.Header>
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4">
+                            <ic:SymbolIcon Symbol="List" FontSize="20"/>
+                            <TextBlock Text="Todo" FontSize="11" FontWeight="Medium"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid RowDefinitions="Auto,*" Margin="0,20,0,0">
+                        <!-- Fixed input for new todo -->
+                        <TextBox Grid.Row="0" x:Name="NewTodoInput" 
+                                 Watermark="Add a task and press Enter..." 
+                                 KeyDown="NewTodo_KeyDown"
+                                 Margin="0,0,0,16">
+                            <TextBox.InnerLeftContent>
+                                <ic:SymbolIcon Symbol="Add" Margin="12,0,0,0" FontSize="16" Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                            </TextBox.InnerLeftContent>
+                        </TextBox>
+
+                        <!-- Scrollable list of existing todos -->
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl ItemsSource="{Binding TodoList}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:TodoSubTask">
+                                        <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,8">
+                                            <CheckBox IsChecked="{Binding IsDone}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Todo}" 
+                                                       VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       TextWrapping="Wrap" FontSize="14"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </TabItem>
+
+                <!-- 3. Vault -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4">
                             <ic:SymbolIcon Symbol="LockClosed" FontSize="20"/>
-                            <TextBlock Text="Vault" FontSize="12"/>
+                            <TextBlock Text="Vault" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <StackPanel Spacing="16" Margin="0,20">
-                        <TextBox x:Name="VaultLabel" Watermark="Label (e.g. WiFi Password)"/>
-                        <TextBox x:Name="VaultContent" Watermark="Secret Content..." PasswordChar="*" AcceptsReturn="True" Height="150"/>
-                    </StackPanel>
+                    <Panel Margin="0,20,0,0">
+                        <!-- Setup View -->
+                        <StackPanel Spacing="20" IsVisible="{Binding !HasVaultPassword}">
+                            <Border Background="{DynamicResource AppStatusBarBrush}" 
+                                    CornerRadius="12" Padding="20" BorderThickness="1" 
+                                    BorderBrush="{DynamicResource AppInputBorderBrush}">
+                                <StackPanel Spacing="12">
+                                    <ic:SymbolIcon Symbol="ShieldLock" FontSize="32" Foreground="{DynamicResource AppAccentBrush}" 
+                                                   HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Vault Not Configured" FontSize="16" FontWeight="Bold" 
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="To use the encrypted vault, you must first set a master password." 
+                                               FontSize="13" Foreground="{DynamicResource AppSecondaryTextBrush}" 
+                                               TextWrapping="Wrap" TextAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="New Master Password" Classes="Label"/>
+                                <TextBox x:Name="SetupVaultPassword" 
+                                         Watermark="Choose a strong password..." 
+                                         PasswordChar="●"/>
+                            </StackPanel>
+                            
+                            <Button Content="Set Master Password" 
+                                    Click="SetPassword_Click" 
+                                    Classes="Primary" 
+                                    HorizontalAlignment="Stretch" 
+                                    Height="40"/>
+                        </StackPanel>
+
+                        <!-- Capture View -->
+                        <Grid RowDefinitions="*,Auto" IsVisible="{Binding HasVaultPassword}">
+                            <Border Grid.Row="0" Background="{DynamicResource AppInputBackgroundBrush}" 
+                                    CornerRadius="12" BorderThickness="1" 
+                                    BorderBrush="{DynamicResource AppInputBorderBrush}"
+                                    Margin="0,0,0,16">
+                                <TextBox x:Name="VaultContent" 
+                                         Watermark="Enter sensitive information to encrypt..." 
+                                         AcceptsReturn="True" 
+                                         TextWrapping="Wrap"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         Padding="16"
+                                         FontFamily="Cascadia Code,Consolas,Menlo,Monaco,DejaVu Sans Mono,Courier New,monospace"
+                                         VerticalContentAlignment="Top"/>
+                            </Border>
+                            <Border Grid.Row="1" Background="{DynamicResource AppStatusBarBrush}" 
+                                    CornerRadius="8" Padding="12" BorderThickness="1" 
+                                    BorderBrush="{DynamicResource AppInputBorderBrush}">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <ic:SymbolIcon Symbol="Info" FontSize="16" Foreground="{DynamicResource AppAccentBrush}"/>
+                                    <TextBlock Text="Encrypted via Manual Master Password" 
+                                               FontSize="11" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Panel>
                 </TabItem>
 
-                <!-- File -->
+                <!-- 4. File -->
                 <TabItem>
                     <TabItem.Header>
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4">
                             <ic:SymbolIcon Symbol="Document" FontSize="20"/>
-                            <TextBlock Text="File" FontSize="12"/>
+                            <TextBlock Text="File" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <StackPanel Spacing="16" Margin="0,20">
-                        <Button Content="Select File" Click="SelectFile_Click" HorizontalAlignment="Stretch" Height="40"/>
-                        <TextBlock x:Name="SelectedFileName" Text="No file selected" HorizontalAlignment="Center" Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                    <StackPanel Spacing="20" Margin="0,20,0,0">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Description" Classes="Label"/>
+                            <TextBox x:Name="FileDescription" Watermark="What is this file for?"/>
+                        </StackPanel>
+                        
+                        <Button HorizontalAlignment="Stretch" Height="100" 
+                                Click="SelectFile_Click" Classes="Secondary">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <ic:SymbolIcon Symbol="DocumentAdd" FontSize="32" HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="SelectedFileName" Text="Click to select a file" 
+                                           HorizontalAlignment="Center" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Existing File Actions -->
+                        <StackPanel Spacing="12" IsVisible="{Binding IsEditMode}">
+                            <TextBlock Text="File Actions" Classes="Label"/>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Button Grid.Column="0" Click="OpenFile_Click" HorizontalAlignment="Stretch" Padding="0,8">
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                        <ic:SymbolIcon Symbol="Open" FontSize="20"/>
+                                        <TextBlock Text="View" FontSize="11"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1" Click="SaveFileAs_Click" HorizontalAlignment="Stretch" Padding="0,8">
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                        <ic:SymbolIcon Symbol="ArrowDownload" FontSize="20"/>
+                                        <TextBlock Text="Save As" FontSize="11"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </TabItem>
             </TabControl>

@@ -103,6 +103,13 @@ public class StorageService : IDisposable
         SaveSettings(_settings);
     }
 
+    public string? GetVaultPassword() => _settings.VaultPassword;
+    public void SetVaultPassword(string? password)
+    {
+        _settings.VaultPassword = password;
+        SaveSettings(_settings);
+    }
+
     public ILiteCollection<TodoItem> GetTodos() => _db!.GetCollection<TodoItem>("todos");
     public ILiteCollection<Reminder> GetReminders() => _db!.GetCollection<Reminder>("reminders");
     public ILiteCollection<MemoryNote> GetMemoryNotes() => _db!.GetCollection<MemoryNote>("notes");
@@ -110,6 +117,24 @@ public class StorageService : IDisposable
     public ILiteCollection<FileItem> GetFileItems() => _db!.GetCollection<FileItem>("files");
     
     public ILiteStorage<string> GetFileStorage() => _db!.FileStorage;
+
+    public void UploadFile(string id, string fileName, Stream stream)
+    {
+        _db!.FileStorage.Upload(id, fileName, stream);
+    }
+
+    public bool DownloadFile(string id, Stream destination)
+    {
+        var file = _db!.FileStorage.FindById(id);
+        if (file == null) return false;
+        _db.FileStorage.Download(id, destination);
+        return true;
+    }
+
+    public bool DeleteFile(string id)
+    {
+        return _db!.FileStorage.Delete(id);
+    }
 
     public string GetCurrentDbPath() => _settings.DbPath;
 

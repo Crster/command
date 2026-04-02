@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CrsterCommand.Models;
 
@@ -21,28 +22,32 @@ public abstract class BaseNoteItem
     public abstract string Summary { get; }
 }
 
+public class TodoSubTask
+{
+    public string Todo { get; set; } = "";
+    public bool IsDone { get; set; }
+}
+
 public class TodoItem : BaseNoteItem
 {
-    public string Task { get; set; } = "";
-    public bool IsDone { get; set; }
+    public List<TodoSubTask> Tasks { get; set; } = new();
     public override NoteType Type => NoteType.Todo;
-    public override string Summary => Task;
+    public override string Summary => $"{Tasks.Count} items ({Tasks.Count(t => t.IsDone)} done)";
 }
 
 public class Reminder : BaseNoteItem
 {
     public string Message { get; set; } = "";
     public DateTime DueDate { get; set; } = DateTime.Now.AddDays(1);
-    public override NoteType Type => NoteType.Todo; // Mapping reminders to Todo for now
+    public override NoteType Type => NoteType.Todo;
     public override string Summary => Message;
 }
 
 public class MemoryNote : BaseNoteItem
 {
-    public string Title { get; set; } = "";
     public string Content { get; set; } = "";
     public override NoteType Type => NoteType.Memory;
-    public override string Summary => string.IsNullOrEmpty(Title) ? (Content.Length > 50 ? Content.Substring(0, 50) + "..." : Content) : Title;
+    public override string Summary => Content.Length > 50 ? Content.Substring(0, 50) + "..." : Content;
 }
 
 public class VaultItem : BaseNoteItem
@@ -57,9 +62,11 @@ public class FileItem : BaseNoteItem
 {
     public string FileName { get; set; } = "";
     public string FilePath { get; set; } = "";
+    public string FileId { get; set; } = "";
     public string FileType { get; set; } = "";
+    public string Description { get; set; } = "";
     public override NoteType Type => NoteType.File;
-    public override string Summary => FileName;
+    public override string Summary => string.IsNullOrEmpty(Description) ? FileName : Description;
 }
 
 public class AppData
