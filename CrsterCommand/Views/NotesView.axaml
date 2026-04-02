@@ -26,7 +26,7 @@
                 </StackPanel>
 
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                    <TextBox Text="{Binding SearchQuery}" 
+                    <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
                              Watermark="Semantic search... try searching by meaning"
                              Classes="RevealPasswordButton">
                         <TextBox.InnerLeftContent>
@@ -48,7 +48,10 @@
         </Border>
 
         <!-- Main Listing -->
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer Grid.Row="1" 
+                      Name="MainScrollViewer"
+                      ScrollChanged="MainScrollViewer_ScrollChanged"
+                      HorizontalScrollBarVisibility="Disabled">
             <ListBox ItemsSource="{Binding AllNotes}" 
                      Background="Transparent" 
                      BorderThickness="0"
@@ -115,17 +118,17 @@
                                                TextWrapping="Wrap"
                                                HorizontalAlignment="Stretch"/>
                                     
-                                    <TextBlock Text="{Binding Description}" 
+                                    <TextBlock Text="{Binding DisplayDescription}" 
                                                FontSize="13" 
                                                Foreground="{DynamicResource AppSecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                MaxLines="4"
                                                LineHeight="18"
                                                HorizontalAlignment="Stretch"
-                                               IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                               IsVisible="{Binding DisplayDescription, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                                     <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
-                                        <TextBlock Text="{Binding Type}" 
+                                        <TextBlock Text="{Binding DetailInfo}" 
                                                    FontSize="12" 
                                                    FontWeight="Medium"
                                                    Foreground="{DynamicResource AppSecondaryTextBrush}"/>

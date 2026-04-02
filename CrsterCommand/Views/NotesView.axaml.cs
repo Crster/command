@@ -66,4 +66,19 @@ public partial class NotesView : UserControl
             OpenEditDialogCommand(vm.SelectedNote);
         }
     }
+
+    private void MainScrollViewer_ScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        if (e.ExtentDelta.Length == 0 && e.OffsetDelta.Length == 0) return;
+        
+        var viewer = sender as ScrollViewer;
+        if (viewer == null) return;
+
+        // If we are within 100 pixels of the bottom, load more
+        if (viewer.Offset.Y + viewer.Viewport.Height >= viewer.Extent.Height - 100)
+        {
+            var vm = DataContext as NotesViewModel;
+            vm?.LoadMoreCommand.Execute(false);
+        }
+    }
 }

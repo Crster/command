@@ -315,6 +315,7 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
                     file.FilePath = _selectedFilePath;
                     file.FileId = currentFileId ?? "";
                     file.FileType = Path.GetExtension(_selectedFilePath);
+                    file.FileSize = new FileInfo(_selectedFilePath).Length;
                     
                     itemToProcess = file;
                     if (File.Exists(_selectedFilePath))
@@ -341,8 +342,8 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
                 // 2. Generate Embedding
                 if (_embeddingService != null)
                 {
-                    // Use Description for embedding as requested
-                    itemToProcess.Embedding = await _embeddingService.GetEmbeddingAsync(itemToProcess.Description);
+                    // Use improved text for embedding (Description + Content)
+                    itemToProcess.Embedding = await _embeddingService.GetEmbeddingAsync(itemToProcess.GetTextForEmbedding());
                 }
 
                 Result = itemToProcess;

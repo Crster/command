@@ -19,11 +19,36 @@ public partial class NotesViewModel : ViewModelBase
     public readonly StorageService StorageService;
     public readonly AIService AIService;
     public readonly EmbeddingService EmbeddingService;
+    
+    private List<BaseNoteItem> _filteredList = new();
+    private const int PageSize = 10;
+    private int _loadedCount = 0;
+    private System.Threading.CancellationTokenSource? _searchCts;
 
     public ObservableCollection<BaseNoteItem> AllNotes { get; } = new();
     
     [ObservableProperty]
     private string _searchQuery = "";
+
+    partial void OnSearchQueryChanged(string value)
+    {
+        _searchCts?.Cancel();
+        _searchCts = new System.Threading.CancellationTokenSource();
+        var token = _searchCts.Token;
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(1000, token);
+                if (!token.IsCancellationRequested)
+                {
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(SemanticSearch);
+                }
+            }
+            catch (OperationCanceledException) { }
+        }, token);
+    }
 
     [ObservableProperty]
     private BaseNoteItem? _selectedNote;
@@ -51,11 +76,25 @@ public partial class NotesViewModel : ViewModelBase
         combined.AddRange(vault);
         combined.AddRange(files);
 
-        // Sort by LastModified descending
-        foreach (var item in combined.OrderByDescending(i => i.LastModified))
+        _filteredList = combined.OrderByDescending(i => i.LastModified).ToList();
+        LoadMore(true);
+    }
+
+    [RelayCommand]
+    public void LoadMore(bool reset = false)
+    {
+        if (reset)
+        {
+            AllNotes.Clear();
+            _loadedCount = 0;
+        }
+
+        var nextItems = _filteredList.Skip(_loadedCount).Take(PageSize).ToList();
+        foreach (var item in nextItems)
         {
             AllNotes.Add(item);
         }
+        _loadedCount += nextItems.Count;
     }
 
     [RelayCommand]
@@ -80,15 +119,14 @@ public partial class NotesViewModel : ViewModelBase
         allItems.AddRange(vault);
         allItems.AddRange(files);
  
-        var scoredItems = allItems
+        _filteredList = allItems
             .Select(n => new { Item = n, Score = n.Embedding != null ? EmbeddingService.CalculateSimilarity(queryVector, n.Embedding) : 0 })
             .OrderByDescending(x => x.Score)
-            .Where(x => x.Score > 0.2) // Lower threshold for broader search
+            .Where(x => x.Score > 0.1) // Slightly lower threshold for better recall
             .Select(x => x.Item)
             .ToList();
 
-        AllNotes.Clear();
-        foreach (var item in scoredItems) AllNotes.Add(item);
+        LoadMore(true);
     }
 
     [RelayCommand]
