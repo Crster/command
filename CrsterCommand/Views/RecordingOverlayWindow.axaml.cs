@@ -14,6 +14,11 @@ public partial class RecordingOverlayWindow : Window
     private TimeSpan _elapsed;
     private Action? _stopCallback;
 
+    public RecordingOverlayWindow()
+    {
+        InitializeComponent();
+    }
+
     public RecordingOverlayWindow(Action stopCallback)
     {
         InitializeComponent();

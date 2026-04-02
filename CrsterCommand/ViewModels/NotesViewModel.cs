@@ -19,19 +19,13 @@ public partial class NotesViewModel : ViewModelBase
     private readonly StorageService _storageService;
     private readonly EmbeddingService _embeddingService = new();
 
-    public ObservableCollection<TodoItem> Todos { get; } = new();
-    public ObservableCollection<Reminder> Reminders { get; } = new();
-    public ObservableCollection<MemoryNote> MemoryNotes { get; } = new();
-    public ObservableCollection<string> AttachedFiles { get; } = new();
-
-    [ObservableProperty]
-    private string _newTodoTask = "";
-
+    public ObservableCollection<BaseNoteItem> AllNotes { get; } = new();
+    
     [ObservableProperty]
     private string _searchQuery = "";
 
     [ObservableProperty]
-    private MemoryNote? _selectedNote;
+    private BaseNoteItem? _selectedNote;
 
     public NotesViewModel(StorageService storageService)
     {
@@ -41,41 +35,24 @@ public partial class NotesViewModel : ViewModelBase
 
     private void LoadAll()
     {
-        Todos.Clear();
-        foreach (var item in _storageService.GetTodos().FindAll()) Todos.Add(item);
+        AllNotes.Clear();
         
-        Reminders.Clear();
-        foreach (var item in _storageService.GetReminders().FindAll()) Reminders.Add(item);
-        
-        MemoryNotes.Clear();
-        foreach (var item in _storageService.GetMemoryNotes().FindAll()) MemoryNotes.Add(item);
+        var todos = _storageService.GetTodos().FindAll();
+        var notes = _storageService.GetMemoryNotes().FindAll();
+        var vault = _storageService.GetVaultItems().FindAll();
+        var files = _storageService.GetFileItems().FindAll();
 
-        AttachedFiles.Clear();
-        foreach (var file in _storageService.GetFileStorage().FindAll()) AttachedFiles.Add(file.Id);
-    }
+        var combined = new List<BaseNoteItem>();
+        combined.AddRange(todos);
+        combined.AddRange(notes);
+        combined.AddRange(vault);
+        combined.AddRange(files);
 
-    [RelayCommand]
-    private async Task SaveNote()
-    {
-        if (SelectedNote == null) return;
-
-        // Generate embedding if content changed (simplified check: always generate for now)
-        if (!string.IsNullOrEmpty(SelectedNote.Content))
+        // Sort by LastModified descending
+        foreach (var item in combined.OrderByDescending(i => i.LastModified))
         {
-            SelectedNote.Embedding = await _embeddingService.GetEmbeddingAsync(SelectedNote.Content);
+            AllNotes.Add(item);
         }
-        
-        SelectedNote.LastModified = DateTime.Now;
-        _storageService.GetMemoryNotes().Update(SelectedNote);
-    }
-
-    [RelayCommand]
-    private void AddNote()
-    {
-        var note = new MemoryNote { Title = "New Note", Content = "" };
-        _storageService.GetMemoryNotes().Insert(note);
-        MemoryNotes.Add(note);
-        SelectedNote = note;
     }
 
     [RelayCommand]
@@ -88,72 +65,75 @@ public partial class NotesViewModel : ViewModelBase
         }
 
         var queryVector = await _embeddingService.GetEmbeddingAsync(SearchQuery);
-        var allNotes = _storageService.GetMemoryNotes().FindAll().ToList();
+        
+        var todos = _storageService.GetTodos().FindAll();
+        var notes = _storageService.GetMemoryNotes().FindAll();
+        var vault = _storageService.GetVaultItems().FindAll();
+        var files = _storageService.GetFileItems().FindAll();
 
-        var scoredNotes = allNotes
-            .Select(n => new { Note = n, Score = n.Embedding != null ? _embeddingService.CalculateSimilarity(queryVector, n.Embedding) : 0 })
+        var allItems = new List<BaseNoteItem>();
+        allItems.AddRange(todos);
+        allItems.AddRange(notes);
+        allItems.AddRange(vault);
+        allItems.AddRange(files);
+
+        var scoredItems = allItems
+            .Select(n => new { Item = n, Score = n.Embedding != null ? _embeddingService.CalculateSimilarity(queryVector, n.Embedding) : 0 })
             .OrderByDescending(x => x.Score)
-            .Where(x => x.Score > 0.3) // Similarity threshold
-            .Select(x => x.Note)
+            .Where(x => x.Score > 0.2) // Lower threshold for broader search
+            .Select(x => x.Item)
             .ToList();
 
-        MemoryNotes.Clear();
-        foreach (var note in scoredNotes) MemoryNotes.Add(note);
+        AllNotes.Clear();
+        foreach (var item in scoredItems) AllNotes.Add(item);
     }
 
     [RelayCommand]
-    private void AddTodo()
+    private async Task AddTodo(string task)
     {
-        if (string.IsNullOrWhiteSpace(NewTodoTask)) return;
-        
-        var todo = new TodoItem { Task = NewTodoTask };
+        var todo = new TodoItem { Task = task, LastModified = DateTime.Now };
+        todo.Embedding = await _embeddingService.GetEmbeddingAsync(todo.Summary);
         _storageService.GetTodos().Insert(todo);
-        Todos.Add(todo);
-        NewTodoTask = "";
+        AllNotes.Insert(0, todo);
     }
 
     [RelayCommand]
-    private void DeleteTodo(TodoItem item)
+    private async Task AddMemory(MemoryNote note)
     {
-        _storageService.GetTodos().Delete(item.Id);
-        Todos.Remove(item);
+        note.LastModified = DateTime.Now;
+        note.Embedding = await _embeddingService.GetEmbeddingAsync($"{note.Title} {note.Content}");
+        _storageService.GetMemoryNotes().Insert(note);
+        AllNotes.Insert(0, note);
     }
 
     [RelayCommand]
-    private async Task UploadFile()
+    private async Task AddVault(VaultItem vault)
     {
-        var topLevel = (Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-        if (topLevel == null) return;
+        vault.LastModified = DateTime.Now;
+        vault.Embedding = await _embeddingService.GetEmbeddingAsync(vault.Label);
+        _storageService.GetVaultItems().Insert(vault);
+        AllNotes.Insert(0, vault);
+    }
 
-        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select File to Upload",
-            AllowMultiple = false
-        });
+    [RelayCommand]
+    private async Task AddFile(FileItem file)
+    {
+        file.LastModified = DateTime.Now;
+        file.Embedding = await _embeddingService.GetEmbeddingAsync(file.FileName);
+        _storageService.GetFileItems().Insert(file);
+        AllNotes.Insert(0, file);
+    }
 
-        if (files.Count > 0)
+    [RelayCommand]
+    private void DeleteItem(BaseNoteItem item)
+    {
+        switch (item.Type)
         {
-            var file = files[0];
-            using var stream = await file.OpenReadAsync();
-            var fileId = file.Name;
-            _storageService.GetFileStorage().Upload(fileId, fileId, stream);
-            AttachedFiles.Add(fileId);
+            case NoteType.Todo: _storageService.GetTodos().Delete(item.Id); break;
+            case NoteType.Memory: _storageService.GetMemoryNotes().Delete(item.Id); break;
+            case NoteType.Vault: _storageService.GetVaultItems().Delete(item.Id); break;
+            case NoteType.File: _storageService.GetFileItems().Delete(item.Id); break;
         }
-    }
-
-    [RelayCommand]
-    private async Task AttachClipboard()
-    {
-        var clipboard = (Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow?.Clipboard;
-        if (clipboard == null) return;
-
-        var text = await ((Avalonia.Input.IAsyncDataTransfer)clipboard).TryGetTextAsync();
-        if (!string.IsNullOrEmpty(text))
-        {
-            var fileId = $"clipboard_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
-            using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(text));
-            _storageService.GetFileStorage().Upload(fileId, fileId, ms);
-            AttachedFiles.Add(fileId);
-        }
+        AllNotes.Remove(item);
     }
 }

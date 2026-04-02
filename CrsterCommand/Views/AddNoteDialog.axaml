@@ -1,0 +1,105 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ic="using:FluentIcons.Avalonia"
+        xmlns:models="using:CrsterCommand.Models"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="550"
+        x:Class="CrsterCommand.Views.AddNoteDialog"
+        Title="Add New Item"
+        Width="450" Height="550"
+        WindowStartupLocation="CenterOwner"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True">
+
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="0.7"
+                    MaterialOpacity="0.5" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <DockPanel Margin="24">
+            <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,20">
+                <TextBlock Text="What would you like to add?" 
+                           FontSize="20" FontWeight="SemiBold"/>
+                <TextBlock Text="Choose a type and fill in the details." 
+                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,20,0,0">
+                <Button Content="Cancel" Click="Cancel_Click" Classes="Secondary"/>
+                <Button Content="Add Item" Click="Add_Click" Classes="Primary"/>
+            </StackPanel>
+
+            <TabControl x:Name="TabControl" Theme="{StaticResource {x:Type TabControl}}" Padding="0">
+                <TabControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="4"/>
+                    </ItemsPanelTemplate>
+                </TabControl.ItemsPanel>
+
+                <!-- Todo -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <ic:SymbolIcon Symbol="List" FontSize="20"/>
+                            <TextBlock Text="Todo" FontSize="12"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <StackPanel Spacing="16" Margin="0,20">
+                        <TextBlock Text="Task Description" FontWeight="Medium"/>
+                        <TextBox x:Name="TodoTask" Watermark="What needs to be done?" AcceptsReturn="True" Height="150"/>
+                    </StackPanel>
+                </TabItem>
+
+                <!-- Memory -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <ic:SymbolIcon Symbol="BrainCircuit" FontSize="20"/>
+                            <TextBlock Text="Memory" FontSize="12"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <StackPanel Spacing="16" Margin="0,20">
+                        <TextBox x:Name="MemoryTitle" Watermark="Title" FontWeight="SemiBold"/>
+                        <TextBox x:Name="MemoryContent" Watermark="Details..." AcceptsReturn="True" Height="200"/>
+                    </StackPanel>
+                </TabItem>
+
+                <!-- Vault -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <ic:SymbolIcon Symbol="LockClosed" FontSize="20"/>
+                            <TextBlock Text="Vault" FontSize="12"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <StackPanel Spacing="16" Margin="0,20">
+                        <TextBox x:Name="VaultLabel" Watermark="Label (e.g. WiFi Password)"/>
+                        <TextBox x:Name="VaultContent" Watermark="Secret Content..." PasswordChar="*" AcceptsReturn="True" Height="150"/>
+                    </StackPanel>
+                </TabItem>
+
+                <!-- File -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <ic:SymbolIcon Symbol="Document" FontSize="20"/>
+                            <TextBlock Text="File" FontSize="12"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <StackPanel Spacing="16" Margin="0,20">
+                        <Button Content="Select File" Click="SelectFile_Click" HorizontalAlignment="Stretch" Height="40"/>
+                        <TextBlock x:Name="SelectedFileName" Text="No file selected" HorizontalAlignment="Center" Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+        </DockPanel>
+    </Panel>
+</Window>

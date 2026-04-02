@@ -107,6 +107,7 @@ public class StorageService : IDisposable
     public ILiteCollection<Reminder> GetReminders() => _db!.GetCollection<Reminder>("reminders");
     public ILiteCollection<MemoryNote> GetMemoryNotes() => _db!.GetCollection<MemoryNote>("notes");
     public ILiteCollection<VaultItem> GetVaultItems() => _db!.GetCollection<VaultItem>("vault");
+    public ILiteCollection<FileItem> GetFileItems() => _db!.GetCollection<FileItem>("files");
     
     public ILiteStorage<string> GetFileStorage() => _db!.FileStorage;
 
