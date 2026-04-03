@@ -13,26 +13,89 @@
         <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.1"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.05"/>
+            </Transitions>
+        </Setter>
     </Style>
     <Style Selector="Button.Primary">
         <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource AppAccentForegroundBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
+    <Style Selector="Button.Primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+    <Style Selector="Button.Primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+        <Setter Property="Opacity" Value="0.8"/>
+        <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+
     <Style Selector="Button.Secondary">
         <Setter Property="Background" Value="{DynamicResource AppSecondaryAccentBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource AppAccentForegroundBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
+    <Style Selector="Button.Secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppSecondaryAccentBrush}"/>
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+    <Style Selector="Button.Secondary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppSecondaryAccentBrush}"/>
+        <Setter Property="Opacity" Value="0.8"/>
+        <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+
+    <Style Selector="Button.InputZone">
+        <Setter Property="Background" Value="{DynamicResource AppInputBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AppInputBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+        <Setter Property="CornerRadius" Value="12"/>
+    </Style>
+    <Style Selector="Button.InputZone:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppInputBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+    </Style>
+    <Style Selector="Button.InputZone:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.99)"/>
+    </Style>
+    <Style Selector="Button.InputZone ic|SymbolIcon">
+        <Setter Property="Foreground" Value="{DynamicResource AppAccentBrush}"/>
+    </Style>
+
     <Style Selector="Button.Success">
         <Setter Property="Background" Value="{DynamicResource AppSuccessBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource AppSuccessForegroundBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
+    <Style Selector="Button.Success:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppSuccessBrush}"/>
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+    <Style Selector="Button.Success:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppSuccessBrush}"/>
+        <Setter Property="Opacity" Value="0.8"/>
+        <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+
     <Style Selector="Button.Danger">
         <Setter Property="Background" Value="{DynamicResource AppDangerBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource AppDangerForegroundBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.Danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppDangerBrush}"/>
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+    <Style Selector="Button.Danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AppDangerBrush}"/>
+        <Setter Property="Opacity" Value="0.8"/>
+        <Setter Property="RenderTransform" Value="scale(0.98)"/>
     </Style>
 
     <!-- ═══════════════════════════════════════
@@ -48,6 +111,27 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Remove the white border on hover and focus if desired, or make it subtle -->
+    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{DynamicResource AppInputBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource AppInputBackgroundBrush}"/>
+    </Style>
+
+    <!-- Consistent look on focus with a slight highlight -->
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Background" Value="{DynamicResource AppInputBackgroundBrush}"/>
+    </Style>
+
+    <Style Selector="TextBox">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+            </Transitions>
+        </Setter>
     </Style>
 
     <!-- ═══════════════════════════════════════

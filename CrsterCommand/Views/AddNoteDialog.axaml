@@ -11,20 +11,42 @@
         Title="{Binding HeaderText}"
         Width="450" Height="600"
         WindowStartupLocation="CenterOwner"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="Transparent"
-        ExtendClientAreaToDecorationsHint="True">
+        ExtendClientAreaToDecorationsHint="True"
+        CanMinimize="False"
+        CanMaximize="False"
+        ShowInTaskbar="False">
+
+    <Window.Styles>
+        <Style Selector="TabItem ic|SymbolIcon">
+            <Setter Property="Foreground" Value="{DynamicResource AppSubtleTextBrush}"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="TabItem:selected ic|SymbolIcon">
+            <Setter Property="Foreground" Value="{DynamicResource AppSecondaryAccentBrush}"/>
+        </Style>
+        <Style Selector="TabItem:pointerover ic|SymbolIcon">
+            <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+        </Style>
+    </Window.Styles>
 
     <Panel>
-        <ExperimentalAcrylicBorder IsHitTestVisible="False">
-            <ExperimentalAcrylicBorder.Material>
-                <ExperimentalAcrylicMaterial
-                    BackgroundSource="Digger"
-                    TintColor="Black"
-                    TintOpacity="0.7"
-                    MaterialOpacity="0.5" />
-            </ExperimentalAcrylicBorder.Material>
-        </ExperimentalAcrylicBorder>
+        <!-- Background mimicking main window but darker -->
+        <Panel IsHitTestVisible="False">
+            <Border>
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="{DynamicResource AppBgStartColor}" Offset="0"/>
+                        <GradientStop Color="{DynamicResource AppBgEndColor}"   Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+            <!-- Darkening overlay to make it a distinct dialog -->
+            <Border Background="Black" Opacity="0.4"/>
+        </Panel>
 
         <DockPanel Margin="24">
             <!-- Header -->
@@ -161,8 +183,14 @@
                         </StackPanel>
 
                         <!-- Capture View -->
-                        <Grid RowDefinitions="*,Auto" IsVisible="{Binding HasVaultPassword}">
-                            <Border Grid.Row="0" Background="{DynamicResource AppInputBackgroundBrush}" 
+                        <Grid RowDefinitions="Auto,*,Auto" IsVisible="{Binding HasVaultPassword}">
+                            <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+                                <TextBlock Text="Description" Classes="Label"/>
+                                <TextBox x:Name="VaultDescription" 
+                                         Watermark="Private information (default)"/>
+                            </StackPanel>
+
+                            <Border Grid.Row="1" Background="{DynamicResource AppInputBackgroundBrush}" 
                                     CornerRadius="12" BorderThickness="1" 
                                     BorderBrush="{DynamicResource AppInputBorderBrush}"
                                     Margin="0,0,0,16">
@@ -176,23 +204,17 @@
                                          FontFamily="Cascadia Code,Consolas,Menlo,Monaco,DejaVu Sans Mono,Courier New,monospace"
                                          VerticalContentAlignment="Top"/>
                             </Border>
-                            <StackPanel Grid.Row="1" Spacing="16">
-                                <StackPanel Spacing="8">
-                                    <TextBlock Text="Description (Visible)" Classes="Label"/>
-                                    <TextBox x:Name="VaultDescription" 
-                                             Watermark="Private information (default)"/>
+
+                            <Border Grid.Row="2" Background="{DynamicResource AppStatusBarBrush}" 
+                                    CornerRadius="8" Padding="12" BorderThickness="1" 
+                                    BorderBrush="{DynamicResource AppInputBorderBrush}">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <ic:SymbolIcon Symbol="Info" FontSize="16" Foreground="{DynamicResource AppAccentBrush}"/>
+                                    <TextBlock Text="Encrypted via Manual Master Password" 
+                                               FontSize="11" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource AppSecondaryTextBrush}"/>
                                 </StackPanel>
-                                <Border Background="{DynamicResource AppStatusBarBrush}" 
-                                        CornerRadius="8" Padding="12" BorderThickness="1" 
-                                        BorderBrush="{DynamicResource AppInputBorderBrush}">
-                                    <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <ic:SymbolIcon Symbol="Info" FontSize="16" Foreground="{DynamicResource AppAccentBrush}"/>
-                                        <TextBlock Text="Encrypted via Manual Master Password" 
-                                                   FontSize="11" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
+                            </Border>
                         </Grid>
                     </Panel>
                 </TabItem>
@@ -207,7 +229,7 @@
                     </TabItem.Header>
                     <StackPanel Spacing="20" Margin="0,20,0,0">
                         <Button HorizontalAlignment="Stretch" Height="100" 
-                                Click="SelectFile_Click" Classes="Secondary">
+                                Click="SelectFile_Click" Classes="InputZone">
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
                                 <ic:SymbolIcon Symbol="DocumentAdd" FontSize="32" HorizontalAlignment="Center"/>
                                 <TextBlock x:Name="SelectedFileName" Text="Click to select a file" 
