@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -13,6 +14,8 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using CrsterCommand.Models;
 using CrsterCommand.Services;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace CrsterCommand.Views;
 
@@ -80,6 +83,9 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
         HasVaultPassword = !string.IsNullOrEmpty(_storageService?.GetVaultPassword());
         UpdateSaveButtonText(0);
         DataContext = this;
+
+        // Use tunneling to intercept Ctrl+V before focused controls handle it
+        AddHandler(KeyDownEvent, Window_KeyDown, RoutingStrategies.Tunnel);
     }
 
     private void TabControl_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -175,6 +181,113 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
     private void ChangePasswordInSettings_Click(object? sender, RoutedEventArgs e)
     {
         // This could navigate or just show a message, but for simplicity we keep it hidden or use it to reset.
+    }
+
+    private async void Window_KeyDown(object? sender, KeyEventArgs e)
+    {
+        Console.WriteLine($"[DEBUG] KeyDown: {e.Key} (Modifiers: {e.KeyModifiers})");
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.V)
+        {
+            Console.WriteLine("[DEBUG] Ctrl+V detected!");
+            if (await ProcessClipboardPaste())
+            {
+                e.Handled = true;
+            }
+        }
+    }
+
+    private async Task<bool> ProcessClipboardPaste()
+    {
+        var clipboard = GetTopLevel(this)?.Clipboard;
+        if (clipboard == null) return false;
+
+        // One call to get the data transfer object
+        using var data = await clipboard.TryGetDataAsync();
+        if (data == null) return false;
+
+        // 1. Files
+        var storageItems = await data.TryGetFilesAsync();
+        if (storageItems != null && storageItems.Any())
+        {
+            var firstItem = storageItems.First();
+            _selectedFilePath = firstItem.Path.LocalPath;
+            SelectedFileName.Text = firstItem.Name;
+            TabControl.SelectedIndex = 3; // File Tab
+            return true;
+        }
+
+        // 2. Bitmap (Screenshots)
+        var bitmap = await data.TryGetBitmapAsync();
+        if (bitmap != null)
+        {
+            try
+            {
+                string tempDir = Path.Combine(Path.GetTempPath(), "CrsterCommand");
+                if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
+                string tempPath = Path.Combine(tempDir, $"clip_{DateTime.Now:yyyyMMdd_HHmmss}.png");
+                bitmap.Save(tempPath);
+
+                _selectedFilePath = tempPath;
+                SelectedFileName.Text = Path.GetFileName(tempPath);
+                TabControl.SelectedIndex = 3; // File Tab
+                return true;
+            }
+            catch { }
+        }
+
+        // 3. Text
+        var textContent = await data.TryGetTextAsync();
+        if (string.IsNullOrWhiteSpace(textContent)) return false;
+
+            // Todo List Pattern
+            var lines = textContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+                                  .Select(l => l.Trim())
+                                  .Where(l => !string.IsNullOrEmpty(l))
+                                  .ToList();
+
+            bool isTodo = lines.Count > 1 && lines.All(l => l.StartsWith("-") || l.StartsWith("*") || l.StartsWith(">") || l.StartsWith("[]"));
+            if (!isTodo && (textContent.Contains("\r\n-") || textContent.Contains("\n-"))) isTodo = true;
+
+            if (isTodo)
+            {
+                TabControl.SelectedIndex = 1; // Todo Tab
+                foreach (var line in lines)
+                {
+                    string cleanLine = line.TrimStart('-', '*', '>', '[', ']', ' ').Trim();
+                    if (!string.IsNullOrWhiteSpace(cleanLine))
+                    {
+                        if (!TodoList.Any(t => t.Todo == cleanLine))
+                            TodoList.Add(new TodoSubTask { Todo = cleanLine, IsDone = false });
+                    }
+                }
+                return true;
+            }
+
+            // Vault Pattern
+            if (textContent.Length < 256)
+            {
+                bool hasEmail = Regex.IsMatch(textContent, @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}");
+                bool hasPotentialSecret = Regex.IsMatch(textContent, @"[a-zA-Z0-9!@#$%^&*()_+]{8,}");
+
+                if (hasEmail && hasPotentialSecret)
+                {
+                    TabControl.SelectedIndex = 2; // Vault Tab
+                    VaultContent.Text = textContent;
+                    return true;
+                }
+            }
+
+            // Fallback: Memory
+            bool isFocusedOnTextInput = FocusManager?.GetFocusedElement() is TextBox;
+            if (!isFocusedOnTextInput || (TabControl.SelectedIndex == 0 && !MemoryContent.IsFocused))
+            {
+                if (TabControl.SelectedIndex != 0) TabControl.SelectedIndex = 0;
+                MemoryContent.Text = (MemoryContent.Text ?? "") + textContent;
+                MemoryContent.CaretIndex = MemoryContent.Text.Length;
+                return true;
+            }
+
+        return false;
     }
 
     private void NewTodo_KeyDown(object? sender, KeyEventArgs e)

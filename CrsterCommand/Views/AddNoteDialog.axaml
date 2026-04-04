@@ -14,7 +14,8 @@
         ExtendClientAreaToDecorationsHint="True"
         CanMinimize="False"
         CanMaximize="False"
-        ShowInTaskbar="False">
+        ShowInTaskbar="False"
+        KeyDown="Window_KeyDown">
 
     <Window.Styles>
         <Style Selector="TabItem ic|SymbolIcon">
