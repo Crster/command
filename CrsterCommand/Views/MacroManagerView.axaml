@@ -2,90 +2,265 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:CrsterCommand.ViewModels"
              xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:views="using:CrsterCommand.Views"
              x:Class="CrsterCommand.Views.MacroManagerView"
              x:DataType="vm:MacroManagerViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Button.CardHeaderButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.CardHeaderButton:pointerover">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.CardHeaderButton:pressed">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.CardHeaderButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.CardHeaderButton:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <Style Selector="Border.AiAppCard:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+        </Style>
+        <Style Selector="Border.AiAppCard.expanded">
+            <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+        </Style>
+
+        <Style Selector="Border.ChatComposer:focus-within">
+            <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+        </Style>
+
+        <Style Selector="TextBox.ComposerInput">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="TextBox.ComposerInput:pointerover">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="TextBox.ComposerInput:focus">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="TextBox.ComposerInput /template/ Border">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style Selector="Button.SendIconButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.SendIconButton:pointerover">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.SendIconButton:pressed">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.SendIconButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.SendIconButton:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.SendIconButton:disabled">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="Button.SendIconButton:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <Style Selector="Button.DeleteIconButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppDangerBrush}"/>
+        </Style>
+        <Style Selector="Button.DeleteIconButton:pointerover">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppDangerBrush}"/>
+        </Style>
+        <Style Selector="Button.DeleteIconButton:pressed">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppDangerBrush}"/>
+        </Style>
+        <Style Selector="Button.DeleteIconButton:disabled">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Opacity" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppDangerBrush}"/>
+        </Style>
+        <Style Selector="Button.DeleteIconButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.DeleteIconButton:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.DeleteIconButton:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <Style Selector="TextBox.AiAnswerBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="TextBox.AiAnswerBox:pointerover">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="TextBox.AiAnswerBox:focus">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="TextBox.AiAnswerBox /template/ Border">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </UserControl.Styles>
 
     <ScrollViewer Background="Transparent">
         <StackPanel Margin="32" Spacing="20">
 
-            <!-- Header -->
-            <StackPanel Spacing="4">
-                <TextBlock Classes="PageTitle"    Text="Macro Manager"/>
-                <TextBlock Classes="PageSubtitle" Text="Automate system tasks and utility operations"/>
-            </StackPanel>
-
-            <!-- Network Card -->
-            <Border Classes="Card">
-                <StackPanel Spacing="16">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <ic:SymbolIcon Symbol="NetworkCheck"
-                                       Foreground="{DynamicResource AppAccentBrush}"
-                                       FontSize="20"/>
-                        <TextBlock Classes="SectionHeader"
-                                   Text="System Optimization"
-                                   Foreground="{DynamicResource AppAccentBrush}"/>
-                    </StackPanel>
-                    <TextBlock Text="Flush DNS and renew DHCP lease to resolve connectivity issues."
-                               FontSize="13"
-                               Foreground="{DynamicResource AppSecondaryTextBrush}"
-                               TextWrapping="Wrap"/>
-                    <Button Command="{Binding ResetNetworkCommand}"
-                            Classes="Primary"
-                            HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ic:SymbolIcon Symbol="Flash"/>
-                            <TextBlock Text="Reset Network Stack"/>
-                        </StackPanel>
-                    </Button>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Classes="PageTitle" Text="Macro Manager"/>
+                    <TextBlock Classes="PageSubtitle" Text="Create AI apps with system prompts and run quick tasks"/>
                 </StackPanel>
-            </Border>
 
-            <!-- Password Card -->
-            <Border Classes="Card">
-                <StackPanel Spacing="16">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <ic:SymbolIcon Symbol="LockShield"
-                                       Foreground="{DynamicResource AppSuccessBrush}"
-                                       FontSize="20"/>
-                        <TextBlock Classes="SectionHeader"
-                                   Text="Security Utilities"
-                                   Foreground="{DynamicResource AppSuccessBrush}"/>
+                <Button Grid.Column="1"
+                        Command="{Binding $parent[views:MacroManagerView].OpenAddDialogCommand}"
+                        Classes="Primary"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:SymbolIcon Symbol="Add"/>
+                        <TextBlock Text="Add Macro"/>
                     </StackPanel>
-                    <TextBlock Text="Generate a secure, random password."
-                               FontSize="13"
-                               Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                </Button>
+            </Grid>
 
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <TextBox Text="{Binding GeneratedPassword}"
-                                 IsReadOnly="True"
-                                 Watermark="Password will appear here…"/>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                            <Button Command="{Binding GeneratePasswordCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <ic:SymbolIcon Symbol="Key"/>
-                                    <TextBlock Text="Generate"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Command="{Binding CopyPasswordCommand}"
-                                    IsEnabled="{Binding GeneratedPassword.Length}"
-                                    Classes="Secondary">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <ic:SymbolIcon Symbol="Copy"/>
-                                    <TextBlock Text="Copy"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </StackPanel>
-            </Border>
+            <ItemsControl ItemsSource="{Binding AiApps}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:MacroAiAppItem">
+                        <Border Classes="Card AiAppCard"
+                                Classes.expanded="{Binding IsExpanded}"
+                                Padding="14">
+                            <StackPanel Spacing="12">
+                                <!-- System Prompt Header -->
+                                <Button Classes="CardHeaderButton"
+                                        BorderThickness="0"
+                                        Padding="0"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Command="{Binding $parent[UserControl].((vm:MacroManagerViewModel)DataContext).ToggleExpandCommand}"
+                                        CommandParameter="{Binding}">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding SystemPrompt}"
+                                                   FontWeight="SemiBold"
+                                                   TextWrapping="Wrap"
+                                                   MaxLines="3"/>
+                                        <ic:SymbolIcon Grid.Column="1"
+                                                       Symbol="ChevronDown"
+                                                       VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
 
-            <!-- Status Bar -->
-            <Border Classes="StatusBar">
-                <TextBlock Text="{Binding MacroStatus}"
-                           FontSize="13"
-                           Foreground="{DynamicResource AppSecondaryTextBrush}"
-                           TextWrapping="Wrap"/>
-            </Border>
+                                <!-- Expanded Content -->
+                                <StackPanel Spacing="10" IsVisible="{Binding IsExpanded}">
+                                    <Border CornerRadius="8"
+                                            Classes="ChatComposer"
+                                            Padding="10"
+                                            Background="{DynamicResource AppInputBackgroundBrush}"
+                                            BorderBrush="{DynamicResource AppInputBorderBrush}"
+                                            BorderThickness="1">
+                                        <Grid RowDefinitions="*,Auto" RowSpacing="8" MinHeight="96">
+                                            <TextBox Grid.Row="0"
+                                                     Classes="ComposerInput"
+                                                     Text="{Binding UserInput}"
+                                                     Watermark="Type user input..."
+                                                     AcceptsReturn="True"
+                                                     TextWrapping="Wrap"
+                                                     BorderThickness="0"
+                                                     Background="Transparent"
+                                                     Padding="0"
+                                                     MinHeight="54"
+                                                     VerticalContentAlignment="Top"/>
+
+                                            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                    <Button Grid.Column="2"
+                                                            Classes="DeleteIconButton"
+                                                            Width="30"
+                                                            Height="30"
+                                                            Padding="0"
+                                                            Command="{Binding $parent[UserControl].((vm:MacroManagerViewModel)DataContext).DeleteAiAppCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            VerticalAlignment="Center">
+                                                        <ic:SymbolIcon Symbol="Delete" FontSize="14" Foreground="{DynamicResource AppDangerBrush}"/>
+                                                    </Button>
+                                                    <ic:SymbolIcon Symbol="BrainCircuit" FontSize="14"/>
+                                                    <TextBlock Text="Model" FontSize="12" VerticalAlignment="Center"/>
+                                                </StackPanel>
+
+                                                <ComboBox Grid.Column="1"
+                                                          MinWidth="170"
+                                                          ItemsSource="{Binding $parent[UserControl].((vm:MacroManagerViewModel)DataContext).AiModelOptions}"
+                                                          SelectedItem="{Binding SelectedModel}"
+                                                          VerticalAlignment="Center"/>
+
+                                                <Button Grid.Column="3"
+                                                        Classes="SendIconButton"
+                                                        Width="30"
+                                                        Height="30"
+                                                        Padding="0"
+                                                        CornerRadius="15"
+                                                        Command="{Binding $parent[UserControl].((vm:MacroManagerViewModel)DataContext).SendCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsEnabled="{Binding !IsBusy}"
+                                                        VerticalAlignment="Center">
+                                                    <ic:SymbolIcon Symbol="Send" FontSize="14"/>
+                                                </Button>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+
+                                    <TextBox Classes="AiAnswerBox"
+                                             Text="{Binding AiAnswer}"
+                                             IsReadOnly="True"
+                                             IsVisible="{Binding AiAnswer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                             TextWrapping="Wrap"
+                                             Padding="10"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
         </StackPanel>
     </ScrollViewer>

@@ -68,6 +68,7 @@
                     </Style>
                     <Style Selector="ListBoxItem:pointerover Border.Card">
                         <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+                        <Setter Property="Background" Value="{DynamicResource AppStatusBarBrush}"/>
                         <Setter Property="Cursor" Value="Hand"/>
                     </Style>
                     <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">

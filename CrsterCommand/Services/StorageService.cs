@@ -115,6 +115,7 @@ public class StorageService : IDisposable
     public ILiteCollection<MemoryNote> GetMemoryNotes() => _db!.GetCollection<MemoryNote>("notes");
     public ILiteCollection<VaultItem> GetVaultItems() => _db!.GetCollection<VaultItem>("vault");
     public ILiteCollection<FileItem> GetFileItems() => _db!.GetCollection<FileItem>("files");
+    public ILiteCollection<AiMacroApp> GetAiMacroApps() => _db!.GetCollection<AiMacroApp>("ai_macro_apps");
     
     public ILiteStorage<string> GetFileStorage() => _db!.FileStorage;
 

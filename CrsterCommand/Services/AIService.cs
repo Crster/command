@@ -20,6 +20,50 @@ public class AIService
         _storageService = storageService;
     }
 
+    public async Task<string> RunMacroPromptAsync(string systemPrompt, string userInput, string? modelOverride = null)
+    {
+        var apiKey = _storageService.GetAiApiKey();
+        var modelName = string.IsNullOrWhiteSpace(modelOverride)
+            ? (_storageService.GetAiModel() ?? "gemini-2.5-flash")
+            : modelOverride;
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return "Please provide a valid Gemini API Key in the Settings page.";
+
+        if (string.IsNullOrWhiteSpace(systemPrompt))
+            return "System prompt is required.";
+
+        if (string.IsNullOrWhiteSpace(userInput))
+            return "User input is required.";
+
+        try
+        {
+            var client = new Client(apiKey: apiKey);
+            var composedPrompt =
+                $"System instruction:\n{systemPrompt}\n\n" +
+                $"User input:\n{userInput}\n\n" +
+                "Return only the direct answer unless the user asks for explanation.";
+
+            var response = await client.Models.GenerateContentAsync(
+                model: modelName,
+                contents: new List<Content>
+                {
+                    new Content
+                    {
+                        Role = "user",
+                        Parts = new List<Part> { new Part { Text = composedPrompt } }
+                    }
+                }
+            );
+
+            return response.Text?.Trim() ?? "No response available.";
+        }
+        catch (Exception ex)
+        {
+            return "AI Error: " + ex.Message;
+        }
+    }
+
     public async Task<string> GenerateNoteDescriptionAsync(BaseNoteItem item, Stream? fileStream = null)
     {
         var apiKey = _storageService.GetAiApiKey();

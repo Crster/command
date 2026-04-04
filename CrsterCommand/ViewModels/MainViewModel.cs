@@ -25,7 +25,7 @@ public partial class MainViewModel : ViewModelBase
         NavigationItems.Add(new NavigationItem("Capture", Symbol.Camera, new ScreenCaptureViewModel()));
         NavigationItems.Add(new NavigationItem("Recorder", Symbol.Video, new ScreenRecorderViewModel()));
         NavigationItems.Add(new NavigationItem("AI Reader", Symbol.Brain, new AIReaderViewModel(_storageService)));
-        NavigationItems.Add(new NavigationItem("Macros", Symbol.Flash, new MacroManagerViewModel()));
+        NavigationItems.Add(new NavigationItem("Macros", Symbol.Flash, new MacroManagerViewModel(_storageService)));
         NavigationItems.Add(new NavigationItem("Settings", Symbol.Settings, new SettingsViewModel(_storageService)));
 
         SelectedListItem = NavigationItems[0];
