@@ -1,0 +1,72 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ic="using:FluentIcons.Avalonia"
+        xmlns:views="using:CrsterCommand.Views"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+        x:Class="CrsterCommand.Views.AddAiAppDialog"
+        x:DataType="views:AddAiAppDialog"
+        Title="Add Macro"
+        Width="500" Height="400"
+        WindowStartupLocation="CenterOwner"
+        ExtendClientAreaToDecorationsHint="True"
+        CanMinimize="False"
+        CanMaximize="False"
+        ShowInTaskbar="False">
+
+    <Panel>
+        <!-- Background mimicking main window but darker -->
+        <Panel IsHitTestVisible="False">
+            <Border>
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="{DynamicResource AppBgStartColor}" Offset="0"/>
+                        <GradientStop Color="{DynamicResource AppBgEndColor}"   Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+            <!-- Darkening overlay to make it a distinct dialog -->
+            <Border Background="Black" Opacity="0.4"/>
+        </Panel>
+
+        <DockPanel Margin="24">
+            <!-- Header -->
+            <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,24">
+                <TextBlock Text="New macro" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AppPrimaryTextBrush}"/>
+                <TextBlock Text="Configure a custom AI assistant with a system prompt" Foreground="{DynamicResource AppSecondaryTextBrush}" FontSize="13"/>
+            </StackPanel>
+
+            <!-- Footer Actions -->
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
+                <Button Click="Cancel_Click" Classes="Secondary" Width="130" Height="42" HorizontalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:SymbolIcon Symbol="Dismiss" FontSize="18"/>
+                        <TextBlock Text="Cancel" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Click="Add_Click" Classes="Primary" Width="160" Height="42" HorizontalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:SymbolIcon Symbol="Save" FontSize="18"/>
+                        <TextBlock Text="Save Macro" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- Main Content -->
+            <Border Background="{DynamicResource AppInputBackgroundBrush}" 
+                    CornerRadius="12" BorderThickness="1" 
+                    BorderBrush="{DynamicResource AppInputBorderBrush}">
+                <TextBox x:Name="SystemPromptInput" 
+                         Watermark="Enter system prompt... e.g. You are a math solver" 
+                         AcceptsReturn="True" 
+                         TextWrapping="Wrap"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         Padding="16"
+                         FontFamily="Cascadia Code,Consolas,Menlo,Monaco,DejaVu Sans Mono,Courier New,monospace"
+                         VerticalContentAlignment="Top"/>
+            </Border>
+        </DockPanel>
+    </Panel>
+</Window>
