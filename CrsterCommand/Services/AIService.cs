@@ -36,20 +36,32 @@ public class AIService
 
             if (item is MemoryNote memory)
             {
-                prompt = $"Explain the usage of this concept/memory in 50 words max: {memory.Content}";
+                prompt = "Analyze the following memory/note content.\n" +
+                         "1. Identify the content type (e.g., URL, Comment, Source Code, SQL, regular text).\n" +
+                         "2. Provide a concise description of the purpose or content.\n" +
+                         "Constraint: Maximum 30 words total.\n\n" +
+                         $"CONTENT:\n{memory.Content}";
                 parts.Add(new Part { Text = prompt });
             }
             else if (item is TodoItem todo)
             {
                 var tasks = string.Join(", ", todo.Tasks.Select(t => t.Todo));
-                prompt = $"Explain what this todo list is about in 50 words max: {tasks}";
+                prompt = "Analyze this list of tasks.\n" +
+                         "1. Determine the category (e.g., Grocery, Work, Wish List, Daily tasks, OKR).\n" +
+                         "2. Briefly summarize the objective.\n" +
+                         "Constraint: Maximum 10 words total.\n\n" +
+                         $"TASKS: {tasks}";
                 parts.Add(new Part { Text = prompt });
             }
             else if (item is FileItem file && fileStream != null)
             {
-                if (fileStream.Length < 2 * 1024 * 1024) // < 2MB
+                var mimeType = GetMimeType(file.FileType);
+                
+                if (fileStream.Length < 2 * 1024 * 1024 && mimeType != "application/octet-stream") // < 2MB and supported
                 {
-                    prompt = "Describe what this file contains in 50 words max.";
+                    prompt = "Analyze the provided file content and provide the following details:\n" +
+                             "1. File Classification: Identify the content type.\n" +
+                             "2. Brief Summary: Provide a maximum 20-word summary of the content.";
                     parts.Add(new Part { Text = prompt });
                     
                     byte[] buffer = new byte[fileStream.Length];
@@ -66,12 +78,12 @@ public class AIService
                     { 
                         InlineData = new Blob 
                         { 
-                            MimeType = GetMimeType(file.FileType), 
+                            MimeType = mimeType, 
                             Data = buffer 
                         } 
                     });
                 }
-                else // > 2MB
+                else // > 2MB or unsupported binary format
                 {
                     fileStream.Position = 0;
                     string md5 = CalculateHash(fileStream, MD5.Create());
@@ -79,7 +91,10 @@ public class AIService
                     string sha256 = CalculateHash(fileStream, SHA256.Create());
                     
                     var info = $"Filename: {file.FileName}\nSize: {fileStream.Length} bytes\nExtension: {file.FileType}\nMD5: {md5}\nSHA256: {sha256}";
-                    prompt = $"Based on this file info, tell me:\n1. What file it is?\n2. Is it potentially dangerous?\n3. What application to open it?\n4. Explain file in 50 words max.\n\nINFO:\n{info}";
+                    prompt = "Analyze the following file metadata and provide these details:\n" +
+                             "1. File Classification: Identify based on filename and extension.\n" +
+                             "2. Brief Summary: Provide a maximum 20-word summary based on the available metadata.\n\n" +
+                             $"FILE INFO:\n{info}";
                     parts.Add(new Part { Text = prompt });
                 }
             }
@@ -117,12 +132,16 @@ public class AIService
         {
             var client = new Client(apiKey: apiKey);
 
-            var prompt = "Classify: FORM, TEXT, IMAGE.\n" +
-                         "1. FORM: If labels + inputs/boxes detected (mandatory priority). Map {label: value}.\n" +
-                         "2. TEXT: Only for pure text/doc blocks. Read all.\n" +
-                         "3. IMAGE: If ball/person/art. Provide generation prompt.\n" +
-                         "Output RAW JSON ONLY: { \"type\": \"FORM\"|\"TEXT\"|\"IMAGE\", \"result\": string|object|null }.\n" +
-                         "No markdown code blocks.";
+            var prompt = "Task: Classify and extract data from the image.\n" +
+                         "Categories:\n" +
+                         "- FORM: Detected labels and input fields. Map them as a JSON object {label: value}.\n" +
+                         "- TEXT: Primarily textual document. Extract the main blocks of text.\n" +
+                         "- IMAGE: A visual drawing, photo, or art. Provide a professional description/prompt.\n\n" +
+                         "Instructions:\n" +
+                         "1. Use FORM category if any structured fields are detected.\n" +
+                         "2. Return RAW JSON ONLY.\n" +
+                         "3. DO NOT include markdown code blocks (e.g., no ```json).\n\n" +
+                         "Output Format: { \"type\": \"FORM\"|\"TEXT\"|\"IMAGE\", \"result\": string|object|null }";
 
             var response = await client.Models.GenerateContentAsync(
                 model: modelName,
@@ -174,10 +193,13 @@ public class AIService
         return extension switch
         {
             ".txt" => "text/plain",
+            ".md" => "text/markdown",
+            ".markdown" => "text/markdown",
             ".pdf" => "application/pdf",
             ".png" => "image/png",
             ".jpg" => "image/jpeg",
             ".jpeg" => "image/jpeg",
+            ".webp" => "image/webp",
             ".csv" => "text/csv",
             ".json" => "application/json",
             _ => "application/octet-stream"

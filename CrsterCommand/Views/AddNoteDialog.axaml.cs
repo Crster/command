@@ -185,10 +185,12 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
 
     private async void Window_KeyDown(object? sender, KeyEventArgs e)
     {
-        Console.WriteLine($"[DEBUG] KeyDown: {e.Key} (Modifiers: {e.KeyModifiers})");
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.V)
         {
-            Console.WriteLine("[DEBUG] Ctrl+V detected!");
+            // Only intercept if we are not in a text input
+            if (FocusManager?.GetFocusedElement() is TextBox)
+                return;
+
             if (await ProcessClipboardPaste())
             {
                 e.Handled = true;
@@ -278,16 +280,10 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
             }
 
             // Fallback: Memory
-            bool isFocusedOnTextInput = FocusManager?.GetFocusedElement() is TextBox;
-            if (!isFocusedOnTextInput || (TabControl.SelectedIndex == 0 && !MemoryContent.IsFocused))
-            {
-                if (TabControl.SelectedIndex != 0) TabControl.SelectedIndex = 0;
-                MemoryContent.Text = (MemoryContent.Text ?? "") + textContent;
-                MemoryContent.CaretIndex = MemoryContent.Text.Length;
-                return true;
-            }
-
-        return false;
+            if (TabControl.SelectedIndex != 0) TabControl.SelectedIndex = 0;
+            MemoryContent.Text = (MemoryContent.Text ?? "") + textContent;
+            MemoryContent.CaretIndex = MemoryContent.Text.Length;
+            return true;
     }
 
     private void NewTodo_KeyDown(object? sender, KeyEventArgs e)

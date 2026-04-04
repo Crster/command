@@ -115,14 +115,14 @@
                                                FontSize="16" 
                                                FontWeight="Bold"
                                                Foreground="{DynamicResource AppPrimaryTextBrush}"
-                                               TextWrapping="Wrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1"
                                                HorizontalAlignment="Stretch"/>
                                     
                                     <TextBlock Text="{Binding DisplayDescription}" 
                                                FontSize="13" 
                                                Foreground="{DynamicResource AppSecondaryTextBrush}"
                                                TextWrapping="Wrap"
-                                               MaxLines="4"
                                                LineHeight="18"
                                                HorizontalAlignment="Stretch"
                                                IsVisible="{Binding DisplayDescription, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>

@@ -54,7 +54,8 @@ public class MemoryNote : BaseNoteItem
 {
     public string Content { get; set; } = "";
     public override NoteType Type => NoteType.Memory;
-    public override string Summary => Content.Length > 50 ? Content.Substring(0, 50) + "..." : Content;
+    public override string Summary => Content.Length > 50 ? Content.Substring(0, 50).Replace("\n", " ").Replace("\r", " ") + "..." : Content.Replace("\n", " ").Replace("\r", " ");
+    public override string DisplayDescription => string.IsNullOrWhiteSpace(Description) ? Content : Description;
     public override string GetTextForEmbedding() => $"{Description} {Content}".Trim();
     public override string DetailInfo => $"{Content.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length} words";
 }
