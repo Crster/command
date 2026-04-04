@@ -8,7 +8,7 @@
         x:Class="CrsterCommand.Views.AddAiAppDialog"
         x:DataType="views:AddAiAppDialog"
         Title="Add Macro"
-        Width="500" Height="400"
+        Width="500" Height="500"
         WindowStartupLocation="CenterOwner"
         ExtendClientAreaToDecorationsHint="True"
         CanMinimize="False"
@@ -54,19 +54,36 @@
             </StackPanel>
 
             <!-- Main Content -->
-            <Border Background="{DynamicResource AppInputBackgroundBrush}" 
-                    CornerRadius="12" BorderThickness="1" 
-                    BorderBrush="{DynamicResource AppInputBorderBrush}">
-                <TextBox x:Name="SystemPromptInput" 
-                         Watermark="Enter system prompt... e.g. You are a math solver" 
-                         AcceptsReturn="True" 
-                         TextWrapping="Wrap"
-                         BorderThickness="0"
-                         Background="Transparent"
-                         Padding="16"
-                         FontFamily="Cascadia Code,Consolas,Menlo,Monaco,DejaVu Sans Mono,Courier New,monospace"
-                         VerticalContentAlignment="Top"/>
-            </Border>
+            <StackPanel Spacing="16">
+                <!-- Model Selection -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="AI Model" Classes="Label" Foreground="{DynamicResource AppPrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                    <ComboBox x:Name="ModelSelector"
+                              ItemsSource="{Binding AiModelOptions}"
+                              SelectedIndex="0"
+                              HorizontalAlignment="Stretch"
+                              Height="40"/>
+                </StackPanel>
+
+                <!-- System Prompt -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="System Prompt" Classes="Label" Foreground="{DynamicResource AppPrimaryTextBrush}" FontSize="13" FontWeight="Medium"/>
+                    <Border Background="{DynamicResource AppInputBackgroundBrush}" 
+                            CornerRadius="12" BorderThickness="1" 
+                            BorderBrush="{DynamicResource AppInputBorderBrush}"
+                            Height="180">
+                        <TextBox x:Name="SystemPromptInput" 
+                                 Watermark="Enter system prompt... e.g. You are a math solver" 
+                                 AcceptsReturn="True" 
+                                 TextWrapping="Wrap"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 Padding="16"
+                                 FontFamily="Cascadia Code,Consolas,Menlo,Monaco,DejaVu Sans Mono,Courier New,monospace"
+                                 VerticalContentAlignment="Top"/>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
         </DockPanel>
     </Panel>
 </Window>
