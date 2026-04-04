@@ -10,6 +10,8 @@ using CommunityToolkit.Mvvm.Input;
 using CrsterCommand.Models;
 using CrsterCommand.Services;
 using Google.GenAI;
+using System.Threading;
+using Desktop.Robot.Extensions;
 
 namespace CrsterCommand.ViewModels;
 
@@ -25,6 +27,15 @@ public class MacroManagerViewModel : ViewModelBase
     public IAsyncRelayCommand<MacroAiAppItem?> SendCommand { get; }
     public IAsyncRelayCommand<MacroAiAppItem?> CopyAnswerCommand { get; }
     public IRelayCommand<MacroAiAppItem?> DeleteAiAppCommand { get; }
+    public IRelayCommand ToggleRobotCommand { get; }
+
+    private CancellationTokenSource? _robotCts;
+    private bool _isRobotRunning;
+    public bool IsRobotRunning
+    {
+        get => _isRobotRunning;
+        set => SetProperty(ref _isRobotRunning, value);
+    }
 
     public MacroManagerViewModel(StorageService storageService)
     {
@@ -35,11 +46,135 @@ public class MacroManagerViewModel : ViewModelBase
         SendCommand = new AsyncRelayCommand<MacroAiAppItem?>(SendAsync);
         CopyAnswerCommand = new AsyncRelayCommand<MacroAiAppItem?>(CopyAnswerAsync);
         DeleteAiAppCommand = new RelayCommand<MacroAiAppItem?>(DeleteAiApp);
+        ToggleRobotCommand = new RelayCommand(ToggleRobot);
 
         LoadModelOptions();
         LoadAll();
         _ = FetchModelsAsync();
     }
+
+    private void ToggleRobot()
+    {
+        if (IsRobotRunning)
+        {
+            // Stop
+            _robotCts?.Cancel();
+            IsRobotRunning = false;
+            _robotCts = null;
+        }
+        else
+        {
+            // Start
+            _robotCts = new CancellationTokenSource();
+            _ = Task.Run(() => RunDesktopRobotAsync(_robotCts.Token));
+            IsRobotRunning = true;
+        }
+    }
+
+    private async Task RunDesktopRobotAsync(CancellationToken token)
+    {
+        var rnd = new Random();
+        await SetWindowVisibilityAsync(false);
+        try
+        {
+            await Task.Delay(3000, token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            await SetWindowVisibilityAsync(true);
+            IsRobotRunning = false;
+            return;
+        }
+        double screenWidth = 1920, screenHeight = 1080;
+        try
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                screenWidth = desktop.MainWindow.Bounds.Width;
+                screenHeight = desktop.MainWindow.Bounds.Height;
+            }
+        }
+        catch { }
+        var diagonal = Math.Sqrt(screenWidth * screenWidth + screenHeight * screenHeight);
+        var threshold = 0.2 * diagonal;
+        var centerX = (int)(screenWidth / 2);
+        var centerY = (int)(screenHeight / 2);
+        var maxOffsetX = screenWidth * 0.25;
+        var maxOffsetY = screenHeight * 0.25;
+        var robot = new Desktop.Robot.Robot();
+        var previousPos = robot.GetMousePosition();
+        try
+        {
+            robot.Click();
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    var actual = robot.GetMousePosition();
+                    var lastRecorded = previousPos;
+                    var dist = Math.Sqrt(Math.Pow(actual.X - lastRecorded.X, 2) + Math.Pow(actual.Y - lastRecorded.Y, 2));
+                    if (dist > threshold)
+                    {
+                        break;
+                    }
+                    int dx = rnd.Next(-220, 221);
+                    int dy = rnd.Next(-160, 161);
+                    var targetX = previousPos.X + dx;
+                    var targetY = previousPos.Y + dy;
+                    targetX = (int)Math.Max(centerX - maxOffsetX, Math.Min(centerX + maxOffsetX, targetX));
+                    targetY = (int)Math.Max(centerY - maxOffsetY, Math.Min(centerY + maxOffsetY, targetY));
+                    targetX = Math.Max(0, Math.Min((int)screenWidth - 1, targetX));
+                    targetY = Math.Max(0, Math.Min((int)screenHeight - 1, targetY));
+                    int steps = rnd.Next(16, 32);
+                    double stepX = (targetX - previousPos.X) / (double)steps;
+                    double stepY = (targetY - previousPos.Y) / (double)steps;
+                    for (int i = 1; i <= steps; i++)
+                    {
+                        double rawX = previousPos.X + stepX * i;
+                        double rawY = previousPos.Y + stepY * i;
+                        rawX = Math.Max(centerX - maxOffsetX, Math.Min(centerX + maxOffsetX, rawX));
+                        rawY = Math.Max(centerY - maxOffsetY, Math.Min(centerY + maxOffsetY, rawY));
+                        int glideX = Math.Max(0, Math.Min((int)screenWidth - 1, (int)rawX));
+                        int glideY = Math.Max(0, Math.Min((int)screenHeight - 1, (int)rawY));
+                        robot.MouseMove(glideX, glideY);
+                        await Task.Delay(rnd.Next(4, 14), token).ConfigureAwait(false);
+                    }
+                    if (rnd.NextDouble() < 0.5)
+                    {
+                        int scrollAmount;
+                        if (rnd.NextDouble() < 0.75)
+                        {
+                            scrollAmount = rnd.Next(-32, -10);
+                        }
+                        else
+                        {
+                            scrollAmount = rnd.Next(8, 10);
+                        }
+                        robot.MouseScroll(scrollAmount);
+                    }
+                    previousPos = robot.GetMousePosition();
+                    await Task.Delay(rnd.Next(500, 2000), token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch
+                {
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            await SetWindowVisibilityAsync(true);
+            await Dispatcher.UIThread.InvokeAsync(() => IsRobotRunning = false);
+        }
+    }
+
+
 
     private void LoadModelOptions()
     {

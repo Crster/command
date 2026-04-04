@@ -163,6 +163,24 @@
                 </Button>
             </Grid>
 
+            <!-- Mouse the move -->
+            <Border Classes="Card AiAppCard" Padding="14">
+                <Button Classes="CardHeaderButton"
+                        BorderThickness="0"
+                        Padding="0"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Command="{Binding ToggleRobotCommand}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Desktop Robot" FontWeight="SemiBold"/>
+                            <TextBlock Text="Automate your life and take a rest!" FontSize="12" Foreground="{DynamicResource ApplicationForegroundSecondaryBrush}"/>
+                        </StackPanel>
+                        <ic:SymbolIcon Grid.Column="1" Symbol="Play" VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
+            </Border>
+
             <ItemsControl ItemsSource="{Binding AiApps}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:MacroAiAppItem">
