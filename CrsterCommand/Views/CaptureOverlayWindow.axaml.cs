@@ -32,6 +32,8 @@ public partial class CaptureOverlayWindow : Window
     private string _currentTool = "Box";
     private DateTime _lastEscapeTime = DateTime.MinValue;
     private const int DoubleTapMs = 500;
+    private bool _isDraggingToolbar;
+    private Point _toolbarDragStart;
 
     public CaptureOverlayWindow() { InitializeComponent(); }
 
@@ -131,6 +133,15 @@ public partial class CaptureOverlayWindow : Window
         DrawingCanvas.PointerMoved += OnPointerMoved;
         DrawingCanvas.PointerReleased += OnPointerReleased;
         this.KeyDown += OnKeyDown;
+
+        // Add toolbar drag functionality
+        var toolbar = this.FindControl<Border>("ToolbarContainer");
+        if (toolbar != null)
+        {
+            toolbar.PointerPressed += OnToolbarPointerPressed;
+            toolbar.PointerMoved += OnToolbarPointerMoved;
+            toolbar.PointerReleased += OnToolbarPointerReleased;
+        }
     }
 
     private void UpdateToolSelection()
@@ -175,6 +186,43 @@ public partial class CaptureOverlayWindow : Window
                 Undo();
             }
         }
+    }
+
+    private void OnToolbarPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        var toolbar = sender as Border;
+        if (toolbar != null)
+        {
+            _isDraggingToolbar = true;
+            _toolbarDragStart = e.GetPosition(this);
+            e.Handled = true;
+        }
+    }
+
+    private void OnToolbarPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_isDraggingToolbar && sender is Border toolbar)
+        {
+            var currentPosition = e.GetPosition(this);
+            var offset = currentPosition - _toolbarDragStart;
+
+            var currentMargin = toolbar.Margin;
+            toolbar.Margin = new Thickness(
+                currentMargin.Left + offset.X,
+                currentMargin.Top + offset.Y,
+                currentMargin.Right,
+                currentMargin.Bottom
+            );
+
+            _toolbarDragStart = currentPosition;
+            e.Handled = true;
+        }
+    }
+
+    private void OnToolbarPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        _isDraggingToolbar = false;
+        e.Handled = true;
     }
 
     private void Undo()

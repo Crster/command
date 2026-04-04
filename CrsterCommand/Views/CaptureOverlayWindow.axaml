@@ -15,51 +15,68 @@
         <Canvas Name="DrawingCanvas" Background="Transparent" />
         
         <!-- Toolbar -->
-        <Border Background="#313244" 
+        <Border Name="ToolbarContainer"
+                Background="#313244" 
                 CornerRadius="12" 
                 Padding="12,8" 
                 Margin="20" 
                 VerticalAlignment="Top" 
                 HorizontalAlignment="Center"
-                BoxShadow="0 8 20 0 #000000">
+                BoxShadow="0 8 20 0 #000000"
+                Cursor="Hand">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <Button Name="RectButton" Classes="tool" ToolTip.Tip="Box">
-                    <ic:SymbolIcon Symbol="Square" FontSize="20"/>
+                    <ic:SymbolIcon Symbol="Square" FontSize="20" Foreground="#cdd6f4"/>
                 </Button>
                 <Button Name="ArrowButton" Classes="tool" ToolTip.Tip="Arrow">
-                    <ic:SymbolIcon Symbol="ArrowUpRight" FontSize="20"/>
+                    <ic:SymbolIcon Symbol="ArrowUpRight" FontSize="20" Foreground="#cdd6f4"/>
                 </Button>
                 <Button Name="TextButton" Classes="tool" ToolTip.Tip="Text">
-                    <ic:SymbolIcon Symbol="TextT" FontSize="20"/>
+                    <ic:SymbolIcon Symbol="TextT" FontSize="20" Foreground="#cdd6f4"/>
                 </Button>
                 <Button Name="CropButton" Classes="tool" ToolTip.Tip="Crop Area">
-                    <ic:SymbolIcon Symbol="Crop" FontSize="20"/>
+                    <ic:SymbolIcon Symbol="Crop" FontSize="20" Foreground="#cdd6f4"/>
                 </Button>
-                
+
                 <Separator Background="#45475a" Width="1" Height="25" Margin="5,0"/>
-                
-                <Button Name="UndoButton" Background="#fab387" Foreground="#11111b" ToolTip.Tip="Undo">
-                    <ic:SymbolIcon Symbol="ArrowUndo" FontSize="20"/>
+
+                <Button Name="UndoButton" ToolTip.Tip="Undo">
+                    <ic:SymbolIcon Symbol="ArrowUndo" FontSize="20" Foreground="#fab387"/>
                 </Button>
-                <Button Name="CopyButton" Background="#89b4fa" Foreground="#11111b" ToolTip.Tip="Copy to Clipboard">
-                    <ic:SymbolIcon Symbol="Copy" FontSize="20"/>
+                <Button Name="CopyButton" ToolTip.Tip="Copy to Clipboard">
+                    <ic:SymbolIcon Symbol="Copy" FontSize="20" Foreground="#89b4fa"/>
                 </Button>
-                <Button Name="SaveButton" Background="#a6e3a1" Foreground="#11111b" ToolTip.Tip="Save Image">
-                    <ic:SymbolIcon Symbol="Save" FontSize="20"/>
+                <Button Name="SaveButton" ToolTip.Tip="Save Image">
+                    <ic:SymbolIcon Symbol="Save" FontSize="20" Foreground="#a6e3a1"/>
                 </Button>
-                <Button Name="CloseButton" Background="#f38ba8" Foreground="#11111b" ToolTip.Tip="Cancel (Esc)">
-                    <ic:SymbolIcon Symbol="Dismiss" FontSize="20"/>
+                <Button Name="CloseButton" ToolTip.Tip="Cancel (Esc)">
+                    <ic:SymbolIcon Symbol="Dismiss" FontSize="20" Foreground="#f38ba8"/>
                 </Button>
             </StackPanel>
         </Border>
     </Panel>
 
     <Window.Styles>
+        <!-- Base button style - transparent background -->
+        <Style Selector="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button:pointerover">
+            <Setter Property="Background" Value="#45475a"/>
+        </Style>
+        <Style Selector="Button:pressed">
+            <Setter Property="Background" Value="#585b70"/>
+        </Style>
+
         <Style Selector="Button.tool.Active">
-            <Setter Property="Background" Value="#f9e2af"/>
-            <Setter Property="Foreground" Value="#11111b"/>
-            <Setter Property="BorderBrush" Value="White"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="#45475a"/>
+        </Style>
+        <Style Selector="Button.tool.Active ic|SymbolIcon">
+            <Setter Property="Foreground" Value="#f9e2af"/>
         </Style>
 
         <!-- Strip ALL theme styling from annotation TextBox (including focus/hover states) -->
