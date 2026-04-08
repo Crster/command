@@ -15,23 +15,83 @@ public class ScreenRecorderService
 
     public static string? ResolveFfmpegPath()
     {
-        var currentPath = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
-        var userPath = Microsoft.Win32.Registry.GetValue(
-            @"HKEY_CURRENT_USER\Environment", "PATH", null) as string ?? string.Empty;
-        var machinePath = Microsoft.Win32.Registry.GetValue(
-            @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "PATH", null) as string ?? string.Empty;
+        // Use platform-appropriate executable name and PATH separator
+        var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "ffmpeg.exe" : "ffmpeg";
+        var pathEnv = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
 
-        var allPaths = string.Join(";", currentPath, machinePath, userPath);
-        foreach (var dir in allPaths.Split(';', StringSplitOptions.RemoveEmptyEntries))
+        // Search PATH entries first (respecting platform path separator)
+        foreach (var dir in pathEnv.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
         {
             try
             {
                 var expanded = Environment.ExpandEnvironmentVariables(dir.Trim());
-                var full = Path.Combine(expanded, "ffmpeg.exe");
+                var full = Path.Combine(expanded, exeName);
                 if (File.Exists(full)) return full;
             }
             catch { }
         }
+
+        // Check some common installation locations per platform
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            var candidates = new[] {
+                "/usr/local/bin/ffmpeg",
+                "/opt/homebrew/bin/ffmpeg",
+                "/usr/bin/ffmpeg",
+                "/usr/local/sbin/ffmpeg"
+            };
+            foreach (var c in candidates) if (File.Exists(c)) return c;
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            var candidates = new[] {
+                "/usr/bin/ffmpeg",
+                "/usr/local/bin/ffmpeg",
+                "/snap/bin/ffmpeg",
+                "/usr/local/sbin/ffmpeg"
+            };
+            foreach (var c in candidates) if (File.Exists(c)) return c;
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // Check common Program Files locations
+            try
+            {
+                var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+                var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var candidates = new[] {
+                    Path.Combine(programFiles, "ffmpeg", "bin", "ffmpeg.exe"),
+                    Path.Combine(programFilesX86, "ffmpeg", "bin", "ffmpeg.exe"),
+                    Path.Combine(localAppData, "Programs", "ffmpeg", "bin", "ffmpeg.exe")
+                };
+                foreach (var c in candidates) if (File.Exists(c)) return c;
+            }
+            catch { }
+
+            // Fallback: try additional PATHs from registry (only on Windows)
+            try
+            {
+                var userPath = Microsoft.Win32.Registry.GetValue(
+                    @"HKEY_CURRENT_USER\Environment", "PATH", null) as string ?? string.Empty;
+                var machinePath = Microsoft.Win32.Registry.GetValue(
+                    @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "PATH", null) as string ?? string.Empty;
+
+                var allPaths = string.Join(";", pathEnv, machinePath, userPath);
+                foreach (var dir in allPaths.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    try
+                    {
+                        var expanded = Environment.ExpandEnvironmentVariables(dir.Trim());
+                        var full = Path.Combine(expanded, "ffmpeg.exe");
+                        if (File.Exists(full)) return full;
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
         return null;
     }
 

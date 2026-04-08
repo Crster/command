@@ -11,7 +11,7 @@ namespace CrsterCommand.Services;
 public class StorageService : IDisposable
 {
     private static string GetDefaultDbPath() => 
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CrsterCommand", "toolkit.db");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CrsterCommand", "command.db");
 
     private static string GetConfigPath() => 
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CrsterCommand", "config.json");

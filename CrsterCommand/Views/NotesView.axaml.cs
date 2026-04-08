@@ -16,13 +16,12 @@ public partial class NotesView : UserControl
 
     public async void OpenAddDialogCommand()
     {
-        var vm = DataContext as NotesViewModel;
-        if (vm == null) return;
+        if (DataContext is not NotesViewModel vm)
+            return;
 
         var dialog = new AddNoteDialog(vm.StorageService, vm.AIService, vm.EmbeddingService);
-        var lifetime = Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
-        var mainWindow = lifetime?.MainWindow;
-        
+
+        var mainWindow = await vm.GetMainWindowAsync();        
         if (mainWindow == null) return;
 
         var result = await dialog.ShowDialog<BaseNoteItem>(mainWindow);
@@ -40,15 +39,15 @@ public partial class NotesView : UserControl
 
     public async void OpenEditDialogCommand(BaseNoteItem item)
     {
-        var vm = DataContext as NotesViewModel;
-        if (vm == null || item == null) return;
+        if (item == null) return;
+
+        if (DataContext is not NotesViewModel vm)
+            return;
 
         var dialog = new AddNoteDialog(vm.StorageService, vm.AIService, vm.EmbeddingService);
         dialog.LoadItem(item);
-        
-        var lifetime = Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
-        var mainWindow = lifetime?.MainWindow;
-        
+
+        var mainWindow = await vm.GetMainWindowAsync();
         if (mainWindow == null) return;
 
         var result = await dialog.ShowDialog<BaseNoteItem>(mainWindow);

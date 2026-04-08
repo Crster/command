@@ -7,16 +7,10 @@ namespace CrsterCommand.Services;
 
 public class EmbeddingService
 {
-    private IEmbeddingGenerator<string, Embedding<float>>? _generator;
+    private IEmbeddingGenerator<string, Embedding<float>> _generator = new LocalEmbeddingGenerator();
 
     public async Task<float[]> GetEmbeddingAsync(string text)
     {
-        if (_generator == null)
-        {
-            // Initialize the generator with default options
-            _generator = new LocalEmbeddingGenerator();
-        }
-
         var result = await _generator.GenerateEmbeddingAsync(text);
         return result.Vector.ToArray();
     }

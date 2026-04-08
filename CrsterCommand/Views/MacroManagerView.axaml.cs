@@ -23,8 +23,7 @@ namespace CrsterCommand.Views
             if (DataContext is not MacroManagerViewModel vm)
                 return;
 
-            var lifetime = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
-            var mainWindow = lifetime?.MainWindow;
+            var mainWindow = await vm.GetMainWindowAsync();
             if (mainWindow == null)
                 return;
 

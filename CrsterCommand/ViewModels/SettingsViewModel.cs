@@ -192,10 +192,10 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private async Task BrowsePath()
     {
-        var topLevel = (Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-        if (topLevel == null) return;
+        var mainWindow = await GetMainWindowAsync();
+        if (mainWindow == null) return;
 
-        var storageProvider = topLevel.StorageProvider;
+        var storageProvider = mainWindow.StorageProvider;
         var folder = await storageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
         {
             Title = "Select Database Folder",

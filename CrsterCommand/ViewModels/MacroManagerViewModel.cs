@@ -12,12 +12,14 @@ using CrsterCommand.Services;
 using Google.GenAI;
 using System.Threading;
 using Desktop.Robot.Extensions;
+using Avalonia.Controls;
 
 namespace CrsterCommand.ViewModels;
 
 public class MacroManagerViewModel : ViewModelBase
 {
     private readonly StorageService _storageService;
+    private readonly ImageService _imageService;
     private readonly AIService _aiService;
 
     public ObservableCollection<MacroAiAppItem> AiApps { get; } = new();
@@ -41,6 +43,7 @@ public class MacroManagerViewModel : ViewModelBase
     {
         _storageService = storageService;
         _aiService = new AIService(storageService);
+        _imageService = new ImageService();
 
         ToggleExpandCommand = new RelayCommand<MacroAiAppItem?>(ToggleExpand);
         SendCommand = new AsyncRelayCommand<MacroAiAppItem?>(SendAsync);
@@ -51,6 +54,11 @@ public class MacroManagerViewModel : ViewModelBase
         LoadModelOptions();
         LoadAll();
         _ = FetchModelsAsync();
+    }
+
+    public new async Task<Window?> GetMainWindowAsync()
+    {
+        return await GetMainWindowAsync();
     }
 
     private void ToggleRobot()
@@ -85,24 +93,18 @@ public class MacroManagerViewModel : ViewModelBase
             IsRobotRunning = false;
             return;
         }
-        double screenWidth = 1920, screenHeight = 1080;
-        try
-        {
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
-            {
-                screenWidth = desktop.MainWindow.Bounds.Width;
-                screenHeight = desktop.MainWindow.Bounds.Height;
-            }
-        }
-        catch { }
-        var diagonal = Math.Sqrt(screenWidth * screenWidth + screenHeight * screenHeight);
+        
+        var screen = this._imageService.GetFullscreenSize();
+
+        var diagonal = Math.Sqrt(screen.Width * screen.Width + screen.Height * screen.Height);
         var threshold = 0.2 * diagonal;
-        var centerX = (int)(screenWidth / 2);
-        var centerY = (int)(screenHeight / 2);
-        var maxOffsetX = screenWidth * 0.25;
-        var maxOffsetY = screenHeight * 0.25;
+        var centerX = (int)(screen.Width / 2);
+        var centerY = (int)(screen.Height / 2);
+        var maxOffsetX = screen.Width * 0.25;
+        var maxOffsetY = screen.Height * 0.25;
         var robot = new Desktop.Robot.Robot();
         var previousPos = robot.GetMousePosition();
+
         try
         {
             robot.Click();
@@ -123,8 +125,8 @@ public class MacroManagerViewModel : ViewModelBase
                     var targetY = previousPos.Y + dy;
                     targetX = (int)Math.Max(centerX - maxOffsetX, Math.Min(centerX + maxOffsetX, targetX));
                     targetY = (int)Math.Max(centerY - maxOffsetY, Math.Min(centerY + maxOffsetY, targetY));
-                    targetX = Math.Max(0, Math.Min((int)screenWidth - 1, targetX));
-                    targetY = Math.Max(0, Math.Min((int)screenHeight - 1, targetY));
+                    targetX = Math.Max(0, Math.Min((int)screen.Width - 1, targetX));
+                    targetY = Math.Max(0, Math.Min((int)screen.Height - 1, targetY));
                     int steps = rnd.Next(16, 32);
                     double stepX = (targetX - previousPos.X) / (double)steps;
                     double stepY = (targetY - previousPos.Y) / (double)steps;
@@ -134,8 +136,8 @@ public class MacroManagerViewModel : ViewModelBase
                         double rawY = previousPos.Y + stepY * i;
                         rawX = Math.Max(centerX - maxOffsetX, Math.Min(centerX + maxOffsetX, rawX));
                         rawY = Math.Max(centerY - maxOffsetY, Math.Min(centerY + maxOffsetY, rawY));
-                        int glideX = Math.Max(0, Math.Min((int)screenWidth - 1, (int)rawX));
-                        int glideY = Math.Max(0, Math.Min((int)screenHeight - 1, (int)rawY));
+                        int glideX = Math.Max(0, Math.Min((int)screen.Width - 1, (int)rawX));
+                        int glideY = Math.Max(0, Math.Min((int)screen.Height - 1, (int)rawY));
                         robot.MouseMove(glideX, glideY);
                         await Task.Delay(rnd.Next(4, 14), token).ConfigureAwait(false);
                     }
@@ -319,11 +321,14 @@ public class MacroManagerViewModel : ViewModelBase
         if (item is null || string.IsNullOrWhiteSpace(item.AiAnswer))
             return;
 
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
-            desktop.MainWindow?.Clipboard != null)
-        {
-            await desktop.MainWindow.Clipboard.SetTextAsync(item.AiAnswer);
-        }
+        var mainWindow = await GetMainWindowAsync();
+        if (mainWindow == null)
+            return;
+
+        if (mainWindow.Clipboard == null)
+            return;
+
+        await mainWindow.Clipboard.SetTextAsync(item.AiAnswer);
     }
 }
 

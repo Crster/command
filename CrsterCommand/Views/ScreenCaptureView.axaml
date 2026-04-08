@@ -38,7 +38,7 @@
                 </StackPanel>
             </Border>
 
-            <Image Source="{Binding CapturedImage}" MaxHeight="300" Stretch="Uniform"/>
+            <Image Source="{Binding CapturedImage}" MaxHeight="400" Stretch="Uniform"/>
 
         </StackPanel>
     </ScrollViewer>

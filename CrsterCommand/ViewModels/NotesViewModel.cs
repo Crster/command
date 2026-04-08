@@ -11,6 +11,7 @@ using Avalonia;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using System.Collections.Generic;
+using Avalonia.Controls;
 
 namespace CrsterCommand.ViewModels;
 
@@ -59,6 +60,11 @@ public partial class NotesViewModel : ViewModelBase
         AIService = new AIService(storageService);
         EmbeddingService = new EmbeddingService();
         LoadAll();
+    }
+
+    public new async Task<Window?> GetMainWindowAsync()
+    {
+        return await base.GetMainWindowAsync();
     }
 
     private void LoadAll()

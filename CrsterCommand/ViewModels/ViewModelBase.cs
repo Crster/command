@@ -44,4 +44,16 @@ public abstract class ViewModelBase : ObservableObject
             }
         });
     }
+
+    protected async Task<Window?> GetMainWindowAsync()
+    {
+        return await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                return desktop.MainWindow;
+            }
+            return null;
+        });
+    }
 }

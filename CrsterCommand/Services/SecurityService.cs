@@ -9,17 +9,6 @@ namespace CrsterCommand.Services;
 
 public static class SecurityService
 {
-    public static string GetMacAddress()
-    {
-        var interfaces = NetworkInterface.GetAllNetworkInterfaces();
-        var mac = interfaces
-            .Where(nic => nic.OperationalStatus == OperationalStatus.Up && nic.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-            .Select(nic => nic.GetPhysicalAddress().ToString())
-            .FirstOrDefault(s => !string.IsNullOrEmpty(s));
-
-        return mac ?? "DEFAULT_KEY_123456"; // Fallback if no network interface found
-    }
-
     public static string Encrypt(string plainText, string key)
     {
         if (string.IsNullOrEmpty(plainText)) return "";
