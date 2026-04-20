@@ -8,7 +8,7 @@
         WindowState="FullScreen"
         Background="Black"
         ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaChromeHints="NoChrome">
+        TransparencyLevelHint="AcrylicBlur">
     
     <Panel Name="MainPanel">
         <Image Name="BackgroundImage" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"/>

@@ -4,11 +4,14 @@
         xmlns:ic="using:FluentIcons.Avalonia"
         x:Class="CrsterCommand.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="Crster Command"
+        Title=""
         Icon="/Assets/app.ico"
         Width="1040" Height="700"
         MinWidth="800" MinHeight="500"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent">
 
     <Grid ColumnDefinitions="64,*">
 

@@ -12,6 +12,8 @@
         Width="450" Height="600"
         WindowStartupLocation="CenterOwner"
         ExtendClientAreaToDecorationsHint="True"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
         CanMinimize="False"
         CanMaximize="False"
         ShowInTaskbar="False"

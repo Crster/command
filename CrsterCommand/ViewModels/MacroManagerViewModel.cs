@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
+using Avalonia.Input;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CrsterCommand.Models;
@@ -56,10 +58,7 @@ public class MacroManagerViewModel : ViewModelBase
         _ = FetchModelsAsync();
     }
 
-    public new async Task<Window?> GetMainWindowAsync()
-    {
-        return await GetMainWindowAsync();
-    }
+    // Use base ViewModelBase.GetMainWindowAsync to obtain the main window.
 
     private void ToggleRobot()
     {
@@ -325,10 +324,41 @@ public class MacroManagerViewModel : ViewModelBase
         if (mainWindow == null)
             return;
 
-        if (mainWindow.Clipboard == null)
+        var clipboard = TopLevel.GetTopLevel(mainWindow)?.Clipboard;
+        if (clipboard == null)
             return;
 
-        await mainWindow.Clipboard.SetTextAsync(item.AiAnswer);
+        // Try direct API (if available), otherwise fall back to reflection-based invocation
+        var setTextMethod = clipboard.GetType().GetMethod("SetTextAsync", new[] { typeof(string) });
+        if (setTextMethod != null)
+        {
+            var task = (System.Threading.Tasks.Task)setTextMethod.Invoke(clipboard, new object[] { item.AiAnswer })!;
+            await task;
+            return;
+        }
+
+        // Try non-async SetText
+        var setTextSync = clipboard.GetType().GetMethod("SetText", new[] { typeof(string) });
+        if (setTextSync != null)
+        {
+            setTextSync.Invoke(clipboard, new object[] { item.AiAnswer });
+            return;
+        }
+
+        // As a last resort, attempt to invoke System.Windows.Forms.Clipboard via reflection on Windows
+        try
+        {
+            if (System.OperatingSystem.IsWindows())
+            {
+                var clipboardType = System.Type.GetType("System.Windows.Forms.Clipboard, System.Windows.Forms");
+                var setText = clipboardType?.GetMethod("SetText", new[] { typeof(string) });
+                setText?.Invoke(null, new object[] { item.AiAnswer });
+            }
+        }
+        catch
+        {
+            // ignore failures; clipboard operation is best-effort
+        }
     }
 }
 

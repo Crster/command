@@ -36,13 +36,14 @@
             PointerPressed="OnDragStart"
             PointerMoved="OnDragMove"
             PointerReleased="OnDragEnd">
-        <DockPanel LastChildFill="True">
+        <!-- Use a Grid so we can center the Stop button while keeping the timer left-aligned -->
+        <Grid ColumnDefinitions="Auto,*,Auto">
             <!-- Recording indicator dot -->
             <Ellipse Width="10" Height="10"
                      Fill="#f38ba8"
                      VerticalAlignment="Center"
                      Margin="0,0,8,0"
-                     DockPanel.Dock="Left">
+                     Grid.Column="0">
                 <Ellipse.Styles>
                     <Style Selector="Ellipse">
                         <Style.Animations>
@@ -62,17 +63,7 @@
                 </Ellipse.Styles>
             </Ellipse>
 
-            <!-- Stop button -->
-            <Button Classes="StopBtn"
-                    DockPanel.Dock="Right"
-                    Click="OnStopClick">
-                <StackPanel Orientation="Horizontal" Spacing="4">
-                    <ic:SymbolIcon Symbol="Stop" FontSize="12" Foreground="#1e1e2e"/>
-                    <TextBlock Text="Stop" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-
-            <!-- Timer -->
+            <!-- Timer (left-aligned in center column) -->
             <TextBlock x:Name="TimerText"
                        Text="00:00"
                        Foreground="White"
@@ -81,7 +72,19 @@
                        FontFamily="Consolas,Monospace"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Left"
-                       Margin="0,0,8,0"/>
-        </DockPanel>
+                       Margin="0,0,8,0"
+                       Grid.Column="1"/>
+
+            <!-- Stop button centered in center column -->
+            <Button Classes="StopBtn"
+                    Click="OnStopClick"
+                    Grid.Column="1"
+                    HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <ic:SymbolIcon Symbol="Stop" FontSize="12" Foreground="#1e1e2e"/>
+                    <TextBlock Text="Stop" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </Grid>
     </Border>
 </Window>

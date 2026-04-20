@@ -45,7 +45,7 @@ public abstract class ViewModelBase : ObservableObject
         });
     }
 
-    protected async Task<Window?> GetMainWindowAsync()
+    public async Task<Window?> GetMainWindowAsync()
     {
         return await Dispatcher.UIThread.InvokeAsync(() =>
         {
