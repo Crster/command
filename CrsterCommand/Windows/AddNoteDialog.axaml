@@ -31,6 +31,16 @@
         <Style Selector="TabItem:pointerover ic|SymbolIcon">
             <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
         </Style>
+        <Style Selector="Button.AiIconButton">
+			<Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppSecondaryTextBrush}"/>
+        </Style>
+        <Style Selector="Button.AiIconButton:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+        </Style>
+        <Style Selector="Button.AiIconButton:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent" />
+        </Style>
     </Window.Styles>
 
     <Panel>
@@ -89,12 +99,23 @@
                             <TextBlock Text="Memory" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <Grid RowDefinitions="*,Auto" Margin="0,20,0,0">
-                        <Border Grid.Row="0" Background="{DynamicResource AppInputBackgroundBrush}" 
+                    <Grid RowDefinitions="Auto,*,Auto" Margin="0,20,0,0">
+                        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,12">
+                            <TextBlock Text="Description" Classes="Label"/>
+                            <TextBox x:Name="MemoryDescription" PlaceholderText="Short description (optional)">
+                                <TextBox.InnerRightContent>
+                                    <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="Memory">
+                                        <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" />
+                                    </Button>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                        </StackPanel>
+
+                        <Border Grid.Row="1" Background="{DynamicResource AppInputBackgroundBrush}" 
                                 CornerRadius="12" BorderThickness="1" 
                                 BorderBrush="{DynamicResource AppInputBorderBrush}">
                             <TextBox x:Name="MemoryContent" 
-                                     Watermark="Write something important to remember..." 
+                                     PlaceholderText="Write something important to remember..." 
                                      AcceptsReturn="True" 
                                      TextWrapping="Wrap"
                                      BorderThickness="0"
@@ -114,10 +135,22 @@
                             <TextBlock Text="Todo" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <Grid RowDefinitions="Auto,*" Margin="0,20,0,0">
+
+                    <Grid RowDefinitions="Auto,Auto,*" Margin="0,20,0,0">
+                        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,12">
+                            <TextBlock Text="Description" Classes="Label"/>
+                            <TextBox x:Name="TodoDescription" PlaceholderText="Short description (optional)">
+                                <TextBox.InnerRightContent>
+                                    <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="Todo">
+                                        <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" />
+                                    </Button>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                        </StackPanel>
+
                         <!-- Fixed input for new todo -->
-                        <TextBox Grid.Row="0" x:Name="NewTodoInput" 
-                                 Watermark="Add a task and press Enter..." 
+                        <TextBox Grid.Row="1" x:Name="NewTodoInput" 
+                                 PlaceholderText="Add a task and press Enter..." 
                                  KeyDown="NewTodo_KeyDown"
                                  Margin="0,0,0,16">
                             <TextBox.InnerLeftContent>
@@ -171,7 +204,7 @@
                             <StackPanel Spacing="8">
                                 <TextBlock Text="New Master Password" Classes="Label"/>
                                 <TextBox x:Name="SetupVaultPassword" 
-                                         Watermark="Choose a strong password..." 
+                                         PlaceholderText="Choose a strong password..." 
                                          PasswordChar="●"/>
                             </StackPanel>
                             
@@ -184,10 +217,16 @@
 
                         <!-- Capture View -->
                         <Grid RowDefinitions="Auto,*,Auto" IsVisible="{Binding HasVaultPassword}">
-                            <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+                            <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,12">
                                 <TextBlock Text="Description" Classes="Label"/>
                                 <TextBox x:Name="VaultDescription" 
-                                         Watermark="Private information (default)"/>
+                                         PlaceholderText="Short description (optional)">
+                                    <TextBox.InnerRightContent>
+                                        <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="Vault">
+                                            <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" />
+                                        </Button>
+                                    </TextBox.InnerRightContent>
+                                </TextBox>
                             </StackPanel>
 
                             <Border Grid.Row="1" Background="{DynamicResource AppInputBackgroundBrush}" 
@@ -195,7 +234,7 @@
                                     BorderBrush="{DynamicResource AppInputBorderBrush}"
                                     Margin="0,0,0,16">
                                 <TextBox x:Name="VaultContent" 
-                                         Watermark="Enter sensitive information to encrypt..." 
+                                         PlaceholderText="Enter sensitive information to encrypt..." 
                                          AcceptsReturn="True" 
                                          TextWrapping="Wrap"
                                          BorderThickness="0"
@@ -227,7 +266,18 @@
                             <TextBlock Text="File" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <StackPanel Spacing="20" Margin="0,20,0,0">
+                    <StackPanel Spacing="10" Margin="0,20,0,0">
+                        <StackPanel Spacing="8" Margin="0,0,0,3">
+                            <TextBlock Text="Description" Classes="Label"/>
+                            <TextBox x:Name="FileDescription" PlaceholderText="Short description (optional)">
+                                <TextBox.InnerRightContent>
+                                    <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="File">
+                                        <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" />
+                                    </Button>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                        </StackPanel>
+
                         <Button HorizontalAlignment="Stretch" Height="100" 
                                 Click="SelectFile_Click" Classes="InputZone">
                             <StackPanel Spacing="8" HorizontalAlignment="Center">

@@ -96,6 +96,75 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
         }
     }
 
+    private async void GenerateDescription_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_aiService == null || IsProcessing) return;
+
+        var btn = sender as Avalonia.Controls.Button;
+        var tag = btn?.Tag?.ToString();
+
+        BaseNoteItem? tempItem = null;
+        Stream? tempStream = null;
+
+        try
+        {
+            switch (tag)
+            {
+                case "Memory":
+                    tempItem = new MemoryNote { Content = MemoryContent.Text ?? "" };
+                    break;
+                case "Todo":
+                    tempItem = new TodoItem { Tasks = TodoList.ToList() };
+                    break;
+                case "Vault":
+                    tempItem = new VaultItem { EncryptedContent = VaultContent.Text ?? "" };
+                    break;
+                case "File":
+                    if (!string.IsNullOrEmpty(_selectedFilePath) && File.Exists(_selectedFilePath))
+                    {
+                        tempItem = new FileItem { FileName = Path.GetFileName(_selectedFilePath), FilePath = _selectedFilePath, FileType = Path.GetExtension(_selectedFilePath) };
+                        tempStream = File.OpenRead(_selectedFilePath);
+                    }
+                    else if (Result is FileItem existingFile && File.Exists(existingFile.FilePath))
+                    {
+                        tempItem = existingFile;
+                        tempStream = File.OpenRead(existingFile.FilePath);
+                    }
+                    break;
+            }
+
+            if (tempItem == null) return;
+
+            IsProcessing = true;
+            var desc = await _aiService.GenerateNoteDescriptionAsync(tempItem, tempStream);
+
+            switch (tag)
+            {
+                case "Memory":
+                    MemoryDescription.Text = desc;
+                    break;
+                case "Todo":
+                    TodoDescription.Text = desc;
+                    break;
+                case "Vault":
+                    VaultDescription.Text = desc;
+                    break;
+                case "File":
+                    FileDescription.Text = desc;
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"AI generate description error: {ex.Message}");
+        }
+        finally
+        {
+            IsProcessing = false;
+            tempStream?.Dispose();
+        }
+    }
+
     private void UpdateSaveButtonText(int index)
     {
         string action = IsEditMode ? "Update" : "Save";
@@ -146,8 +215,12 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
             _selectedFilePath = file.FilePath;
             SelectedFileName.Text = file.FileName;
         }
-        
+
+        // Populate description fields for each tab when editing
+        MemoryDescription.Text = item.Description;
+        TodoDescription.Text = item.Description;
         VaultDescription.Text = item.Description;
+        FileDescription.Text = item.Description;
         
         UpdateSaveButtonText(TabControl.SelectedIndex);
     }
@@ -437,22 +510,44 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
 
         if (itemToProcess != null)
         {
-            IsProcessing = true;
+            // Apply user-provided descriptions from the UI first
             try
             {
                 itemToProcess.LastModified = DateTime.Now;
-                
-                // 1. Generate Description via AI (except Vault which is already set)
-                if (itemToProcess.Type != NoteType.Vault && _aiService != null)
+
+                string? uiDescription = TabControl.SelectedIndex switch
                 {
-                    itemToProcess.Description = await _aiService.GenerateNoteDescriptionAsync(itemToProcess, fileStreamToProcess);
+                    0 => MemoryDescription.Text,
+                    1 => TodoDescription.Text,
+                    2 => VaultDescription.Text,
+                    3 => FileDescription.Text,
+                    _ => null
+                };
+
+                if (!string.IsNullOrWhiteSpace(uiDescription))
+                {
+                    itemToProcess.Description = uiDescription.Trim();
+                }
+
+                // 1. Generate Description via AI (only when editing and no user-provided description exists)
+                if (itemToProcess.Type != NoteType.Vault && _aiService != null && IsEditMode && string.IsNullOrWhiteSpace(itemToProcess.Description))
+                {
+                    IsProcessing = true;
+                    try
+                    {
+                        itemToProcess.Description = await _aiService.GenerateNoteDescriptionAsync(itemToProcess, fileStreamToProcess);
+                    }
+                    finally
+                    {
+                        IsProcessing = false;
+                    }
                 }
 
                 // 2. Generate Embedding
                 if (_embeddingService != null)
                 {
                     // Use improved text for embedding (Description + Content)
-                    itemToProcess.Embedding = await _embeddingService.GetEmbeddingAsync(itemToProcess.GetTextForEmbedding());
+                    itemToProcess.Embedding = await _embedding_service_helper(itemToProcess, fileStreamToProcess);
                 }
 
                 Result = itemToProcess;
@@ -468,6 +563,25 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
             {
                 fileStreamToProcess?.Dispose();
             }
+        }
+    }
+
+    // Helper to safely get embeddings while ensuring any temporary processing state is handled
+    private async Task<float[]?> _embedding_service_helper(BaseNoteItem item, Stream? fileStream)
+    {
+        try
+        {
+            IsProcessing = true;
+            return await _embeddingService!.GetEmbeddingAsync(item.GetTextForEmbedding());
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Embedding error: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            IsProcessing = false;
         }
     }
 }
