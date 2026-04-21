@@ -1,7 +1,9 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="CrsterCommand.App"
              xmlns:local="using:CrsterCommand"
+             xmlns:viewmodels="using:CrsterCommand.ViewModels"
+             x:Class="CrsterCommand.App"
+             x:DataType="viewmodels:AppViewModel"
              RequestedThemeVariant="Default">
 
     <Application.DataTemplates>
@@ -88,5 +90,24 @@
         <FluentTheme />
         <StyleInclude Source="avares://CrsterCommand/Styles/AppStyles.axaml"/>
     </Application.Styles>
+
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon Icon="/Assets/app.ico"
+                      ToolTipText="Crster Command"
+                      IsVisible="{Binding TrayIconVisible}"
+                      Command="{Binding ShowMainWindowCommand}">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Show"
+                                        Command="{Binding ShowMainWindowCommand}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Quit"
+                                        Command="{Binding QuitCommand}" />
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
 
 </Application>
