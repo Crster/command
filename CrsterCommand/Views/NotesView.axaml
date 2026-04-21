@@ -27,7 +27,7 @@
 
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                     <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                             Watermark="Semantic search... try searching by meaning"
+                             PlaceholderText="Semantic search... try searching by meaning"
                              Classes="RevealPasswordButton">
                         <TextBox.InnerLeftContent>
                             <ic:SymbolIcon Symbol="Search" Margin="12,0,0,0" FontSize="18" Foreground="{DynamicResource AppSecondaryTextBrush}"/>

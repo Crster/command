@@ -220,7 +220,7 @@
                                             <TextBox Grid.Row="0"
                                                      Classes="ComposerInput"
                                                      Text="{Binding UserInput}"
-                                                     Watermark="Type user input..."
+                                                     PlaceholderText="Type user input..."
                                                      AcceptsReturn="True"
                                                      TextWrapping="Wrap"
                                                      BorderThickness="0"

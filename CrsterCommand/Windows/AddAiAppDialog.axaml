@@ -72,7 +72,7 @@
                             BorderBrush="{DynamicResource AppInputBorderBrush}"
                             Height="180">
                         <TextBox x:Name="SystemPromptInput" 
-                                 Watermark="Enter system prompt... e.g. You are a math solver" 
+                                 PlaceholderText="Enter system prompt... e.g. You are a math solver" 
                                  AcceptsReturn="True" 
                                  TextWrapping="Wrap"
                                  BorderThickness="0"
