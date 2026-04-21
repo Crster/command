@@ -17,7 +17,7 @@ using CrsterCommand.Services;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 
-namespace CrsterCommand.Views;
+namespace CrsterCommand.Windows;
 
 public partial class AddNoteDialog : Window, INotifyPropertyChanged
 {

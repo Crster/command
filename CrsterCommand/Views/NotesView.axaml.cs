@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using CrsterCommand.Models;
 using CrsterCommand.ViewModels;
+using CrsterCommand.Windows;
 
 namespace CrsterCommand.Views;
 

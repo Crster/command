@@ -1,14 +1,11 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ic="using:FluentIcons.Avalonia"
-        x:Class="CrsterCommand.Views.CaptureOverlayWindow"
+        x:Class="CrsterCommand.Windows.CaptureOverlayWindow"
         Title="Capture Overlay"
-        SystemDecorations="None"
         Topmost="True"
         WindowState="FullScreen"
-        Background="Black"
-        ExtendClientAreaToDecorationsHint="True"
-        TransparencyLevelHint="AcrylicBlur">
+        ExtendClientAreaToDecorationsHint="True">
     
     <Panel Name="MainPanel">
         <Image Name="BackgroundImage" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"/>

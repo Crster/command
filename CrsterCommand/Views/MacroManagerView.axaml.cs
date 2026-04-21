@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CrsterCommand.ViewModels;
 using Avalonia.Markup.Xaml;
+using CrsterCommand.Windows;
 
 namespace CrsterCommand.Views
 {

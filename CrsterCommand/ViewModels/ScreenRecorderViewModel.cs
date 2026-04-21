@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CrsterCommand.Services;
 using CrsterCommand.Views;
+using CrsterCommand.Windows;
 
 namespace CrsterCommand.ViewModels;
 

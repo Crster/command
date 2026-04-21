@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CrsterCommand.Services;
 using Avalonia.Controls;
+using CrsterCommand.Windows;
 
 namespace CrsterCommand.ViewModels;
 
@@ -37,7 +38,7 @@ public partial class ScreenCaptureViewModel : ViewModelBase
 
             var systemBitmap = _imageService.CreateScreenCapture();
             
-            var overlay = new Views.CaptureOverlayWindow(_imageService.ToAvaloniaBitmap(systemBitmap));
+            var overlay = new CaptureOverlayWindow(_imageService.ToAvaloniaBitmap(systemBitmap));
             var result = await overlay.ShowDialog<Bitmap>(mainWindow);
             
             if (result != null)

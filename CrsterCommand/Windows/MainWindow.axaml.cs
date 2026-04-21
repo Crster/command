@@ -1,7 +1,7 @@
 using Avalonia.Controls;
 using CrsterCommand.ViewModels;
 
-namespace CrsterCommand.Views;
+namespace CrsterCommand.Windows;
 
 public partial class MainWindow : Window
 {

@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 
-namespace CrsterCommand.Views;
+namespace CrsterCommand.Windows;
 
 public partial class RecordingOverlayWindow : Window
 {

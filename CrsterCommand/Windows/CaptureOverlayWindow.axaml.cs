@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using ShapePath = Avalonia.Controls.Shapes.Path;
 
-namespace CrsterCommand.Views;
+namespace CrsterCommand.Windows;
 
 public partial class CaptureOverlayWindow : Window
 {

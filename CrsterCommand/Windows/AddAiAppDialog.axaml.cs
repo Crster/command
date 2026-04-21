@@ -2,7 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using System.Collections.ObjectModel;
 
-namespace CrsterCommand.Views;
+namespace CrsterCommand.Windows;
 
 public partial class AddAiAppDialog : Window
 {

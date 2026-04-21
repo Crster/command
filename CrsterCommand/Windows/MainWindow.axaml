@@ -2,23 +2,21 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:CrsterCommand.ViewModels"
         xmlns:ic="using:FluentIcons.Avalonia"
-        x:Class="CrsterCommand.Views.MainWindow"
+        x:Class="CrsterCommand.Windows.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title=""
+        Title="Crster Command"
         Icon="/Assets/app.ico"
         Width="1040" Height="700"
         MinWidth="800" MinHeight="500"
         WindowStartupLocation="CenterScreen"
-        ExtendClientAreaToDecorationsHint="True"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="Transparent">
+        ExtendClientAreaToDecorationsHint="True">
 
     <Grid ColumnDefinitions="64,*">
 
         <!-- ══════════════════════════════════
              SIDEBAR
         ══════════════════════════════════ -->
-        <Border Grid.Column="0" Background="{DynamicResource AppSidebarBrush}">
+        <Border Grid.Column="0" Background="{DynamicResource AppSidebarBrush}" Padding="0,32,0,0">
             <DockPanel>
 
                 <!-- Brand icon -->

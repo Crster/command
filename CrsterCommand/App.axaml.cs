@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using CrsterCommand.ViewModels;
 using CrsterCommand.Views;
+using CrsterCommand.Windows;
 
 namespace CrsterCommand;
 
