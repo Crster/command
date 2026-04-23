@@ -6,7 +6,6 @@ using Avalonia.Input.Platform;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
-using Avalonia.VisualTree;
 using System;
 using Avalonia.Collections;
 using System.Collections.Generic;
@@ -14,22 +13,23 @@ using System.IO;
 using System.Linq;
 using System.Drawing.Imaging;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using ShapePath = Avalonia.Controls.Shapes.Path;
 
 namespace CrsterCommand.Windows;
 
 public partial class CaptureOverlayWindow : Window
 {
+    public Bitmap? ResultBitmap { get; private set; }
+
     private List<Control> _undoStack = new();
     private TextBox? _currentTextBox;
     private Point? _startPoint;
     private Shape? _currentShape;
     private Shape? _cropShape;
     private bool _isDragging;
-    private DispatcherTimer? _marchingTimer;
-    private double _marchingOffset = 0;
-    private string _currentTool = "Box";
+    // Removed marching ants timer and offset
+    // Default tool changed to Crop so the dashed crop frame is selected when overlay opens
+    private string _currentTool = "Crop";
     private DateTime _lastEscapeTime = DateTime.MinValue;
     private const int DoubleTapMs = 500;
     private bool _isDraggingToolbar;
@@ -50,6 +50,7 @@ public partial class CaptureOverlayWindow : Window
             this.Height = screen.Bounds.Height;
         }
         this.WindowState = WindowState.FullScreen;
+        this.Topmost = true;
 
         RectButton.Click += (s, e) => { _currentTool = "Box"; UpdateToolSelection(); };
         ArrowButton.Click += (s, e) => { _currentTool = "Arrow"; UpdateToolSelection(); };
@@ -57,13 +58,23 @@ public partial class CaptureOverlayWindow : Window
         CropButton.Click += (s, e) => { _currentTool = "Crop"; UpdateToolSelection(); };
         UndoButton.Click += (s, e) => Undo();
         UpdateToolSelection(); 
+        // Initialize haze visibility and sizing for crop default
+        if (_currentTool == "Crop")
+        {
+            EnsureCropHaze();
+        }
         
-        CloseButton.Click += (s, e) => Close(null);
+        CloseButton.Click += (s, e) =>
+        {
+            ResultBitmap = null;
+            Close(null);
+        };
 
         CopyButton.Click += async (s, e) =>
         {
             CommitText();
             var bitmap = await RenderToBitmap();
+            ResultBitmap = bitmap;
             var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
             if (clipboard != null)
             {
@@ -81,6 +92,7 @@ public partial class CaptureOverlayWindow : Window
         {
             CommitText();
             var bitmap = await RenderToBitmap();
+            ResultBitmap = bitmap;
             if (bitmap != null)
             {
                 var topLevel = TopLevel.GetTopLevel(this);
@@ -155,6 +167,103 @@ public partial class CaptureOverlayWindow : Window
         else if (_currentTool == "Arrow") ArrowButton.Classes.Add("Active");
         else if (_currentTool == "Text") TextButton.Classes.Add("Active");
         else if (_currentTool == "Crop") CropButton.Classes.Add("Active");
+
+        // Toggle haze overlay when crop is active
+        if (_currentTool == "Crop")
+        {
+            EnsureCropHaze();
+        }
+        else
+        {
+            HideCropHaze();
+        }
+    }
+
+    private void EnsureCropHaze()
+    {
+        // Make sure haze elements exist and are visible
+        var top = this.FindControl<Rectangle>("HazeTop");
+        var left = this.FindControl<Rectangle>("HazeLeft");
+        var right = this.FindControl<Rectangle>("HazeRight");
+        var bottom = this.FindControl<Rectangle>("HazeBottom");
+
+        if (top == null || left == null || right == null || bottom == null)
+            return;
+        // Position haze depending on whether a crop rect exists.
+        double canvasW = DrawingCanvas.Bounds.Width;
+        double canvasH = DrawingCanvas.Bounds.Height;
+
+        // If layout hasn't happened yet, defer until we have sizes
+        if (canvasW <= 0 || canvasH <= 0)
+        {
+            DrawingCanvas.LayoutUpdated += OnDrawingCanvasLayoutUpdated;
+            return;
+        }
+
+        // If there's no crop rectangle yet, show a full-screen haze to indicate crop mode is active
+        if (_cropShape == null || _cropShape.Width <= 0 || _cropShape.Height <= 0)
+        {
+            top.IsVisible = true;
+            left.IsVisible = false;
+            right.IsVisible = false;
+            bottom.IsVisible = false;
+
+            Canvas.SetLeft(top, 0);
+            Canvas.SetTop(top, 0);
+            top.Width = canvasW;
+            top.Height = canvasH;
+            return;
+        }
+
+        top.IsVisible = true; left.IsVisible = true; right.IsVisible = true; bottom.IsVisible = true;
+
+        var cropX = Canvas.GetLeft(_cropShape);
+        var cropY = Canvas.GetTop(_cropShape);
+        var cropW = _cropShape.Width;
+        var cropH = _cropShape.Height;
+
+        // Position crop shape (ensure values are sane)
+        Canvas.SetLeft(_cropShape, cropX);
+        Canvas.SetTop(_cropShape, cropY);
+
+        // Position haze rectangles around crop
+        Canvas.SetLeft(top, 0);
+        Canvas.SetTop(top, 0);
+        top.Width = canvasW;
+        top.Height = Math.Max(0, cropY);
+
+        Canvas.SetLeft(left, 0);
+        Canvas.SetTop(left, cropY);
+        left.Width = Math.Max(0, cropX);
+        left.Height = Math.Max(0, cropH);
+
+        Canvas.SetLeft(right, cropX + cropW);
+        Canvas.SetTop(right, cropY);
+        right.Width = Math.Max(0, canvasW - (cropX + cropW));
+        right.Height = Math.Max(0, cropH);
+
+        Canvas.SetLeft(bottom, 0);
+        Canvas.SetTop(bottom, cropY + cropH);
+        bottom.Width = canvasW;
+        bottom.Height = Math.Max(0, canvasH - (cropY + cropH));
+    }
+
+    private void HideCropHaze()
+    {
+        var top = this.FindControl<Rectangle>("HazeTop");
+        var left = this.FindControl<Rectangle>("HazeLeft");
+        var right = this.FindControl<Rectangle>("HazeRight");
+        var bottom = this.FindControl<Rectangle>("HazeBottom");
+        if (top != null) top.IsVisible = false;
+        if (left != null) left.IsVisible = false;
+        if (right != null) right.IsVisible = false;
+        if (bottom != null) bottom.IsVisible = false;
+    }
+
+    private void OnDrawingCanvasLayoutUpdated(object? sender, EventArgs e)
+    {
+        DrawingCanvas.LayoutUpdated -= OnDrawingCanvasLayoutUpdated;
+        EnsureCropHaze();
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
@@ -270,17 +379,18 @@ public partial class CaptureOverlayWindow : Window
         {
             _isDragging = true;
             if (_cropShape != null) DrawingCanvas.Children.Remove(_cropShape);
-            StopMarchingAnts();
-            
+            // Just a static dashed frame
             _cropShape = new Rectangle
             {
                 Stroke = Brushes.White,
                 StrokeThickness = 1.5,
                 StrokeDashArray = new AvaloniaList<double>(6, 4),
-                StrokeDashOffset = 0,
+                // No StrokeDashOffset
                 Fill = new SolidColorBrush(Colors.White, 0.06)
             };
             DrawingCanvas.Children.Add(_cropShape);
+            // Ensure haze updated to reflect new crop area
+            EnsureCropHaze();
         }
     }
 
@@ -379,6 +489,8 @@ public partial class CaptureOverlayWindow : Window
             Canvas.SetTop(cropRect, minY);
             cropRect.Width = width;
             cropRect.Height = height;
+            // Update haze to follow the dynamic crop area
+            EnsureCropHaze();
             return;
         }
 
@@ -439,29 +551,10 @@ public partial class CaptureOverlayWindow : Window
         if (_currentTool == "Crop" && _isDragging)
         {
             _isDragging = false;
-            StartMarchingAnts();
+            // No marching ants, just static dashed frame
         }
     }
 
-    private void StartMarchingAnts()
-    {
-        StopMarchingAnts();
-        _marchingTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(60) };
-        _marchingTimer.Tick += (s, e) =>
-        {
-            _marchingOffset -= 1;
-            if (_marchingOffset <= -10) _marchingOffset = 0;
-            if (_cropShape != null)
-                _cropShape.StrokeDashOffset = _marchingOffset;
-        };
-        _marchingTimer.Start();
-    }
-
-    private void StopMarchingAnts()
-    {
-        _marchingTimer?.Stop();
-        _marchingTimer = null;
-    }
 
     private async Task<RenderTargetBitmap> RenderToBitmap()
     {

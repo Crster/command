@@ -26,6 +26,12 @@ public abstract class ViewModelBase : ObservableObject
                 if (desktop.MainWindow != null)
                 {
                     desktop.MainWindow.WindowState = state;
+                    if (state == WindowState.Normal)
+                    {
+                        if (!desktop.MainWindow.IsVisible)
+                            desktop.MainWindow.Show();
+                        desktop.MainWindow.Activate();
+                    }
                 }
             }
         });

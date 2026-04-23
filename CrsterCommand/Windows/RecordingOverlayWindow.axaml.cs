@@ -13,6 +13,7 @@ public partial class RecordingOverlayWindow : Window
     private DispatcherTimer? _timer;
     private TimeSpan _elapsed;
     private Action? _stopCallback;
+    private bool _isLoading;
 
     public RecordingOverlayWindow()
     {
@@ -36,6 +37,21 @@ public partial class RecordingOverlayWindow : Window
         }
     }
 
+    public void ShowLoading(string message = "Starting...")
+    {
+        _isLoading = true;
+        RecordingContent.IsVisible = false;
+        LoadingContent.IsVisible = true;
+        LoadingText.Text = message;
+    }
+
+    public void HideLoading()
+    {
+        _isLoading = false;
+        RecordingContent.IsVisible = true;
+        LoadingContent.IsVisible = false;
+    }
+
     public void StartTimer()
     {
         _elapsed = TimeSpan.Zero;
@@ -56,6 +72,8 @@ public partial class RecordingOverlayWindow : Window
 
     private void OnStopClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
+        // Prevent stopping while loading
+        if (_isLoading) return;
         _stopCallback?.Invoke();
     }
 

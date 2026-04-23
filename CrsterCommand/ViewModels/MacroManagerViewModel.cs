@@ -13,8 +13,8 @@ using CrsterCommand.Models;
 using CrsterCommand.Services;
 using Google.GenAI;
 using System.Threading;
-using Desktop.Robot.Extensions;
-using Avalonia.Controls;
+using SharpHook;
+using SharpHook.Data;
 
 namespace CrsterCommand.ViewModels;
 
@@ -101,17 +101,18 @@ public class MacroManagerViewModel : ViewModelBase
         var centerY = (int)(screen.Height / 2);
         var maxOffsetX = screen.Width * 0.25;
         var maxOffsetY = screen.Height * 0.25;
-        var robot = new Desktop.Robot.Robot();
-        var previousPos = robot.GetMousePosition();
+        var simulator = new EventSimulator();
+        var previousPos = _imageService.GetMousePosition();
 
         try
         {
-            robot.Click();
+            simulator.SimulateMousePress((short)previousPos.X, (short)previousPos.Y, SharpHook.Data.MouseButton.Button1);
+            simulator.SimulateMouseRelease((short)previousPos.X, (short)previousPos.Y, SharpHook.Data.MouseButton.Button1);
             while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    var actual = robot.GetMousePosition();
+                    var actual = _imageService.GetMousePosition();
                     var lastRecorded = previousPos;
                     var dist = Math.Sqrt(Math.Pow(actual.X - lastRecorded.X, 2) + Math.Pow(actual.Y - lastRecorded.Y, 2));
                     if (dist > threshold)
@@ -137,7 +138,7 @@ public class MacroManagerViewModel : ViewModelBase
                         rawY = Math.Max(centerY - maxOffsetY, Math.Min(centerY + maxOffsetY, rawY));
                         int glideX = Math.Max(0, Math.Min((int)screen.Width - 1, (int)rawX));
                         int glideY = Math.Max(0, Math.Min((int)screen.Height - 1, (int)rawY));
-                        robot.MouseMove(glideX, glideY);
+                        simulator.SimulateMouseMovement((short)glideX, (short)glideY);
                         await Task.Delay(rnd.Next(4, 14), token).ConfigureAwait(false);
                     }
                     if (rnd.NextDouble() < 0.5)
@@ -151,9 +152,9 @@ public class MacroManagerViewModel : ViewModelBase
                         {
                             scrollAmount = rnd.Next(8, 10);
                         }
-                        robot.MouseScroll(scrollAmount);
+                        simulator.SimulateMouseWheel((short)scrollAmount, MouseWheelScrollDirection.Vertical, MouseWheelScrollType.UnitScroll);
                     }
-                    previousPos = robot.GetMousePosition();
+                    previousPos = _imageService.GetMousePosition();
                     await Task.Delay(rnd.Next(500, 2000), token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested)

@@ -9,7 +9,14 @@
     
     <Panel Name="MainPanel">
         <Image Name="BackgroundImage" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <Canvas Name="DrawingCanvas" Background="Transparent" />
+
+        <Canvas Name="DrawingCanvas" Background="Transparent">
+            <!-- Haze overlay pieces - cover the screen except the crop rect -->
+            <Rectangle Name="HazeTop" Fill="#000000" Opacity="0.55" IsHitTestVisible="False"/>
+            <Rectangle Name="HazeLeft" Fill="#000000" Opacity="0.55" IsHitTestVisible="False"/>
+            <Rectangle Name="HazeRight" Fill="#000000" Opacity="0.55" IsHitTestVisible="False"/>
+            <Rectangle Name="HazeBottom" Fill="#000000" Opacity="0.55" IsHitTestVisible="False"/>
+        </Canvas>
         
         <!-- Toolbar -->
         <Border Name="ToolbarContainer"
@@ -22,6 +29,9 @@
                 BoxShadow="0 8 20 0 #000000"
                 Cursor="Hand">
             <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Name="CropButton" Classes="tool" ToolTip.Tip="Crop Area">
+                    <ic:SymbolIcon Symbol="Crop" FontSize="20" Foreground="#cdd6f4"/>
+                </Button>
                 <Button Name="RectButton" Classes="tool" ToolTip.Tip="Box">
                     <ic:SymbolIcon Symbol="Square" FontSize="20" Foreground="#cdd6f4"/>
                 </Button>
@@ -30,9 +40,6 @@
                 </Button>
                 <Button Name="TextButton" Classes="tool" ToolTip.Tip="Text">
                     <ic:SymbolIcon Symbol="TextT" FontSize="20" Foreground="#cdd6f4"/>
-                </Button>
-                <Button Name="CropButton" Classes="tool" ToolTip.Tip="Crop Area">
-                    <ic:SymbolIcon Symbol="Crop" FontSize="20" Foreground="#cdd6f4"/>
                 </Button>
 
                 <Separator Background="#45475a" Width="1" Height="25" Margin="5,0"/>

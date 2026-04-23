@@ -28,6 +28,9 @@ public partial class ScreenRecorderViewModel : ViewModelBase
     [ObservableProperty]
     private string? _savedFolderPath;
 
+    [ObservableProperty]
+    private string? _audioDeviceName = "Microphone Array (Realtek(R) Audio)";
+
     public bool HasSavedFile => SavedFolderPath != null;
 
     public ScreenRecorderViewModel()
@@ -49,31 +52,37 @@ public partial class ScreenRecorderViewModel : ViewModelBase
     {
         if (!IsRecording)
         {
-            var fileName = $"recording_{DateTime.Now:yyyyMMdd_HHmmss}.mp4";
+            var fileName = $"Screen_{DateTime.Now:yyyyMM_dd_HHmmss}.mp4";
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), fileName);
-            
+
             try
             {
                 await SetWindowStateAsync(Avalonia.Controls.WindowState.Minimized);
-                await Task.Delay(500); // Let animation finish
-                
-                await _recorderService.StartRecordingAsync(path);
-                IsRecording = true;
-                StatusMessage = $"Recording to: {fileName}";
+                await Task.Delay(500);
+
+                // Show overlay with loading state first
                 await ShowOverlayAsync();
+
+                // Now detect audio and start recording
+                await DetectAndStartRecordingAsync(path);
             }
             catch (Exception ex)
             {
                 await SetWindowStateAsync(Avalonia.Controls.WindowState.Normal);
-                StatusMessage = $"Error: {ex.Message}. Make sure FFmpeg is installed.";
+                var message = ex.Message.Replace(Environment.NewLine, " ").Trim();
+                StatusMessage = $"FFmpeg error: {message}";
+                if (_overlayWindow != null)
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() => _overlayWindow.Close());
+                }
             }
         }
         else
         {
             try
             {
-                await HideOverlayAsync();
                 await _recorderService.StopRecordingAsync();
+                await HideOverlayAsync();
                 StatusMessage = "Recording saved to Videos folder.";
                 SavedFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
                 OnPropertyChanged(nameof(HasSavedFile));
@@ -86,17 +95,55 @@ public partial class ScreenRecorderViewModel : ViewModelBase
         }
     }
 
+    private async Task DetectAndStartRecordingAsync(string path)
+    {
+        // Update overlay with audio detection message
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _overlayWindow?.ShowLoading("Detecting audio...");
+        });
+
+        // Try to detect audio device (non-blocking, can take a moment)
+        var detectedDevice = await ScreenRecorderService.TryFindDefaultAudioDeviceAsync().ConfigureAwait(false);
+        if (!string.IsNullOrEmpty(detectedDevice))
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                AudioDeviceName = detectedDevice;
+            });
+        }
+
+        // Update overlay with starting message
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _overlayWindow?.ShowLoading("Starting recording...");
+        });
+
+        // Start recording
+        await _recorderService.StartRecordingAsync(path, AudioDeviceName).ConfigureAwait(false);
+
+        // Hide loading and show recording controls
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _overlayWindow?.HideLoading();
+            _overlayWindow?.StartTimer();
+        });
+
+        IsRecording = true;
+        StatusMessage = $"Recording to: {Path.GetFileName(path)}";
+    }
+
     private async Task ShowOverlayAsync()
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            _overlayWindow = new RecordingOverlayWindow(async () =>
+            _overlayWindow = new RecordingOverlayWindow(() =>
             {
-                // Stop recording from the overlay button
-                await ToggleRecording();
+                _ = ToggleRecording();
             });
             _overlayWindow.Show();
-            _overlayWindow.StartTimer();
+            _overlayWindow.Activate();
+            _overlayWindow.ShowLoading("Starting...");
         });
     }
 

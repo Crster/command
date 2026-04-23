@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.37111.16 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.5.11709.299
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrsterCommand", "CrsterCommand\CrsterCommand.csproj", "{AC06B8BC-BC42-9AE6-2A2F-B140FB564096}"
 EndProject

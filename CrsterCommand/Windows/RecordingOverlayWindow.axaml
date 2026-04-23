@@ -35,56 +35,97 @@
             PointerPressed="OnDragStart"
             PointerMoved="OnDragMove"
             PointerReleased="OnDragEnd">
-        <!-- Use a Grid so we can center the Stop button while keeping the timer left-aligned -->
-        <Grid ColumnDefinitions="Auto,*,Auto">
-            <!-- Recording indicator dot -->
-            <Ellipse Width="10" Height="10"
-                     Fill="#f38ba8"
-                     VerticalAlignment="Center"
-                     Margin="0,0,8,0"
-                     Grid.Column="0">
-                <Ellipse.Styles>
-                    <Style Selector="Ellipse">
-                        <Style.Animations>
-                            <Animation Duration="0:0:1" IterationCount="Infinite">
-                                <KeyFrame KeyTime="0:0:0">
-                                    <Setter Property="Opacity" Value="1.0"/>
-                                </KeyFrame>
-                                <KeyFrame KeyTime="0:0:0.5">
-                                    <Setter Property="Opacity" Value="0.2"/>
-                                </KeyFrame>
-                                <KeyFrame KeyTime="0:0:1">
-                                    <Setter Property="Opacity" Value="1.0"/>
-                                </KeyFrame>
-                            </Animation>
-                        </Style.Animations>
-                    </Style>
-                </Ellipse.Styles>
-            </Ellipse>
+        <!-- Panel with two states: recording and loading -->
+        <Panel>
+            <!-- Main recording UI -->
+            <Grid x:Name="RecordingContent" ColumnDefinitions="Auto,*,Auto" IsVisible="True">
+                <!-- Recording indicator dot -->
+                <Ellipse Width="10" Height="10"
+                         Fill="#f38ba8"
+                         VerticalAlignment="Center"
+                         Margin="0,0,8,0"
+                         Grid.Column="0">
+                    <Ellipse.Styles>
+                        <Style Selector="Ellipse">
+                            <Style.Animations>
+                                <Animation Duration="0:0:1" IterationCount="Infinite">
+                                    <KeyFrame KeyTime="0:0:0">
+                                        <Setter Property="Opacity" Value="1.0"/>
+                                    </KeyFrame>
+                                    <KeyFrame KeyTime="0:0:0.5">
+                                        <Setter Property="Opacity" Value="0.2"/>
+                                    </KeyFrame>
+                                    <KeyFrame KeyTime="0:0:1">
+                                        <Setter Property="Opacity" Value="1.0"/>
+                                    </KeyFrame>
+                                </Animation>
+                            </Style.Animations>
+                        </Style>
+                    </Ellipse.Styles>
+                </Ellipse>
 
-            <!-- Timer (left-aligned in center column) -->
-            <TextBlock x:Name="TimerText"
-                       Text="00:00"
-                       Foreground="White"
-                       FontSize="14"
-                       FontWeight="SemiBold"
-                       FontFamily="Consolas,Monospace"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Left"
-                       Margin="0,0,8,0"
-                       Grid.Column="1"/>
+                <!-- Timer (left-aligned in center column) -->
+                <TextBlock x:Name="TimerText"
+                           Text="00:00"
+                           Foreground="White"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           FontFamily="Consolas,Monospace"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Left"
+                           Margin="0,0,8,0"
+                           Grid.Column="1"/>
 
-            <!-- Stop button centered in center column -->
-            <Button Classes="StopBtn"
-                    Click="OnStopClick"
-                    Grid.Column="2"
-                    HorizontalAlignment="Right">
-                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <!-- Use a filled rectangle as the stop icon so it appears as a filled square instead of an outline -->
-                    <Rectangle Width="12" Height="12" Fill="#1e1e2e" RadiusX="2" RadiusY="2" VerticalAlignment="Center" />
-                    <TextBlock Text="Stop" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-        </Grid>
+                <!-- Stop button centered in center column -->
+                <Button Classes="StopBtn"
+                        Click="OnStopClick"
+                        Grid.Column="2"
+                        HorizontalAlignment="Right">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <!-- Use a filled rectangle as the stop icon so it appears as a filled square instead of an outline -->
+                        <Rectangle Width="12" Height="12" Fill="#1e1e2e" RadiusX="2" RadiusY="2" VerticalAlignment="Center" />
+                        <TextBlock Text="Stop" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Loading/Processing state -->
+            <StackPanel x:Name="LoadingContent" 
+                        IsVisible="False"
+                        Orientation="Horizontal" 
+                        Spacing="12" 
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+                <!-- Spinner animation -->
+                <Ellipse Width="14" Height="14"
+                         Fill="#a6e3a1"
+                         VerticalAlignment="Center"
+                         RenderTransformOrigin="50%,50%">
+                    <Ellipse.RenderTransform>
+                        <RotateTransform Angle="0"/>
+                    </Ellipse.RenderTransform>
+                    <Ellipse.Styles>
+                        <Style Selector="Ellipse">
+                            <Style.Animations>
+                                <Animation Duration="0:0:1" IterationCount="Infinite">
+                                    <KeyFrame KeyTime="0:0:0">
+                                        <Setter Property="RotateTransform.Angle" Value="0"/>
+                                    </KeyFrame>
+                                    <KeyFrame KeyTime="0:0:1">
+                                        <Setter Property="RotateTransform.Angle" Value="360"/>
+                                    </KeyFrame>
+                                </Animation>
+                            </Style.Animations>
+                        </Style>
+                    </Ellipse.Styles>
+                </Ellipse>
+                <!-- Loading text -->
+                <TextBlock x:Name="LoadingText"
+                           Text="Starting..."
+                           Foreground="White"
+                           FontSize="12"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Panel>
     </Border>
 </Window>

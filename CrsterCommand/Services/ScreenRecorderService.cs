@@ -15,11 +15,9 @@ public class ScreenRecorderService
 
     public static string? ResolveFfmpegPath()
     {
-        // Use platform-appropriate executable name and PATH separator
         var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "ffmpeg.exe" : "ffmpeg";
         var pathEnv = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
 
-        // Search PATH entries first (respecting platform path separator)
         foreach (var dir in pathEnv.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
         {
             try
@@ -31,45 +29,51 @@ public class ScreenRecorderService
             catch { }
         }
 
-        // Check some common installation locations per platform
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            var candidates = new[] {
+            var candidates = new[]
+            {
                 "/usr/local/bin/ffmpeg",
                 "/opt/homebrew/bin/ffmpeg",
                 "/usr/bin/ffmpeg",
                 "/usr/local/sbin/ffmpeg"
             };
-            foreach (var c in candidates) if (File.Exists(c)) return c;
+
+            foreach (var c in candidates)
+                if (File.Exists(c)) return c;
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            var candidates = new[] {
+            var candidates = new[]
+            {
                 "/usr/bin/ffmpeg",
                 "/usr/local/bin/ffmpeg",
                 "/snap/bin/ffmpeg",
                 "/usr/local/sbin/ffmpeg"
             };
-            foreach (var c in candidates) if (File.Exists(c)) return c;
+
+            foreach (var c in candidates)
+                if (File.Exists(c)) return c;
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // Check common Program Files locations
             try
             {
                 var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
                 var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                var candidates = new[] {
+                var candidates = new[]
+                {
                     Path.Combine(programFiles, "ffmpeg", "bin", "ffmpeg.exe"),
                     Path.Combine(programFilesX86, "ffmpeg", "bin", "ffmpeg.exe"),
                     Path.Combine(localAppData, "Programs", "ffmpeg", "bin", "ffmpeg.exe")
                 };
-                foreach (var c in candidates) if (File.Exists(c)) return c;
+
+                foreach (var c in candidates)
+                    if (File.Exists(c)) return c;
             }
             catch { }
 
-            // Fallback: try additional PATHs from registry (only on Windows)
             try
             {
                 var userPath = Microsoft.Win32.Registry.GetValue(
@@ -95,15 +99,22 @@ public class ScreenRecorderService
         return null;
     }
 
-    public async Task StartRecordingAsync(string outputPath)
+    public async Task StartRecordingAsync(string outputPath, string? audioDevice = null)
     {
         if (IsRecording) return;
 
         var ffmpegPath = ResolveFfmpegPath()
             ?? throw new FileNotFoundException("FFmpeg not found. Please install FFmpeg and add it to your system PATH.");
 
+        // Ensure output directory exists
+        var outputDir = Path.GetDirectoryName(outputPath);
+        if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+        {
+            Directory.CreateDirectory(outputDir);
+        }
+
         _currentOutputFile = outputPath;
-        var arguments = GetPlatformArguments(outputPath);
+        var arguments = GetPlatformArguments(outputPath, audioDevice);
 
         _ffmpegProcess = new Process
         {
@@ -113,45 +124,142 @@ public class ScreenRecorderService
                 Arguments = arguments,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                RedirectStandardInput = true // Used to send 'q' to stop
+                RedirectStandardInput = true
             }
         };
 
-        await Task.Run(() => _ffmpegProcess.Start());
+        try
+        {
+            _ffmpegProcess.Start();
+        }
+        catch (Exception ex)
+        {
+            _ffmpegProcess.Dispose();
+            _ffmpegProcess = null;
+            throw new InvalidOperationException($"Failed to start FFmpeg: {ex.Message}", ex);
+        }
     }
 
     public async Task StopRecordingAsync()
     {
         if (_ffmpegProcess == null || _ffmpegProcess.HasExited) return;
 
-        // Send 'q' to FFmpeg to stop recording gracefully
-        await _ffmpegProcess.StandardInput.WriteAsync("q");
-        await _ffmpegProcess.WaitForExitAsync();
-        
-        _ffmpegProcess.Dispose();
-        _ffmpegProcess = null;
+        try
+        {
+            // Send 'q' to FFmpeg to stop recording gracefully
+            await _ffmpegProcess.StandardInput.WriteAsync("q").ConfigureAwait(false);
+            await _ffmpegProcess.StandardInput.FlushAsync().ConfigureAwait(false);
+            _ffmpegProcess.StandardInput.Close();
+
+            // Wait for graceful exit (up to 5 seconds)
+            var exited = await Task.Run(() => _ffmpegProcess.WaitForExit(5000)).ConfigureAwait(false);
+
+            if (!exited && !_ffmpegProcess.HasExited)
+            {
+                // Force kill if still running
+                _ffmpegProcess.Kill(entireProcessTree: true);
+                await _ffmpegProcess.WaitForExitAsync().ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            _ffmpegProcess.Dispose();
+            _ffmpegProcess = null;
+        }
     }
 
-    private string GetPlatformArguments(string outputPath)
+    /// <summary>
+    /// Attempts to find the default audio device name asynchronously (non-blocking).
+    /// Returns null if not found or on non-Windows platforms.
+    /// </summary>
+    public static async Task<string?> TryFindDefaultAudioDeviceAsync(string? ffmpegPath = null)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return null;
+
+        try
+        {
+            ffmpegPath ??= ResolveFfmpegPath();
+            if (string.IsNullOrEmpty(ffmpegPath))
+                return null;
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = ffmpegPath,
+                Arguments = "-list_devices true -f dshow -i dummy",
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(psi);
+            if (process == null)
+                return null;
+
+            var stderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
+            await process.WaitForExitAsync().ConfigureAwait(false);
+
+            var lines = stderr.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var audioSection = false;
+
+            foreach (var raw in lines)
+            {
+                var line = raw.Trim();
+
+                if (line.Contains("DirectShow audio devices", StringComparison.OrdinalIgnoreCase))
+                {
+                    audioSection = true;
+                    continue;
+                }
+
+                if (audioSection)
+                {
+                    var firstQuote = line.IndexOf('"');
+                    var lastQuote = line.LastIndexOf('"');
+                    if (firstQuote >= 0 && lastQuote > firstQuote)
+                    {
+                        var name = line.Substring(firstQuote + 1, lastQuote - firstQuote - 1);
+                        if (!string.IsNullOrWhiteSpace(name))
+                            return name;
+                    }
+
+                    if (line.Contains("DirectShow video devices", StringComparison.OrdinalIgnoreCase))
+                        break;
+                }
+            }
+        }
+        catch
+        {
+            // Silently fail - mic detection is optional
+        }
+
+        return null;
+    }
+
+    private string GetPlatformArguments(string outputPath, string? audioDevice = null)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // Windows: gdigrab for screen, dshow for audio (using default mic if possible)
-            // Note: On Windows, detecting the exact mic name is complex via CLI, 
-            // but we can try 'audio="virtual-audio-capturer"' or similar if installed, 
-            // otherwise we might need user input. For now, capturing screen only 
-            // as primary, audio added via -f dshow -i audio="Microphone..." if known.
-            return $"-f gdigrab -framerate 30 -i desktop -c:v libx264 -pix_fmt yuv420p \"{outputPath}\"";
+            // Windows: gdigrab for screen capture
+            if (!string.IsNullOrWhiteSpace(audioDevice))
+            {
+                return $"-y -f gdigrab -framerate 30 -i desktop -f dshow -i audio=\"{audioDevice}\" -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k \"{outputPath}\"";
+            }
+            return $"-y -f gdigrab -framerate 30 -i desktop -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p \"{outputPath}\"";
         }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            // macOS: avfoundation
-            return $"-f avfoundation -i \"1:0\" -c:v libx264 -pix_fmt yuv420p \"{outputPath}\"";
+            // macOS: avfoundation for screen capture (1:0 = screen + default audio)
+            return $"-y -f avfoundation -framerate 30 -i \"1:0\" -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -c:a aac \"{outputPath}\"";
         }
-        else
+
+        // Linux: x11grab for screen, pulse for audio
+        if (!string.IsNullOrWhiteSpace(audioDevice))
         {
-            // Linux: x11grab and pulse
-            return $"-f x11grab -framerate 30 -i :0.0 -f pulse -i default -c:v libx264 -pix_fmt yuv420p \"{outputPath}\"";
+            return $"-y -f x11grab -framerate 30 -i :0.0 -f pulse -i {audioDevice} -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k \"{outputPath}\"";
         }
+
+        return $"-y -f x11grab -framerate 30 -i :0.0 -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p \"{outputPath}\"";
     }
 }
