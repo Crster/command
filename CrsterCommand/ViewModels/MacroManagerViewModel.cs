@@ -91,7 +91,7 @@ public class MacroManagerViewModel : ViewModelBase
     private async Task RunDesktopRobotAsync(CancellationToken token, bool fromHotkey = false)
     {
         var rnd = new Random();
-        await SetWindowVisibilityAsync(false);
+        await MinimizeToTrayAsync();
         try
         {
             await Task.Delay(3000, token).ConfigureAwait(false);
@@ -100,7 +100,7 @@ public class MacroManagerViewModel : ViewModelBase
         {
             if (!fromHotkey)
             {
-                await SetWindowVisibilityAsync(true);
+                await RestoreFromTrayAsync();
             }
             IsRobotRunning = false;
             return;
@@ -108,8 +108,6 @@ public class MacroManagerViewModel : ViewModelBase
         
         var screen = this._imageService.GetFullscreenSize();
 
-        var diagonal = Math.Sqrt(screen.Width * screen.Width + screen.Height * screen.Height);
-        var threshold = 0.2 * diagonal;
         var centerX = (int)(screen.Width / 2);
         var centerY = (int)(screen.Height / 2);
         var maxOffsetX = screen.Width * 0.25;
@@ -121,14 +119,19 @@ public class MacroManagerViewModel : ViewModelBase
         {
             simulator.SimulateMousePress((short)previousPos.X, (short)previousPos.Y, SharpHook.Data.MouseButton.Button1);
             simulator.SimulateMouseRelease((short)previousPos.X, (short)previousPos.Y, SharpHook.Data.MouseButton.Button1);
+
+            // Move mouse to center of boundary
+            simulator.SimulateMouseMovement((short)centerX, (short)centerY);
+            previousPos = _imageService.GetMousePosition();
+
             while (!token.IsCancellationRequested)
             {
                 try
                 {
                     var actual = _imageService.GetMousePosition();
-                    var lastRecorded = previousPos;
-                    var dist = Math.Sqrt(Math.Pow(actual.X - lastRecorded.X, 2) + Math.Pow(actual.Y - lastRecorded.Y, 2));
-                    if (dist > threshold)
+                    // Check if mouse is outside the allowed boundary box
+                    if (actual.X < centerX - maxOffsetX || actual.X > centerX + maxOffsetX ||
+                        actual.Y < centerY - maxOffsetY || actual.Y > centerY + maxOffsetY)
                     {
                         break;
                     }
@@ -156,7 +159,7 @@ public class MacroManagerViewModel : ViewModelBase
                     }
                     if (rnd.NextDouble() < 0.5)
                     {
-                        int scrollAmount = rnd.NextDouble() < 0.5 ? 5 : -5;
+                        int scrollAmount = GetPlatformScrollAmount(rnd);
                         simulator.SimulateMouseWheel((short)scrollAmount, MouseWheelScrollDirection.Vertical, MouseWheelScrollType.UnitScroll);
                     }
                     previousPos = _imageService.GetMousePosition();
@@ -170,6 +173,9 @@ public class MacroManagerViewModel : ViewModelBase
                 {
                 }
             }
+
+            // Move mouse back to center of boundary when exiting
+            simulator.SimulateMouseMovement((short)centerX, (short)centerY);
         }
         catch (OperationCanceledException)
         {
@@ -178,7 +184,7 @@ public class MacroManagerViewModel : ViewModelBase
         {
             if (!fromHotkey)
             {
-                await SetWindowVisibilityAsync(true);
+                await RestoreFromTrayAsync();
             }
             await Dispatcher.UIThread.InvokeAsync(() => IsRobotRunning = false);
         }
@@ -368,6 +374,38 @@ public class MacroManagerViewModel : ViewModelBase
         {
             // ignore failures; clipboard operation is best-effort
         }
+    }
+
+    private int GetPlatformScrollAmount(Random rnd)
+    {
+        // Platform-specific scroll amounts based on SharpHook documentation:
+        // Windows: multiples of 120 represent one default wheel step
+        // macOS: values between -10 and 10 recommended for pixel scrolling
+        // Linux: multiples of 100 can be used
+        int scrollAmount;
+
+        if (OperatingSystem.IsWindows())
+        {
+            // Windows: 240 = 2 wheel steps (120 per step)
+            scrollAmount = rnd.NextDouble() < 0.5 ? 240 : -240;
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            // macOS: use smaller values between -10 and 10
+            scrollAmount = rnd.NextDouble() < 0.5 ? 8 : -8;
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            // Linux: multiples of 100
+            scrollAmount = rnd.NextDouble() < 0.5 ? 200 : -200;
+        }
+        else
+        {
+            // Fallback for unknown platforms
+            scrollAmount = rnd.NextDouble() < 0.5 ? 120 : -120;
+        }
+
+        return scrollAmount;
     }
 }
 

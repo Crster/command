@@ -51,6 +51,51 @@ public abstract class ViewModelBase : ObservableObject
         });
     }
 
+    protected async Task MinimizeToTrayAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                if (desktop.MainWindow != null)
+                {
+                    desktop.MainWindow.WindowState = WindowState.Minimized;
+                    desktop.MainWindow.ShowInTaskbar = false;
+                    desktop.MainWindow.IsVisible = false;
+
+                    // Set tray icon visible through AppViewModel
+                    if (Application.Current is App app && app.DataContext is AppViewModel appViewModel)
+                    {
+                        appViewModel.SetTrayVisible(true);
+                    }
+                }
+            }
+        });
+    }
+
+    protected async Task RestoreFromTrayAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                if (desktop.MainWindow != null)
+                {
+                    desktop.MainWindow.IsVisible = true;
+                    desktop.MainWindow.ShowInTaskbar = true;
+                    desktop.MainWindow.WindowState = WindowState.Normal;
+                    desktop.MainWindow.Activate();
+
+                    // Hide tray icon through AppViewModel
+                    if (Application.Current is App app && app.DataContext is AppViewModel appViewModel)
+                    {
+                        appViewModel.SetTrayVisible(false);
+                    }
+                }
+            }
+        });
+    }
+
     public async Task<Window?> GetMainWindowAsync()
     {
         return await Dispatcher.UIThread.InvokeAsync(() =>
