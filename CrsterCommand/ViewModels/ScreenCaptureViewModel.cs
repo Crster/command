@@ -15,6 +15,7 @@ public partial class ScreenCaptureViewModel : ViewModelBase
 {
     private readonly ImageService _imageService = new();
     private Action? _onCaptureCompleted;
+    private bool _captureStartedFromHotkey;
 
     [ObservableProperty]
     private Bitmap? _capturedImage;
@@ -30,12 +31,19 @@ public partial class ScreenCaptureViewModel : ViewModelBase
     [RelayCommand]
     public async Task StartCaptureAsync()
     {
+        await StartCaptureAsync(fromHotkey: false);
+    }
+
+    public async Task StartCaptureAsync(bool fromHotkey = false)
+    {
         if (IsCapturing)
         {
             return;
         }
 
         IsCapturing = true;
+        bool captureSucceeded = false;
+        _captureStartedFromHotkey = fromHotkey;
 
         try 
         {
@@ -53,6 +61,7 @@ public partial class ScreenCaptureViewModel : ViewModelBase
             if (overlay.ResultBitmap != null)
             {
                 CapturedImage = overlay.ResultBitmap;
+                captureSucceeded = true;
             }
         }
         catch (Exception ex)
@@ -61,10 +70,17 @@ public partial class ScreenCaptureViewModel : ViewModelBase
         } 
         finally
         {
-            await SetWindowStateAsync(WindowState.Normal);
+            // Only restore window and notify if not started from hotkey
+            if (!_captureStartedFromHotkey)
+            {
+                await SetWindowStateAsync(WindowState.Normal);
 
-            // Notify that capture is completed and navigate to the Capture view
-            _onCaptureCompleted?.Invoke();
+                // Only notify if capture succeeded (not cancelled)
+                if (captureSucceeded)
+                {
+                    _onCaptureCompleted?.Invoke();
+                }
+            }
         }
 
         IsCapturing = false;

@@ -35,6 +35,7 @@ public class MacroManagerViewModel : ViewModelBase
 
     private CancellationTokenSource? _robotCts;
     private bool _isRobotRunning;
+    private bool _robotStartedFromHotkey;
     public bool IsRobotRunning
     {
         get => _isRobotRunning;
@@ -51,7 +52,7 @@ public class MacroManagerViewModel : ViewModelBase
         SendCommand = new AsyncRelayCommand<MacroAiAppItem?>(SendAsync);
         CopyAnswerCommand = new AsyncRelayCommand<MacroAiAppItem?>(CopyAnswerAsync);
         DeleteAiAppCommand = new RelayCommand<MacroAiAppItem?>(DeleteAiApp);
-        ToggleRobotCommand = new RelayCommand(ToggleRobot);
+        ToggleRobotCommand = new RelayCommand(() => ToggleRobot());
 
         LoadModelOptions();
         LoadAll();
@@ -60,7 +61,7 @@ public class MacroManagerViewModel : ViewModelBase
 
     // Use base ViewModelBase.GetMainWindowAsync to obtain the main window.
 
-    private void ToggleRobot()
+    private void ToggleRobot(bool fromHotkey = false)
     {
         if (IsRobotRunning)
         {
@@ -73,20 +74,21 @@ public class MacroManagerViewModel : ViewModelBase
         {
             // Start
             _robotCts = new CancellationTokenSource();
-            _ = Task.Run(() => RunDesktopRobotAsync(_robotCts.Token));
+            _robotStartedFromHotkey = fromHotkey;
+            _ = Task.Run(() => RunDesktopRobotAsync(_robotCts.Token, fromHotkey));
             IsRobotRunning = true;
         }
     }
 
-    public void RunDesktopRobot()
+    public void RunDesktopRobot(bool fromHotkey = false)
     {
         if (!IsRobotRunning)
         {
-            ToggleRobot();
+            ToggleRobot(fromHotkey);
         }
     }
 
-    private async Task RunDesktopRobotAsync(CancellationToken token)
+    private async Task RunDesktopRobotAsync(CancellationToken token, bool fromHotkey = false)
     {
         var rnd = new Random();
         await SetWindowVisibilityAsync(false);
@@ -96,7 +98,10 @@ public class MacroManagerViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
-            await SetWindowVisibilityAsync(true);
+            if (!fromHotkey)
+            {
+                await SetWindowVisibilityAsync(true);
+            }
             IsRobotRunning = false;
             return;
         }
@@ -171,7 +176,10 @@ public class MacroManagerViewModel : ViewModelBase
         }
         finally
         {
-            await SetWindowVisibilityAsync(true);
+            if (!fromHotkey)
+            {
+                await SetWindowVisibilityAsync(true);
+            }
             await Dispatcher.UIThread.InvokeAsync(() => IsRobotRunning = false);
         }
     }

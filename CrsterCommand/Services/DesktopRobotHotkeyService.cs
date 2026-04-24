@@ -141,7 +141,7 @@ public sealed class DesktopRobotHotkeyService : IDisposable
             return;
         }
 
-        Dispatcher.UIThread.Post(() => _macroManagerViewModel.RunDesktopRobot());
+        Dispatcher.UIThread.Post(() => _macroManagerViewModel.RunDesktopRobot(fromHotkey: true));
     }
 
     private static bool TryParseShortcut(string shortcut, out ShortcutDefinition definition)

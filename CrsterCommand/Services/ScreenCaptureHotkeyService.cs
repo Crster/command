@@ -141,7 +141,7 @@ public sealed class ScreenCaptureHotkeyService : IDisposable
             return;
         }
 
-        Dispatcher.UIThread.Post(async () => await _screenCaptureViewModel.StartCaptureAsync());
+        Dispatcher.UIThread.Post(async () => await _screenCaptureViewModel.StartCaptureAsync(fromHotkey: true));
     }
 
     private static bool TryParseShortcut(string shortcut, out ShortcutDefinition definition)
