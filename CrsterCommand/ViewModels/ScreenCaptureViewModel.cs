@@ -14,6 +14,7 @@ namespace CrsterCommand.ViewModels;
 public partial class ScreenCaptureViewModel : ViewModelBase
 {
     private readonly ImageService _imageService = new();
+    private Action? _onCaptureCompleted;
 
     [ObservableProperty]
     private Bitmap? _capturedImage;
@@ -21,9 +22,19 @@ public partial class ScreenCaptureViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isCapturing;
 
-    [RelayCommand]
-    private async Task StartCaptureAsync()
+    public void SetOnCaptureCompleted(Action callback)
     {
+        _onCaptureCompleted = callback;
+    }
+
+    [RelayCommand]
+    public async Task StartCaptureAsync()
+    {
+        if (IsCapturing)
+        {
+            return;
+        }
+
         IsCapturing = true;
 
         try 
@@ -38,7 +49,7 @@ public partial class ScreenCaptureViewModel : ViewModelBase
             overlay.Closed += (_, _) => tcs.TrySetResult(null);
             overlay.Show();
             await tcs.Task;
-            
+
             if (overlay.ResultBitmap != null)
             {
                 CapturedImage = overlay.ResultBitmap;
@@ -51,6 +62,9 @@ public partial class ScreenCaptureViewModel : ViewModelBase
         finally
         {
             await SetWindowStateAsync(WindowState.Normal);
+
+            // Notify that capture is completed and navigate to the Capture view
+            _onCaptureCompleted?.Invoke();
         }
 
         IsCapturing = false;

@@ -3,7 +3,7 @@
         xmlns:ic="using:FluentIcons.Avalonia"
         x:Class="CrsterCommand.Windows.RecordingOverlayWindow"
         Title="Recording"
-        Width="160" Height="44"
+        Width="200" Height="44"
         Topmost="True"
         ShowInTaskbar="False"
         CanResize="False"

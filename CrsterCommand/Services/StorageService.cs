@@ -110,6 +110,20 @@ public class StorageService : IDisposable
         SaveSettings(_settings);
     }
 
+    public string GetScreenCaptureShortcut() => _settings.ScreenCaptureShortcut;
+    public void SetScreenCaptureShortcut(string shortcut)
+    {
+        _settings.ScreenCaptureShortcut = shortcut;
+        SaveSettings(_settings);
+    }
+
+    public string GetDesktopRobotShortcut() => _settings.DesktopRobotShortcut;
+    public void SetDesktopRobotShortcut(string shortcut)
+    {
+        _settings.DesktopRobotShortcut = shortcut;
+        SaveSettings(_settings);
+    }
+
     public ILiteCollection<TodoItem> GetTodos() => _db!.GetCollection<TodoItem>("todos");
     public ILiteCollection<Reminder> GetReminders() => _db!.GetCollection<Reminder>("reminders");
     public ILiteCollection<MemoryNote> GetMemoryNotes() => _db!.GetCollection<MemoryNote>("notes");

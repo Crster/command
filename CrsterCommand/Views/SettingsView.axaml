@@ -99,8 +99,74 @@
                 </StackPanel>
             </Border>
 
-            <!-- FFmpeg Card -->
+            <!-- Screen Capture Hotkey Card -->
             <Border Classes="Card">
+                <StackPanel Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <ic:SymbolIcon Symbol="Keyboard"
+                                       Foreground="{DynamicResource AppAccentBrush}"
+                                       FontSize="20"/>
+                        <TextBlock Classes="SectionHeader"
+                                   Text="Screen Capture Shortcut"
+                                   Foreground="{DynamicResource AppAccentBrush}"/>
+                    </StackPanel>
+                    <TextBlock Text="Choose Print Screen, or a supported combo such as Ctrl+Shift+Key, Ctrl+Alt+Shift+Key, or Alt+Shift+Key. On macOS, use Cmd instead of Ctrl."
+                               FontSize="13"
+                               Foreground="{DynamicResource AppSecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock Classes="Label" Text="Shortcut Key"/>
+                                <TextBox x:Name="ScreenCaptureShortcutBox"
+                                         Text="{Binding ScreenCaptureShortcut, Mode=TwoWay}"
+                                         IsReadOnly="True"
+                                         PlaceholderText="Press the shortcut here"
+                                         HorizontalAlignment="Stretch"
+                                         GotFocus="ScreenCaptureShortcutBox_GotFocus"
+                                         LostFocus="ScreenCaptureShortcutBox_LostFocus"/>
+                                <TextBlock Text="Click the field and press a key combination."
+                                           FontSize="12"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Desktop Robot Hotkey Card -->
+                    <Border Classes="Card">
+                        <StackPanel Spacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <ic:SymbolIcon Symbol="AutoFit"
+                                               Foreground="{DynamicResource AppAccentBrush}"
+                                               FontSize="20"/>
+                                <TextBlock Classes="SectionHeader"
+                                           Text="Desktop Robot Shortcut"
+                                           Foreground="{DynamicResource AppAccentBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="Configure the keyboard shortcut to trigger the Desktop Robot. Supported combinations: Alt+key, Win+key, Alt+Shift+key, Ctrl+Shift+key, Ctrl+Alt+key, Ctrl+Alt+Shift+key."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource AppSecondaryTextBrush}"
+                                       TextWrapping="Wrap"/>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock Classes="Label" Text="Shortcut Key"/>
+                                <TextBox x:Name="DesktopRobotShortcutBox"
+                                         Text="{Binding DesktopRobotShortcut, Mode=TwoWay}"
+                                         IsReadOnly="True"
+                                         PlaceholderText="Press the shortcut here"
+                                         HorizontalAlignment="Stretch"
+                                         GotFocus="DesktopRobotShortcutBox_GotFocus"
+                                         LostFocus="DesktopRobotShortcutBox_LostFocus"/>
+                                <TextBlock Text="Click the field and press a key combination."
+                                           FontSize="12"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- FFmpeg Card -->
+                    <Border Classes="Card">
                 <StackPanel Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <ic:SymbolIcon Symbol="Video"

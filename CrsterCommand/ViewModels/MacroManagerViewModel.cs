@@ -78,6 +78,14 @@ public class MacroManagerViewModel : ViewModelBase
         }
     }
 
+    public void RunDesktopRobot()
+    {
+        if (!IsRobotRunning)
+        {
+            ToggleRobot();
+        }
+    }
+
     private async Task RunDesktopRobotAsync(CancellationToken token)
     {
         var rnd = new Random();
@@ -143,15 +151,7 @@ public class MacroManagerViewModel : ViewModelBase
                     }
                     if (rnd.NextDouble() < 0.5)
                     {
-                        int scrollAmount;
-                        if (rnd.NextDouble() < 0.75)
-                        {
-                            scrollAmount = rnd.Next(-32, -10);
-                        }
-                        else
-                        {
-                            scrollAmount = rnd.Next(8, 10);
-                        }
+                        int scrollAmount = rnd.NextDouble() < 0.5 ? 5 : -5;
                         simulator.SimulateMouseWheel((short)scrollAmount, MouseWheelScrollDirection.Vertical, MouseWheelScrollType.UnitScroll);
                     }
                     previousPos = _imageService.GetMousePosition();

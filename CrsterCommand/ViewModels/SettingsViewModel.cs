@@ -27,6 +27,70 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string? _vaultPassword;
 
+    private string _screenCaptureShortcut = "PrintScreen";
+
+    public string ScreenCaptureShortcut
+    {
+        get => _screenCaptureShortcut;
+        set
+        {
+            if (value == "Conflict")
+            {
+                SetProperty(ref _screenCaptureShortcut, value);
+                return;
+            }
+
+            if (CheckShortcutConflict(value, _desktopRobotShortcut))
+            {
+                _screenCaptureShortcut = "Conflict";
+                OnPropertyChanged(nameof(ScreenCaptureShortcut));
+                return;
+            }
+
+            if (SetProperty(ref _screenCaptureShortcut, value))
+            {
+                _storageService.SetScreenCaptureShortcut(value);
+            }
+        }
+    }
+
+    private string _desktopRobotShortcut = "Ctrl+Alt+Shift+F12";
+
+    public string DesktopRobotShortcut
+    {
+        get => _desktopRobotShortcut;
+        set
+        {
+            if (value == "Conflict")
+            {
+                SetProperty(ref _desktopRobotShortcut, value);
+                return;
+            }
+
+            if (CheckShortcutConflict(value, _screenCaptureShortcut))
+            {
+                _desktopRobotShortcut = "Conflict";
+                OnPropertyChanged(nameof(DesktopRobotShortcut));
+                return;
+            }
+
+            if (SetProperty(ref _desktopRobotShortcut, value))
+            {
+                _storageService.SetDesktopRobotShortcut(value);
+            }
+        }
+    }
+
+    private bool CheckShortcutConflict(string shortcut1, string shortcut2)
+    {
+        if (string.IsNullOrEmpty(shortcut1) || string.IsNullOrEmpty(shortcut2))
+            return false;
+        if (shortcut1 == "Conflict" || shortcut2 == "Conflict")
+            return false;
+
+        return string.Equals(shortcut1, shortcut2, StringComparison.OrdinalIgnoreCase);
+    }
+
     [ObservableProperty]
     private ObservableCollection<string> _aiModelOptions = new();
 
@@ -51,7 +115,9 @@ public partial class SettingsViewModel : ViewModelBase
         _aiApiKey = _storageService.GetAiApiKey();
         _aiModel = _storageService.GetAiModel();
         _vaultPassword = _storageService.GetVaultPassword();
-        
+        _screenCaptureShortcut = _storageService.GetScreenCaptureShortcut();
+        _desktopRobotShortcut = _storageService.GetDesktopRobotShortcut();
+
         if (!string.IsNullOrEmpty(_aiApiKey))
         {
             _ = Task.Run(async () => await FetchModelsAsync());
