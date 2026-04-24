@@ -110,8 +110,8 @@ public class MacroManagerViewModel : ViewModelBase
 
         var centerX = (int)(screen.Width / 2);
         var centerY = (int)(screen.Height / 2);
-        var maxOffsetX = screen.Width * 0.25;
-        var maxOffsetY = screen.Height * 0.25;
+        var maxOffsetX = screen.Width * 0.15;
+        var maxOffsetY = screen.Height * 0.20;
         var simulator = new EventSimulator();
         var previousPos = _imageService.GetMousePosition();
 
@@ -135,35 +135,20 @@ public class MacroManagerViewModel : ViewModelBase
                     {
                         break;
                     }
-                    int dx = rnd.Next(-220, 221);
-                    int dy = rnd.Next(-160, 161);
-                    var targetX = previousPos.X + dx;
-                    var targetY = previousPos.Y + dy;
-                    targetX = (int)Math.Max(centerX - maxOffsetX, Math.Min(centerX + maxOffsetX, targetX));
-                    targetY = (int)Math.Max(centerY - maxOffsetY, Math.Min(centerY + maxOffsetY, targetY));
-                    targetX = Math.Max(0, Math.Min((int)screen.Width - 1, targetX));
-                    targetY = Math.Max(0, Math.Min((int)screen.Height - 1, targetY));
-                    int steps = rnd.Next(16, 32);
-                    double stepX = (targetX - previousPos.X) / (double)steps;
-                    double stepY = (targetY - previousPos.Y) / (double)steps;
-                    for (int i = 1; i <= steps; i++)
-                    {
-                        double rawX = previousPos.X + stepX * i;
-                        double rawY = previousPos.Y + stepY * i;
-                        rawX = Math.Max(centerX - maxOffsetX, Math.Min(centerX + maxOffsetX, rawX));
-                        rawY = Math.Max(centerY - maxOffsetY, Math.Min(centerY + maxOffsetY, rawY));
-                        int glideX = Math.Max(0, Math.Min((int)screen.Width - 1, (int)rawX));
-                        int glideY = Math.Max(0, Math.Min((int)screen.Height - 1, (int)rawY));
-                        simulator.SimulateMouseMovement((short)glideX, (short)glideY);
-                        await Task.Delay(rnd.Next(4, 14), token).ConfigureAwait(false);
-                    }
+                    int dx = rnd.Next(-(int)maxOffsetX, (int)maxOffsetX + 1);
+                    int dy = rnd.Next(-(int)maxOffsetY, (int)maxOffsetY + 1);
+                    int targetX = (int)Math.Max(0, Math.Min((int)screen.Width - 1, centerX + dx));
+                    int targetY = (int)Math.Max(0, Math.Min((int)screen.Height - 1, centerY + dy));
+                    simulator.SimulateMouseMovement((short)targetX, (short)targetY);
+
+                    Task.Delay(rnd.Next(500, 1500), token).Wait(token);
+
                     if (rnd.NextDouble() < 0.5)
                     {
                         int scrollAmount = GetPlatformScrollAmount(rnd);
                         simulator.SimulateMouseWheel((short)scrollAmount, MouseWheelScrollDirection.Vertical, MouseWheelScrollType.UnitScroll);
                     }
                     previousPos = _imageService.GetMousePosition();
-                    await Task.Delay(rnd.Next(500, 2000), token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested)
                 {
