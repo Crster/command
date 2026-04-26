@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CrsterCommand.Services;
 
 namespace CrsterCommand.Models;
 
@@ -22,6 +23,7 @@ public abstract class BaseNoteItem
     public abstract NoteType Type { get; }
     public virtual string Summary => "";
     public virtual string DisplayDescription => Description;
+    public virtual string ContentPreview => Description.Length > 250 ? Description.Substring(Description.Length - 250) : Description;
     public virtual string GetTextForEmbedding() => Description;
     public abstract string DetailInfo { get; }
 }
@@ -37,6 +39,7 @@ public class TodoItem : BaseNoteItem
     public List<TodoSubTask> Tasks { get; set; } = new();
     public override NoteType Type => NoteType.Todo;
     public override string Summary => Tasks.FirstOrDefault(t => !t.IsDone)?.Todo ?? (Tasks.Any() ? "All tasks completed!" : "Empty Todo List");
+    public override string ContentPreview { get { var text = string.Join(" ", Tasks.Select(t => t.Todo)); return text.Length > 250 ? text.Substring(text.Length - 250) : text; } }
     public override string GetTextForEmbedding() => $"{Description} {string.Join(" ", Tasks.Select(t => t.Todo))}".Trim();
     public override string DetailInfo => $"{Tasks.Count(t => t.IsDone)}/{Tasks.Count} done";
 }
@@ -56,6 +59,7 @@ public class MemoryNote : BaseNoteItem
     public override NoteType Type => NoteType.Memory;
     public override string Summary => Content.Length > 50 ? Content.Substring(0, 50).Replace("\n", " ").Replace("\r", " ") + "..." : Content.Replace("\n", " ").Replace("\r", " ");
     public override string DisplayDescription => string.IsNullOrWhiteSpace(Description) ? Content : Description;
+    public override string ContentPreview => Content.Length > 250 ? Content.Substring(Content.Length - 250) : Content;
     public override string GetTextForEmbedding() => $"{Description} {Content}".Trim();
     public override string DetailInfo => $"{Content.Split(new[] { ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length} words";
 }
@@ -64,10 +68,26 @@ public class VaultItem : BaseNoteItem
 {
     public string Label { get; set; } = "";
     public string EncryptedContent { get; set; } = "";
+    public string? DecryptedContent { get; set; } // Temporarily holds decrypted content for display
+
     public override NoteType Type => NoteType.Vault;
     public override string Summary => string.IsNullOrWhiteSpace(Description) ? Label : Description;
     public override string DisplayDescription => "Encrypted Vault Item";
-    public override string GetTextForEmbedding() => $"{Description} {Label}".Trim();
+    public override string ContentPreview 
+    { 
+        get 
+        {
+            // If we have decrypted content available for display, use the sanitized version
+            if (!string.IsNullOrEmpty(DecryptedContent))
+            {
+                var sanitized = PasswordSanitizationService.RemovePasswordPatterns(DecryptedContent);
+                return sanitized.Length > 250 ? sanitized.Substring(0, 250) + "..." : sanitized;
+            }
+            return "Encrypted - Unlock to view";
+        }
+    }
+
+    public override string GetTextForEmbedding() => $"{Description} {Label} {EncryptedContent}".Trim();
     public override string DetailInfo => $"{EncryptedContent.Length} chars"; // Encrypted length is suitable for private info
 }
 

@@ -70,7 +70,7 @@ public partial class NotesViewModel : ViewModelBase
     private void LoadAll()
     {
         AllNotes.Clear();
-        
+
         var todos = StorageService.GetTodos().FindAll();
         var notes = StorageService.GetMemoryNotes().FindAll();
         var vault = StorageService.GetVaultItems().FindAll();
@@ -81,6 +81,9 @@ public partial class NotesViewModel : ViewModelBase
         combined.AddRange(notes);
         combined.AddRange(vault);
         combined.AddRange(files);
+
+        // Decrypt vault items for display
+        DecryptVaultItemsForDisplay(combined);
 
         _filteredList = combined.OrderByDescending(i => i.LastModified).ToList();
         LoadMore(true);
@@ -113,22 +116,28 @@ public partial class NotesViewModel : ViewModelBase
         }
 
         var queryVector = await EmbeddingService.GetEmbeddingAsync(SearchQuery);
-        
+
         var todos = StorageService.GetTodos().FindAll();
         var notes = StorageService.GetMemoryNotes().FindAll();
         var vault = StorageService.GetVaultItems().FindAll();
         var files = StorageService.GetFileItems().FindAll();
- 
+
         var allItems = new List<BaseNoteItem>();
         allItems.AddRange(todos);
         allItems.AddRange(notes);
         allItems.AddRange(vault);
         allItems.AddRange(files);
- 
+
+        // Decrypt vault items for display
+        DecryptVaultItemsForDisplay(allItems);
+
+        const int SearchResultLimit = 5;
         _filteredList = allItems
-            .Select(n => new { Item = n, Score = n.Embedding != null ? EmbeddingService.CalculateSimilarity(queryVector, n.Embedding) : 0 })
+            .Where(n => n.Embedding != null)
+            .Select(n => new { Item = n, Score = EmbeddingService.CalculateSimilarity(queryVector, n.Embedding!) })
+            .Where(x => x.Score > 0.20)
             .OrderByDescending(x => x.Score)
-            .Where(x => x.Score > 0.1) // Slightly lower threshold for better recall
+            .Take(SearchResultLimit)
             .Select(x => x.Item)
             .ToList();
 
@@ -195,5 +204,27 @@ public partial class NotesViewModel : ViewModelBase
                 break;
         }
         AllNotes.Remove(item);
+    }
+
+    // Decrypt vault items for display in the notes view
+    private void DecryptVaultItemsForDisplay(List<BaseNoteItem> items)
+    {
+        var password = StorageService.GetVaultPassword();
+        if (string.IsNullOrEmpty(password)) return;
+
+        foreach (var item in items.OfType<VaultItem>())
+        {
+            if (!string.IsNullOrEmpty(item.EncryptedContent))
+            {
+                try
+                {
+                    item.DecryptedContent = SecurityService.Decrypt(item.EncryptedContent, password);
+                }
+                catch
+                {
+                    item.DecryptedContent = "[Decryption Failed]";
+                }
+            }
+        }
     }
 }

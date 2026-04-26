@@ -192,20 +192,16 @@ public class AIService
 
             if (item is MemoryNote memory)
             {
-                prompt = "Analyze the following memory/note content.\n" +
-                         "1. Identify the content type (e.g., URL, Comment, Source Code, SQL, regular text).\n" +
-                         "2. Provide a concise description of the purpose or content.\n" +
-                         "Constraint: Maximum 30 words total.\n\n" +
+                prompt = "Generate a short, clear title for the following note content. " +
+                         "Output only the title, no explanation, no punctuation at the end. Maximum 8 words.\n\n" +
                          $"CONTENT:\n{memory.Content}";
                 parts.Add(new Part { Text = prompt });
             }
             else if (item is TodoItem todo)
             {
                 var tasks = string.Join(", ", todo.Tasks.Select(t => t.Todo));
-                prompt = "Analyze this list of tasks.\n" +
-                         "1. Determine the category (e.g., Grocery, Work, Wish List, Daily tasks, OKR).\n" +
-                         "2. Briefly summarize the objective.\n" +
-                         "Constraint: Maximum 10 words total.\n\n" +
+                prompt = "Generate a short, clear title for the following list of tasks. " +
+                         "Output only the title, no explanation, no punctuation at the end. Maximum 6 words.\n\n" +
                          $"TASKS: {tasks}";
                 parts.Add(new Part { Text = prompt });
             }
@@ -215,11 +211,10 @@ public class AIService
                 
                 if (fileStream.Length < 2 * 1024 * 1024 && mimeType != "application/octet-stream") // < 2MB and supported
                 {
-                    prompt = "Analyze the provided file content and provide the following details:\n" +
-                             "1. File Classification: Identify the content type.\n" +
-                             "2. Brief Summary: Provide a maximum 20-word summary of the content.";
+                    prompt = "Generate a short, clear title for the following file based on its content. " +
+                             "Output only the title, no explanation, no punctuation at the end. Maximum 8 words.";
                     parts.Add(new Part { Text = prompt });
-                    
+
                     byte[] buffer = new byte[fileStream.Length];
                     fileStream.Position = 0;
                     int totalRead = 0;
@@ -247,9 +242,8 @@ public class AIService
                     string sha256 = CalculateHash(fileStream, SHA256.Create());
                     
                     var info = $"Filename: {file.FileName}\nSize: {fileStream.Length} bytes\nExtension: {file.FileType}\nMD5: {md5}\nSHA256: {sha256}";
-                    prompt = "Analyze the following file metadata and provide these details:\n" +
-                             "1. File Classification: Identify based on filename and extension.\n" +
-                             "2. Brief Summary: Provide a maximum 20-word summary based on the available metadata.\n\n" +
+                    prompt = "Generate a short, clear title for the following file based on its metadata. " +
+                             "Output only the title, no explanation, no punctuation at the end. Maximum 8 words.\n\n" +
                              $"FILE INFO:\n{info}";
                     parts.Add(new Part { Text = prompt });
                 }
@@ -273,6 +267,36 @@ public class AIService
         catch (Exception ex)
         {
             return "AI Error: " + ex.Message;
+        }
+    }
+
+    public async Task<string> OptimizeTextAsync(string text)
+    {
+        var apiKey = _storageService.GetAiApiKey();
+        var modelName = _storageService.GetAiModel() ?? "gemini-2.5-flash";
+
+        if (string.IsNullOrEmpty(apiKey))
+            return text;
+
+        try
+        {
+            var client = new Client(apiKey: apiKey);
+            var prompt = "Fix spelling and grammar in the following text. " +
+                         "Make it clear, simple and easy to understand. " +
+                         "Keep the length as close to the original as possible. " +
+                         "Output only the corrected text, nothing else.\n\n" +
+                         text;
+
+            var response = await client.Models.GenerateContentAsync(
+                model: modelName,
+                contents: new List<Content> { new Content { Role = "user", Parts = new List<Part> { new Part { Text = prompt } } } }
+            );
+
+            return response.Text?.Trim() ?? text;
+        }
+        catch
+        {
+            return text;
         }
     }
 

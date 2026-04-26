@@ -112,21 +112,20 @@
 
                                 <!-- Content Summary -->
                                 <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Stretch">
-                                    <TextBlock Text="{Binding Summary}" 
+                                    <TextBlock Text="{Binding Description}" 
                                                FontSize="16" 
                                                FontWeight="Bold"
                                                Foreground="{DynamicResource AppPrimaryTextBrush}"
-                                               TextTrimming="CharacterEllipsis"
-                                               MaxLines="1"
+                                               TextWrapping="Wrap"
                                                HorizontalAlignment="Stretch"/>
-                                    
-                                    <TextBlock Text="{Binding DisplayDescription}" 
+
+                                    <TextBlock Text="{Binding ContentPreview}" 
                                                FontSize="13" 
                                                Foreground="{DynamicResource AppSecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                LineHeight="18"
                                                HorizontalAlignment="Stretch"
-                                               IsVisible="{Binding DisplayDescription, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                               IsVisible="{Binding ContentPreview, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                                     <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
                                         <TextBlock Text="{Binding DetailInfo}" 

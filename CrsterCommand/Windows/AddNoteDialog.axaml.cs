@@ -50,6 +50,45 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
         set => SetField(ref _isEditMode, value);
     }
 
+    private bool _isMemoryTabVisible = true;
+    public bool IsMemoryTabVisible { get => _isMemoryTabVisible; set => SetField(ref _isMemoryTabVisible, value); }
+
+    private bool _isTodoTabVisible = true;
+    public bool IsTodoTabVisible { get => _isTodoTabVisible; set => SetField(ref _isTodoTabVisible, value); }
+
+    private bool _isVaultTabVisible = true;
+    public bool IsVaultTabVisible { get => _isVaultTabVisible; set => SetField(ref _isVaultTabVisible, value); }
+
+    private bool _isFileTabVisible = true;
+    public bool IsFileTabVisible { get => _isFileTabVisible; set => SetField(ref _isFileTabVisible, value); }
+
+    private bool _isGeneratingMemory;
+    public bool IsGeneratingMemory { get => _isGeneratingMemory; set => SetField(ref _isGeneratingMemory, value); }
+
+    private bool _isGeneratingTodo;
+    public bool IsGeneratingTodo { get => _isGeneratingTodo; set => SetField(ref _isGeneratingTodo, value); }
+
+    private bool _isGeneratingVault;
+    public bool IsGeneratingVault { get => _isGeneratingVault; set => SetField(ref _isGeneratingVault, value); }
+
+    private bool _isGeneratingFile;
+    public bool IsGeneratingFile { get => _isGeneratingFile; set => SetField(ref _isGeneratingFile, value); }
+
+    private bool _isOptimizing;
+    public bool IsOptimizing { get => _isOptimizing; set => SetField(ref _isOptimizing, value); }
+
+    private bool _isSearchVisible;
+    public bool IsSearchVisible { get => _isSearchVisible; set => SetField(ref _isSearchVisible, value); }
+
+    private string _searchQuery = "";
+    public string SearchQuery { get => _searchQuery; set => SetField(ref _searchQuery, value); }
+
+    private string _searchMatchInfo = "";
+    public string SearchMatchInfo { get => _searchMatchInfo; set => SetField(ref _searchMatchInfo, value); }
+
+    private List<int> _searchMatches = new();
+    private int _searchMatchIndex = -1;
+
     private string _headerText = "Create New Note";
     public string HeaderText
     {
@@ -98,7 +137,7 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
 
     private async void GenerateDescription_Click(object? sender, RoutedEventArgs e)
     {
-        if (_aiService == null || IsProcessing) return;
+        if (_aiService == null) return;
 
         var btn = sender as Avalonia.Controls.Button;
         var tag = btn?.Tag?.ToString();
@@ -117,7 +156,9 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
                     tempItem = new TodoItem { Tasks = TodoList.ToList() };
                     break;
                 case "Vault":
-                    tempItem = new VaultItem { EncryptedContent = VaultContent.Text ?? "" };
+                    // Remove password patterns before submitting to AI
+                    string sanitizedContent = PasswordSanitizationService.RemovePasswordPatterns(VaultContent.Text ?? "");
+                    tempItem = new VaultItem { EncryptedContent = sanitizedContent };
                     break;
                 case "File":
                     if (!string.IsNullOrEmpty(_selectedFilePath) && File.Exists(_selectedFilePath))
@@ -135,7 +176,13 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
 
             if (tempItem == null) return;
 
-            IsProcessing = true;
+            // Validate content before submitting to AI to save processing time
+            if (!IsValidContentForAI(tempItem))
+            {
+                return;
+            }
+
+            SetGenerating(tag, true);
             var desc = await _aiService.GenerateNoteDescriptionAsync(tempItem, tempStream);
 
             switch (tag)
@@ -160,8 +207,19 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
         }
         finally
         {
-            IsProcessing = false;
+            SetGenerating(tag, false);
             tempStream?.Dispose();
+        }
+    }
+
+    private void SetGenerating(string? tag, bool value)
+    {
+        switch (tag)
+        {
+            case "Memory": IsGeneratingMemory = value; break;
+            case "Todo":   IsGeneratingTodo   = value; break;
+            case "Vault":  IsGeneratingVault  = value; break;
+            case "File":   IsGeneratingFile   = value; break;
         }
     }
 
@@ -187,23 +245,29 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
 
         if (item is MemoryNote memory)
         {
+            IsMemoryTabVisible = true; IsTodoTabVisible = false; IsVaultTabVisible = false; IsFileTabVisible = false;
             TabControl.SelectedIndex = 0;
             MemoryContent.Text = memory.Content;
         }
         else if (item is TodoItem todo)
         {
+            IsMemoryTabVisible = false; IsTodoTabVisible = true; IsVaultTabVisible = false; IsFileTabVisible = false;
             TabControl.SelectedIndex = 1;
             TodoList.Clear();
             foreach (var task in todo.Tasks) TodoList.Add(task);
         }
         else if (item is VaultItem vault)
         {
+            IsMemoryTabVisible = false; IsTodoTabVisible = false; IsVaultTabVisible = true; IsFileTabVisible = false;
             TabControl.SelectedIndex = 2;
             var password = _storageService?.GetVaultPassword();
             if (!string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(vault.EncryptedContent))
             {
                 try {
-                    VaultContent.Text = SecurityService.Decrypt(vault.EncryptedContent, password);
+                    var decryptedContent = SecurityService.Decrypt(vault.EncryptedContent, password);
+                    VaultContent.Text = decryptedContent;
+                    // Store decrypted content for display purposes
+                    vault.DecryptedContent = decryptedContent;
                 } catch {
                     VaultContent.Text = "[Decryption Failed]";
                 }
@@ -211,6 +275,7 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
         }
         else if (item is FileItem file)
         {
+            IsMemoryTabVisible = false; IsTodoTabVisible = false; IsVaultTabVisible = false; IsFileTabVisible = true;
             TabControl.SelectedIndex = 3;
             _selectedFilePath = file.FilePath;
             SelectedFileName.Text = file.FileName;
@@ -239,6 +304,7 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
 
     private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
+        e.Handled = true;
         Close();
     }
 
@@ -258,6 +324,8 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
 
     private async void Window_KeyDown(object? sender, KeyEventArgs e)
     {
+        if (PlatformImpl is null) { e.Handled = true; return; }
+
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.V)
         {
             // Only intercept if we are not in a text input
@@ -366,6 +434,277 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
             TodoList.Add(new TodoSubTask { Todo = NewTodoInput.Text, IsDone = false });
             NewTodoInput.Text = "";
         }
+        else if (e.Key == Key.F2)
+        {
+            _ = OptimizeSelectedTextAsync(NewTodoInput);
+            e.Handled = true;
+        }
+    }
+
+    private void MemoryContent_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Tab)
+        {
+            var caret = MemoryContent.CaretIndex;
+            MemoryContent.Text = (MemoryContent.Text ?? "").Insert(caret, "    ");
+            MemoryContent.CaretIndex = caret + 4;
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F5)
+        {
+            var now = DateTime.Now.ToString("g");
+            var caret = MemoryContent.CaretIndex;
+            MemoryContent.Text = (MemoryContent.Text ?? "").Insert(caret, now);
+            MemoryContent.CaretIndex = caret + now.Length;
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F1)
+        {
+            _ = PasteFromClipboardAsync();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F2)
+        {
+            _ = OptimizeSelectedTextAsync(MemoryContent);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F3)
+        {
+            if (!IsSearchVisible)
+            {
+                OpenSearch();
+            }
+            else if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            {
+                NavigateSearch(-1);
+            }
+            else
+            {
+                NavigateSearch(1);
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && IsSearchVisible)
+        {
+            CloseSearch();
+            e.Handled = true;
+        }
+    }
+
+    private void OpenSearch()
+    {
+        IsSearchVisible = true;
+        SearchQuery = "";
+        _searchMatches.Clear();
+        _searchMatchIndex = -1;
+        SearchMatchInfo = "";
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => SearchBox?.Focus());
+    }
+
+    private void CloseSearch()
+    {
+        IsSearchVisible = false;
+        _searchMatches.Clear();
+        _searchMatchIndex = -1;
+        SearchMatchInfo = "";
+        MemoryContent.Focus();
+    }
+
+    private void RunSearch(string query)
+    {
+        _searchMatches.Clear();
+        _searchMatchIndex = -1;
+
+        var text = MemoryContent.Text ?? "";
+        if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(text))
+        {
+            SearchMatchInfo = "";
+            return;
+        }
+
+        var comparison = StringComparison.OrdinalIgnoreCase;
+        int idx = 0;
+        while ((idx = text.IndexOf(query, idx, comparison)) >= 0)
+        {
+            _searchMatches.Add(idx);
+            idx += query.Length;
+        }
+
+        if (_searchMatches.Count > 0)
+        {
+            _searchMatchIndex = 0;
+            HighlightMatch();
+        }
+        else
+        {
+            SearchMatchInfo = "No results";
+        }
+    }
+
+    private void NavigateSearch(int direction)
+    {
+        if (_searchMatches.Count == 0) return;
+        _searchMatchIndex = (_searchMatchIndex + direction + _searchMatches.Count) % _searchMatches.Count;
+        HighlightMatch();
+    }
+
+    private void HighlightMatch()
+    {
+        if (_searchMatchIndex < 0 || _searchMatchIndex >= _searchMatches.Count) return;
+        var start = _searchMatches[_searchMatchIndex];
+        var len = SearchQuery.Length;
+        SearchMatchInfo = $"{_searchMatchIndex + 1}/{_searchMatches.Count}";
+        MemoryContent.SelectionStart = start;
+        MemoryContent.SelectionEnd = start + len;
+        MemoryContent.CaretIndex = start;
+    }
+
+    private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        RunSearch(SearchBox?.Text ?? "");
+    }
+
+    private void SearchBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.F3 || e.Key == Key.Enter)
+        {
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                NavigateSearch(-1);
+            else
+                NavigateSearch(1);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            CloseSearch();
+            e.Handled = true;
+        }
+    }
+
+    private void SearchNext_Click(object? sender, RoutedEventArgs e) => NavigateSearch(1);
+    private void SearchPrev_Click(object? sender, RoutedEventArgs e) => NavigateSearch(-1);
+
+    private async Task PasteFromClipboardAsync()
+    {
+        var clipboard = GetTopLevel(this)?.Clipboard;
+        if (clipboard == null) return;
+
+        using var data = await clipboard.TryGetDataAsync();
+        if (data == null) return;
+
+        var caret = MemoryContent.CaretIndex;
+        string textToInsert = "";
+
+        // 1. Check for files first
+        var storageItems = await data.TryGetFilesAsync();
+        if (storageItems != null && storageItems.Any())
+        {
+            var firstItem = storageItems.First();
+            textToInsert = firstItem.Path.LocalPath;
+        }
+        // 2. Check for images
+        else
+        {
+            var bitmap = await data.TryGetBitmapAsync();
+            if (bitmap != null)
+            {
+                textToInsert = $"{bitmap.PixelSize.Width} x {bitmap.PixelSize.Height}";
+            }
+            else
+            {
+                // 3. Check for text
+                var textContent = await data.TryGetTextAsync();
+                if (!string.IsNullOrWhiteSpace(textContent))
+                {
+                    // Convert to one-liner: replace escape characters and newlines
+                    textToInsert = ConvertToOneLiner(textContent);
+                }
+            }
+        }
+
+        if (!string.IsNullOrEmpty(textToInsert))
+        {
+            MemoryContent.Text = (MemoryContent.Text ?? "").Insert(caret, textToInsert);
+            MemoryContent.CaretIndex = caret + textToInsert.Length;
+        }
+    }
+
+    private string ConvertToOneLiner(string text)
+    {
+        // Handle command-line continuation characters (\ and ^)
+        // These are used in bash, PowerShell, batch scripts, etc.
+        // Remove line continuation backslash followed by newline
+        text = Regex.Replace(text, @"\\\s*(\r\n|\r|\n)\s*", " ");
+        // Remove line continuation caret (^) used in Windows batch
+        text = Regex.Replace(text, @"\^\s*(\r\n|\r|\n)\s*", " ");
+
+        // Replace escaped versions first (from JSON/web content)
+        text = text.Replace("\\r\\n", " ");
+        text = text.Replace("\\n", " ");
+        text = text.Replace("\\r", "");
+        text = text.Replace("\\t", " ");
+        text = text.Replace("\\f", " ");
+        text = text.Replace("\\b", " ");
+        text = text.Replace("\\\"", "\"");
+        text = text.Replace("\\\\", "\\");
+        text = text.Replace("\\/", "/");
+
+        // Replace actual control characters with spaces
+        text = text.Replace("\r\n", " ");
+        text = text.Replace("\n", " ");
+        text = text.Replace("\r", "");
+        text = text.Replace("\t", " ");
+        text = text.Replace("\f", " ");
+        text = text.Replace("\b", " ");
+
+        // Replace common HTML entities
+        text = text.Replace("&nbsp;", " ");
+        text = text.Replace("&lt;", "<");
+        text = text.Replace("&gt;", ">");
+        text = text.Replace("&amp;", "&");
+        text = text.Replace("&quot;", "\"");
+        text = text.Replace("&#39;", "'");
+        text = text.Replace("&apos;", "'");
+
+        // Clean up multiple consecutive spaces
+        while (text.Contains("  "))
+        {
+            text = text.Replace("  ", " ");
+        }
+
+        return text.Trim();
+    }
+
+
+    private async Task OptimizeSelectedTextAsync(TextBox tb)
+    {
+        if (_aiService == null || IsOptimizing) return;
+
+        var selected = tb.SelectedText;
+        if (string.IsNullOrWhiteSpace(selected)) return;
+
+        var selStart = tb.SelectionStart;
+        var selEnd = tb.SelectionEnd;
+        var start = Math.Min(selStart, selEnd);
+        var length = Math.Abs(selEnd - selStart);
+
+        try
+        {
+            IsOptimizing = true;
+            var optimized = await _aiService.OptimizeTextAsync(selected);
+            var full = tb.Text ?? "";
+            tb.Text = full.Remove(start, length).Insert(start, optimized);
+            tb.SelectionStart = start;
+            tb.SelectionEnd = start + optimized.Length;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Optimize text error: {ex.Message}");
+        }
+        finally
+        {
+            IsOptimizing = false;
+        }
     }
 
     private async void SelectFile_Click(object? sender, RoutedEventArgs e)
@@ -436,10 +775,11 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
     private async void Add_Click(object? sender, RoutedEventArgs e)
     {
         if (IsProcessing) return;
-        
+
         int selectedIndex = TabControl.SelectedIndex;
         BaseNoteItem? itemToProcess = null;
         Stream? fileStreamToProcess = null;
+        string? vaultPlainTextForEmbedding = null; // Store original vault content for embedding
 
         switch (selectedIndex)
         {
@@ -465,6 +805,9 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
                 var password = _storageService?.GetVaultPassword();
                 if (!string.IsNullOrWhiteSpace(VaultContent.Text) && !string.IsNullOrEmpty(password))
                 {
+                    // Store original plain text for embedding BEFORE encryption
+                    vaultPlainTextForEmbedding = VaultContent.Text;
+
                     string encrypted = SecurityService.Encrypt(VaultContent.Text, password);
                     var vault = Result as VaultItem ?? new VaultItem { Label = "Encrypted Vault Item" };
                     vault.EncryptedContent = encrypted;
@@ -546,8 +889,25 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
                 // 2. Generate Embedding
                 if (_embeddingService != null)
                 {
-                    // Use improved text for embedding (Description + Content)
-                    itemToProcess.Embedding = await _embedding_service_helper(itemToProcess, fileStreamToProcess);
+                    // For vault items, use the original plain text content for better semantic search
+                    if (itemToProcess.Type == NoteType.Vault && !string.IsNullOrWhiteSpace(vaultPlainTextForEmbedding))
+                    {
+                        var vault = itemToProcess as VaultItem;
+                        if (vault != null)
+                        {
+                            // Temporarily set the plain text for embedding generation
+                            string originalEncrypted = vault.EncryptedContent;
+                            vault.EncryptedContent = vaultPlainTextForEmbedding;
+                            itemToProcess.Embedding = await _embedding_service_helper(itemToProcess, fileStreamToProcess);
+                            // Restore encrypted content
+                            vault.EncryptedContent = originalEncrypted;
+                        }
+                    }
+                    else
+                    {
+                        // Use improved text for embedding (Description + Content)
+                        itemToProcess.Embedding = await _embedding_service_helper(itemToProcess, fileStreamToProcess);
+                    }
                 }
 
                 Result = itemToProcess;
@@ -584,4 +944,21 @@ public partial class AddNoteDialog : Window, INotifyPropertyChanged
             IsProcessing = false;
         }
     }
+
+    // Validate that content is not empty/null/whitespace before submitting to AI
+    private bool IsValidContentForAI(BaseNoteItem? item)
+    {
+        if (item == null) return false;
+
+        return item switch
+        {
+            MemoryNote memory => !string.IsNullOrWhiteSpace(memory.Content),
+            TodoItem todo => todo.Tasks != null && todo.Tasks.Count > 0,
+            VaultItem vault => !string.IsNullOrWhiteSpace(vault.EncryptedContent),
+            FileItem file => !string.IsNullOrWhiteSpace(file.FileName) && !string.IsNullOrWhiteSpace(file.FilePath),
+            _ => false
+        };
+    }
 }
+
+

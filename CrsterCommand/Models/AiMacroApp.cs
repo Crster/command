@@ -12,7 +12,6 @@ public class AiMacroApp
     public string LastUserInput { get; set; } = "";
     public string LastAiAnswer { get; set; } = "";
     public string? Model { get; set; }
-    // Previously supported multiple attachments; now only a single attachment is stored per macro
     public FileAttachment? Attachment { get; set; }
 }
 

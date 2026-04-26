@@ -9,7 +9,7 @@
         x:Class="CrsterCommand.Windows.AddNoteDialog"
         x:DataType="views:AddNoteDialog"
         Title="{Binding HeaderText}"
-        Width="450" Height="600"
+        Width="800" Height="600"
         WindowStartupLocation="CenterOwner"
         CanMinimize="False"
         CanMaximize="False"
@@ -41,6 +41,9 @@
         <Style Selector="Button.AiIconButton:pointerover /template/ ContentPresenter">
 			<Setter Property="Background" Value="Transparent" />
         </Style>
+        <Style Selector="Button.AiIconButton:disabled /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent" />
+        </Style>
     </Window.Styles>
 
     <Panel>
@@ -59,12 +62,6 @@
         </Panel>
 
         <DockPanel Margin="24">
-            <!-- Header -->
-            <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,24">
-                <TextBlock Text="{Binding HeaderText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AppPrimaryTextBrush}"/>
-                <TextBlock Text="{Binding HeaderSubtitle}" Foreground="{DynamicResource AppSecondaryTextBrush}" FontSize="13"/>
-            </StackPanel>
-
             <!-- Footer Actions -->
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16" Margin="0,24,0,0">
                 <Button Click="Cancel_Click" Classes="Secondary" Width="130" Height="42" HorizontalContentAlignment="Center">
@@ -87,14 +84,15 @@
                         Padding="0">
                 <TabControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <UniformGrid Columns="4" IsHitTestVisible="{Binding !IsEditMode}"/>
+                            <UniformGrid Columns="4"/>
                     </ItemsPanelTemplate>
                 </TabControl.ItemsPanel>
 
                 <!-- 1. Memory -->
-                <TabItem>
+                <TabItem IsEnabled="{Binding IsMemoryTabVisible}">
                     <TabItem.Header>
-                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4">
+                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4"
+                                    IsVisible="{Binding IsMemoryTabVisible}">
                             <ic:SymbolIcon Symbol="BrainCircuit" FontSize="20"/>
                             <TextBlock Text="Memory" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
@@ -104,8 +102,12 @@
                             <TextBlock Text="Description" Classes="Label"/>
                             <TextBox x:Name="MemoryDescription" PlaceholderText="Short description (optional)">
                                 <TextBox.InnerRightContent>
-                                    <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="Memory">
-                                        <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" />
+                                    <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="Memory"
+                                            IsEnabled="{Binding !IsGeneratingMemory}">
+                                        <Panel>
+                                            <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" IsVisible="{Binding !IsGeneratingMemory}"/>
+                                            <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Timer" FontSize="14" IsVisible="{Binding IsGeneratingMemory}"/>
+                                        </Panel>
                                     </Button>
                                 </TextBox.InnerRightContent>
                             </TextBox>
@@ -114,23 +116,76 @@
                         <Border Grid.Row="1" Background="{DynamicResource AppInputBackgroundBrush}" 
                                 CornerRadius="12" BorderThickness="1" 
                                 BorderBrush="{DynamicResource AppInputBorderBrush}">
-                            <TextBox x:Name="MemoryContent" 
-                                     PlaceholderText="Write something important to remember..." 
-                                     AcceptsReturn="True" 
-                                     TextWrapping="Wrap"
-                                     BorderThickness="0"
-                                     Background="Transparent"
-                                     Padding="16"
-                                     FontFamily="Cascadia Code,Consolas,Menlo,Monaco,DejaVu Sans Mono,Courier New,monospace"
-                                     VerticalContentAlignment="Top"/>
+                            <Panel>
+                                <TextBox x:Name="MemoryContent"
+                                         PlaceholderText="Write something important to remember..."
+                                         AcceptsReturn="True"
+                                         TextWrapping="NoWrap"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         Padding="16"
+                                         FontFamily="Cascadia Code,Consolas,Menlo,Monaco,DejaVu Sans Mono,Courier New,monospace"
+                                         FontSize="13"
+                                         VerticalContentAlignment="Top"
+                                         SelectionBrush="{DynamicResource AppAccentBrush}"
+                                         KeyDown="MemoryContent_KeyDown"/>
+                                <Border Background="#88000000" CornerRadius="12"
+                                        IsVisible="{Binding IsOptimizing}"
+                                        IsHitTestVisible="False">
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
+                                        <ic:SymbolIcon Symbol="Timer" FontSize="20" Foreground="White"/>
+                                        <TextBlock Text="Optimizing..." Foreground="White" FontSize="12"/>
+                                    </StackPanel>
+                                </Border>
+                            </Panel>
+                        </Border>
+
+                        <!-- Find Bar -->
+                        <Border Grid.Row="2"
+                                IsVisible="{Binding IsSearchVisible}"
+                                Background="{DynamicResource AppStatusBarBrush}"
+                                BorderBrush="{DynamicResource AppInputBorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="8,6"
+                                Margin="0,6,0,0">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="6">
+                                <ic:SymbolIcon Grid.Column="0" Symbol="Search" FontSize="14"
+                                               Foreground="{DynamicResource AppSecondaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         x:Name="SearchBox"
+                                         Text="{Binding SearchQuery}"
+                                         PlaceholderText="Find... (F3 next, Shift+F3 prev, Esc close)"
+                                         BorderThickness="0" Background="Transparent"
+                                         Padding="4,0" Height="28"
+                                         VerticalContentAlignment="Center"
+                                         FontSize="13"
+                                         TextChanged="SearchBox_TextChanged"
+                                         KeyDown="SearchBox_KeyDown"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding SearchMatchInfo}"
+                                           FontSize="12" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"
+                                           MinWidth="50"/>
+                                <Button Grid.Column="3" Classes="AiIconButton"
+                                        Width="26" Height="26" Padding="0"
+                                        Click="SearchPrev_Click" ToolTip.Tip="Previous (Shift+F3)">
+                                    <ic:SymbolIcon Symbol="ChevronUp" FontSize="13"/>
+                                </Button>
+                                <Button Grid.Column="4" Classes="AiIconButton"
+                                        Width="26" Height="26" Padding="0"
+                                        Click="SearchNext_Click" ToolTip.Tip="Next (F3)">
+                                    <ic:SymbolIcon Symbol="ChevronDown" FontSize="13"/>
+                                </Button>
+                            </Grid>
                         </Border>
                     </Grid>
                 </TabItem>
 
                 <!-- 2. Todo -->
-                <TabItem>
+                <TabItem IsEnabled="{Binding IsTodoTabVisible}">
                     <TabItem.Header>
-                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4">
+                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4"
+                                    IsVisible="{Binding IsTodoTabVisible}">
                             <ic:SymbolIcon Symbol="List" FontSize="20"/>
                             <TextBlock Text="Todo" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
@@ -141,8 +196,12 @@
                             <TextBlock Text="Description" Classes="Label"/>
                             <TextBox x:Name="TodoDescription" PlaceholderText="Short description (optional)">
                                 <TextBox.InnerRightContent>
-                                    <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="Todo">
-                                        <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" />
+                                    <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="Todo"
+                                            IsEnabled="{Binding !IsGeneratingTodo}">
+                                        <Panel>
+                                            <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" IsVisible="{Binding !IsGeneratingTodo}"/>
+                                            <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Timer" FontSize="14" IsVisible="{Binding IsGeneratingTodo}"/>
+                                        </Panel>
                                     </Button>
                                 </TextBox.InnerRightContent>
                             </TextBox>
@@ -159,7 +218,7 @@
                         </TextBox>
 
                         <!-- Scrollable list of existing todos -->
-                        <ScrollViewer Grid.Row="1">
+                        <ScrollViewer Grid.Row="2">
                             <ItemsControl ItemsSource="{Binding TodoList}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="models:TodoSubTask">
@@ -177,9 +236,10 @@
                 </TabItem>
 
                 <!-- 3. Vault -->
-                <TabItem>
+                <TabItem IsEnabled="{Binding IsVaultTabVisible}">
                     <TabItem.Header>
-                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4">
+                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4"
+                                    IsVisible="{Binding IsVaultTabVisible}">
                             <ic:SymbolIcon Symbol="LockClosed" FontSize="20"/>
                             <TextBlock Text="Vault" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
@@ -222,8 +282,12 @@
                                 <TextBox x:Name="VaultDescription" 
                                          PlaceholderText="Short description (optional)">
                                     <TextBox.InnerRightContent>
-                                        <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="Vault">
-                                            <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" />
+                                        <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="Vault"
+                                                IsEnabled="{Binding !IsGeneratingVault}">
+                                            <Panel>
+                                                <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" IsVisible="{Binding !IsGeneratingVault}"/>
+                                                <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Timer" FontSize="14" IsVisible="{Binding IsGeneratingVault}"/>
+                                            </Panel>
                                         </Button>
                                     </TextBox.InnerRightContent>
                                 </TextBox>
@@ -259,9 +323,10 @@
                 </TabItem>
 
                 <!-- 4. File -->
-                <TabItem>
+                <TabItem IsEnabled="{Binding IsFileTabVisible}">
                     <TabItem.Header>
-                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4">
+                        <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,4"
+                                    IsVisible="{Binding IsFileTabVisible}">
                             <ic:SymbolIcon Symbol="Document" FontSize="20"/>
                             <TextBlock Text="File" FontSize="11" FontWeight="Medium"/>
                         </StackPanel>
@@ -271,8 +336,12 @@
                             <TextBlock Text="Description" Classes="Label"/>
                             <TextBox x:Name="FileDescription" PlaceholderText="Short description (optional)">
                                 <TextBox.InnerRightContent>
-                                    <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="File">
-                                        <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" />
+                                    <Button Classes="AiIconButton" Click="GenerateDescription_Click" Tag="File"
+                                            IsEnabled="{Binding !IsGeneratingFile}">
+                                        <Panel>
+                                            <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Sparkle" FontSize="14" IsVisible="{Binding !IsGeneratingFile}"/>
+                                            <ic:SymbolIcon Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Symbol="Timer" FontSize="14" IsVisible="{Binding IsGeneratingFile}"/>
+                                        </Panel>
                                     </Button>
                                 </TextBox.InnerRightContent>
                             </TextBox>
