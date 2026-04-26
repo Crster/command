@@ -54,6 +54,9 @@ public partial class NotesViewModel : ViewModelBase
     [ObservableProperty]
     private BaseNoteItem? _selectedNote;
 
+    [ObservableProperty]
+    private bool _hasMoreItems;
+
     public NotesViewModel(StorageService storageService)
     {
         StorageService = storageService;
@@ -69,8 +72,6 @@ public partial class NotesViewModel : ViewModelBase
 
     private void LoadAll()
     {
-        AllNotes.Clear();
-
         var todos = StorageService.GetTodos().FindAll();
         var notes = StorageService.GetMemoryNotes().FindAll();
         var vault = StorageService.GetVaultItems().FindAll();
@@ -86,11 +87,16 @@ public partial class NotesViewModel : ViewModelBase
         DecryptVaultItemsForDisplay(combined);
 
         _filteredList = combined.OrderByDescending(i => i.LastModified).ToList();
-        LoadMore(true);
+        LoadMoreCore(true);
     }
 
     [RelayCommand]
-    public void LoadMore(bool reset = false)
+    public void LoadMore()
+    {
+        LoadMoreCore(false);
+    }
+
+    private void LoadMoreCore(bool reset)
     {
         if (reset)
         {
@@ -104,6 +110,7 @@ public partial class NotesViewModel : ViewModelBase
             AllNotes.Add(item);
         }
         _loadedCount += nextItems.Count;
+        HasMoreItems = _loadedCount < _filteredList.Count;
     }
 
     [RelayCommand]
@@ -131,17 +138,15 @@ public partial class NotesViewModel : ViewModelBase
         // Decrypt vault items for display
         DecryptVaultItemsForDisplay(allItems);
 
-        const int SearchResultLimit = 5;
         _filteredList = allItems
             .Where(n => n.Embedding != null)
             .Select(n => new { Item = n, Score = EmbeddingService.CalculateSimilarity(queryVector, n.Embedding!) })
             .Where(x => x.Score > 0.20)
             .OrderByDescending(x => x.Score)
-            .Take(SearchResultLimit)
             .Select(x => x.Item)
             .ToList();
 
-        LoadMore(true);
+        LoadMoreCore(true);
     }
 
     [RelayCommand]
