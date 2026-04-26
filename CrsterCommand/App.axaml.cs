@@ -9,16 +9,21 @@ using CrsterCommand.Services;
 using CrsterCommand.ViewModels;
 using CrsterCommand.Views;
 using CrsterCommand.Windows;
+using System.Diagnostics;
 
 namespace CrsterCommand;
 
 public partial class App : Application
 {
-    private ScreenCaptureHotkeyService? _hotkeyService;
-    private DesktopRobotHotkeyService? _desktopRobotHotkeyService;
+    public ScreenCaptureHotkeyService? HotkeyService =>
+        (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow is MainWindow mainWindow
+            ? mainWindow.HotkeyService
+            : null;
 
-    public ScreenCaptureHotkeyService? HotkeyService => _hotkeyService;
-    public DesktopRobotHotkeyService? DesktopRobotHotkeyService => _desktopRobotHotkeyService;
+    public DesktopRobotHotkeyService? DesktopRobotHotkeyService =>
+        (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow is MainWindow mainWindow
+            ? mainWindow.DesktopRobotHotkeyService
+            : null;
 
     public override void Initialize()
     {
@@ -33,15 +38,30 @@ public partial class App : Application
             var appViewModel = new AppViewModel();
             var mainViewModel = new MainViewModel(storageService);
 
+            static void LogStartupState(string stage, MainWindow window, AppViewModel appVm)
+            {
+                Debug.WriteLine(
+                    $"[Startup] {stage} | IsStartHidden={Program.IsStartHidden} | " +
+                    $"IsHidden={!window.IsVisible} | IsMinimized={window.WindowState == WindowState.Minimized} | " +
+                    $"TrayIconVisible={appVm.TrayIconVisible}");
+            }
+
             MainWindow mainWindow;
 
             if (Program.IsStartHidden)
             {
+                appViewModel.SetTrayVisible(true);
+
                 mainWindow = new MainWindow()
                 {
                     DataContext = mainViewModel,
                     ShowActivated = false,
+                    ShowInTaskbar = false,
+                    WindowState = WindowState.Minimized,
+                    IsVisible = false,
                 };
+
+                LogStartupState("Created hidden-start window", mainWindow, appViewModel);
             }
             else
             {
@@ -49,6 +69,8 @@ public partial class App : Application
                 {
                     DataContext = mainViewModel,
                 };
+
+                LogStartupState("Created normal-start window", mainWindow, appViewModel);
             }
 
             appViewModel.AttachMainWindow(mainWindow);
@@ -58,15 +80,18 @@ public partial class App : Application
             desktop.MainWindow = mainWindow;
             desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
-            _hotkeyService = new ScreenCaptureHotkeyService(storageService, mainViewModel.ScreenCaptureViewModel);
-            _hotkeyService.Start();
+            LogStartupState("MainWindow assigned to desktop lifetime", mainWindow, appViewModel);
 
-            _desktopRobotHotkeyService = new DesktopRobotHotkeyService(storageService, mainViewModel.MacroManagerViewModel);
-            _desktopRobotHotkeyService.Start();
+            mainWindow.InitializeHotkeyServices(storageService, mainViewModel);
 
             if (Program.IsStartHidden)
             {
                 await mainViewModel.MinimizeToTrayAsync();
+                LogStartupState("Applied MinimizeToTrayAsync", mainWindow, appViewModel);
+            }
+            else
+            {
+                LogStartupState("Normal startup completed", mainWindow, appViewModel);
             }
         }
 

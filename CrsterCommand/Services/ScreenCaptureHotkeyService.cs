@@ -18,6 +18,7 @@ public sealed class ScreenCaptureHotkeyService : IDisposable
     private Action? _onEscapePressed;
     private Action? _onBackspacePressed;
     private readonly object _sync = new();
+    private bool _disposed;
 
     public ScreenCaptureHotkeyService(StorageService storageService, ScreenCaptureViewModel screenCaptureViewModel)
     {
@@ -363,6 +364,16 @@ public sealed class ScreenCaptureHotkeyService : IDisposable
 
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        // Unsubscribe from global hook first
+        _hookManager.KeyPressed -= HookOnKeyPressed;
+
         try
         {
             lock (_sync)
@@ -371,9 +382,9 @@ public sealed class ScreenCaptureHotkeyService : IDisposable
                 _paused = false;
                 _captureMode = false;
                 _captureCallback = null;
+                _onEscapePressed = null;
+                _onBackspacePressed = null;
             }
-
-            _hookManager.KeyPressed -= HookOnKeyPressed;
             Console.WriteLine("[ScreenCapture] Disposed");
         }
         catch (Exception ex)
