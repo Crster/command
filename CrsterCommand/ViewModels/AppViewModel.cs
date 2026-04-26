@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System;
+using System.Threading.Tasks;
 
 namespace CrsterCommand.ViewModels;
 
@@ -44,11 +46,11 @@ public partial class AppViewModel : ObservableObject
     public void SetTrayVisible(bool visible) => TrayIconVisible = visible;
 
     [RelayCommand]
-    private void Quit()
+    private async Task Quit()
     {
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (_mainWindow != null)
         {
-            desktop.Shutdown();
+            _mainWindow.Close();
         }
     }
 }

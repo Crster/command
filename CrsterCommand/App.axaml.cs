@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
@@ -8,7 +9,6 @@ using CrsterCommand.Services;
 using CrsterCommand.ViewModels;
 using CrsterCommand.Views;
 using CrsterCommand.Windows;
-using System;
 
 namespace CrsterCommand;
 
@@ -40,17 +40,20 @@ public partial class App : Application
                 DataContext = mainViewModel,
             };
 
-            desktop.MainWindow = mainWindow;
-
             appViewModel.AttachMainWindow(mainWindow);
 
-            // If started with --startup-hidden flag, hide the window
+            // If started with --startup-hidden flag, keep app in tray without showing window
             if (Program.IsStartHidden)
             {
-                mainWindow.WindowState = Avalonia.Controls.WindowState.Minimized;
+                desktop.ShutdownMode = ShutdownMode.OnLastWindowClose;
+                appViewModel.SetTrayVisible(true);
                 mainWindow.ShowInTaskbar = false;
-                mainWindow.Hide();
-                Console.WriteLine("[App] Starting hidden due to startup flag");
+                mainWindow.WindowState = Avalonia.Controls.WindowState.Minimized;
+            }
+            else
+            {
+                desktop.MainWindow = mainWindow;
+                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
             }
 
             _hotkeyService = new ScreenCaptureHotkeyService(storageService, mainViewModel.ScreenCaptureViewModel);
@@ -62,41 +65,31 @@ public partial class App : Application
             // Handle application exit to properly dispose resources before shutdown
             desktop.ShutdownRequested += (_, e) =>
             {
-                Console.WriteLine("[App] ShutdownRequested - disposing services");
-
                 try
                 {
                     _hotkeyService?.Dispose();
                     _hotkeyService = null;
-                    Console.WriteLine("[App] HotkeyService disposed");
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Console.WriteLine($"[App] Error disposing HotkeyService: {ex.Message}");
                 }
 
                 try
                 {
                     _desktopRobotHotkeyService?.Dispose();
                     _desktopRobotHotkeyService = null;
-                    Console.WriteLine("[App] DesktopRobotHotkeyService disposed");
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Console.WriteLine($"[App] Error disposing DesktopRobotHotkeyService: {ex.Message}");
                 }
 
                 try
                 {
                     GlobalHookManager.ResetInstance();
-                    Console.WriteLine("[App] GlobalHookManager disposed");
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Console.WriteLine($"[App] Error disposing GlobalHookManager: {ex.Message}");
                 }
-
-                Console.WriteLine("[App] All services disposed successfully");
             };
         }
 

@@ -32,10 +32,14 @@ public partial class MainWindow : Window
     {
         if (e.Property == WindowStateProperty)
         {
-            if (WindowState == WindowState.Minimized && IsVisible)
+            if (WindowState == WindowState.Minimized)
             {
                 (Application.Current?.DataContext as AppViewModel)?.SetTrayVisible(true);
-                Hide();
+
+                if (IsVisible)
+                {
+                    Hide();
+                }
             }
             else if (WindowState == WindowState.Normal || WindowState == WindowState.Maximized)
             {
