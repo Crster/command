@@ -32,15 +32,11 @@ public partial class AppViewModel : ObservableObject
             return;
         }
 
-        if (!_mainWindow.IsVisible)
-        {
-            _mainWindow.Show();
-        }
-
         _mainWindow.ShowInTaskbar = true;
         _mainWindow.WindowState = WindowState.Normal;
         TrayIconVisible = false;
         _mainWindow.Activate();
+        _mainWindow.Show();
     }
 
     public void SetTrayVisible(bool visible) => TrayIconVisible = visible;

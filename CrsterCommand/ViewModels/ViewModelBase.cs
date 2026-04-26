@@ -51,7 +51,7 @@ public abstract class ViewModelBase : ObservableObject
         });
     }
 
-    protected async Task MinimizeToTrayAsync()
+    internal async Task MinimizeToTrayAsync()
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
         {

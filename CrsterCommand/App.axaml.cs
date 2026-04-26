@@ -25,36 +25,38 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    public async override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var storageService = new StorageService();
             var appViewModel = new AppViewModel();
-            DataContext = appViewModel;
-
             var mainViewModel = new MainViewModel(storageService);
 
-            var mainWindow = new MainWindow
-            {
-                DataContext = mainViewModel,
-            };
+            MainWindow mainWindow;
 
-            appViewModel.AttachMainWindow(mainWindow);
-
-            // If started with --startup-hidden flag, keep app in tray without showing window
             if (Program.IsStartHidden)
             {
-                desktop.ShutdownMode = ShutdownMode.OnLastWindowClose;
-                appViewModel.SetTrayVisible(true);
-                mainWindow.ShowInTaskbar = false;
-                mainWindow.WindowState = Avalonia.Controls.WindowState.Minimized;
+                mainWindow = new MainWindow()
+                {
+                    DataContext = mainViewModel,
+                    ShowActivated = false,
+                };
             }
             else
             {
-                desktop.MainWindow = mainWindow;
-                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+                mainWindow = new MainWindow
+                {
+                    DataContext = mainViewModel,
+                };
             }
+
+            appViewModel.AttachMainWindow(mainWindow);
+
+            DataContext = appViewModel;
+
+            desktop.MainWindow = mainWindow;
+            desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
             _hotkeyService = new ScreenCaptureHotkeyService(storageService, mainViewModel.ScreenCaptureViewModel);
             _hotkeyService.Start();
@@ -62,35 +64,10 @@ public partial class App : Application
             _desktopRobotHotkeyService = new DesktopRobotHotkeyService(storageService, mainViewModel.MacroManagerViewModel);
             _desktopRobotHotkeyService.Start();
 
-            // Handle application exit to properly dispose resources before shutdown
-            desktop.ShutdownRequested += (_, e) =>
+            if (Program.IsStartHidden)
             {
-                try
-                {
-                    _hotkeyService?.Dispose();
-                    _hotkeyService = null;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    _desktopRobotHotkeyService?.Dispose();
-                    _desktopRobotHotkeyService = null;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    GlobalHookManager.ResetInstance();
-                }
-                catch
-                {
-                }
-            };
+                await mainViewModel.MinimizeToTrayAsync();
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
