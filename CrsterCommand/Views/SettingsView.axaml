@@ -1,254 +1,302 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:CrsterCommand.ViewModels"
-             xmlns:ic="using:FluentIcons.Avalonia"
-             x:Class="CrsterCommand.Views.SettingsView"
-             x:DataType="vm:SettingsViewModel">
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:vm="using:CrsterCommand.ViewModels"
+			 xmlns:ic="using:FluentIcons.Avalonia"
+			 x:Class="CrsterCommand.Views.SettingsView"
+			 x:DataType="vm:SettingsViewModel">
 
-    <ScrollViewer Background="Transparent">
-        <StackPanel Margin="32" Spacing="20">
+	<ScrollViewer Background="Transparent">
+		<StackPanel Margin="32" Spacing="20">
 
-            <!-- Header -->
-            <StackPanel Spacing="4">
-                <TextBlock Classes="PageTitle"    Text="Settings"/>
-                <TextBlock Classes="PageSubtitle" Text="Configure your toolkit preferences"/>
-            </StackPanel>
+			<!-- Header -->
+			<StackPanel Spacing="4">
+				<TextBlock Classes="PageTitle"    Text="Settings"/>
+				<TextBlock Classes="PageSubtitle" Text="Configure your toolkit preferences"/>
+			</StackPanel>
 
-            <!-- Database Card -->
-            <Border Classes="Card">
-                <StackPanel Spacing="16">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <ic:SymbolIcon Symbol="Database"
-                                       Foreground="{DynamicResource AppAccentBrush}"
-                                       FontSize="20"/>
-                        <TextBlock Classes="SectionHeader"
-                                   Text="Database Configuration"
-                                   Foreground="{DynamicResource AppAccentBrush}"/>
-                    </StackPanel>
-                    <TextBlock Text="Set the location of your LiteDB file. Default is your Documents folder."
-                               FontSize="13"
-                               Foreground="{DynamicResource AppSecondaryTextBrush}"
-                               TextWrapping="Wrap"/>
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <TextBox Text="{Binding DbPath}" IsReadOnly="True" PlaceholderText="Path to toolkit.db..."/>
-                        <Button Grid.Column="1" Command="{Binding BrowsePathCommand}" Classes="Primary">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <ic:SymbolIcon Symbol="FolderOpen"/>
-                                <TextBlock Text="Browse"/>
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-                </StackPanel>
-            </Border>
+			<!-- Database Card -->
+			<Border Classes="Card">
+				<StackPanel Spacing="16">
+					<StackPanel Orientation="Horizontal" Spacing="10">
+						<ic:SymbolIcon Symbol="Database"
+									   Foreground="{DynamicResource AppAccentBrush}"
+									   FontSize="20"/>
+						<TextBlock Classes="SectionHeader"
+								   Text="Database Configuration"
+								   Foreground="{DynamicResource AppAccentBrush}"/>
+					</StackPanel>
+					<TextBlock Text="Set the location of your LiteDB file. Default is your Documents folder."
+							   FontSize="13"
+							   Foreground="{DynamicResource AppSecondaryTextBrush}"
+							   TextWrapping="Wrap"/>
+					<Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+						<TextBox Text="{Binding DbPath}" IsReadOnly="True" PlaceholderText="Path to toolkit.db..."/>
+						<Button Grid.Column="1" Command="{Binding BrowsePathCommand}" Classes="Primary">
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<ic:SymbolIcon Symbol="FolderOpen"/>
+								<TextBlock Text="Browse"/>
+							</StackPanel>
+						</Button>
+					</Grid>
+				</StackPanel>
+			</Border>
 
-            <!-- Gemini AI Card -->
-            <Border Classes="Card">
-                <StackPanel Spacing="16">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <ic:SymbolIcon Symbol="Bot"
-                                       Foreground="{DynamicResource AppWarningBrush}"
-                                       FontSize="20"/>
-                        <TextBlock Classes="SectionHeader"
-                                   Text="Gemini AI Configuration"
-                                   Foreground="{DynamicResource AppWarningBrush}"/>
-                    </StackPanel>
-                    <TextBlock Text="Configure your native Gemini AI settings for intelligent features."
-                               FontSize="13"
-                               Foreground="{DynamicResource AppSecondaryTextBrush}"
-                               TextWrapping="Wrap"/>
+			<!-- Gemini AI Card -->
+			<Border Classes="Card">
+				<StackPanel Spacing="16">
+					<StackPanel Orientation="Horizontal" Spacing="10">
+						<ic:SymbolIcon Symbol="Bot"
+									   Foreground="{DynamicResource AppWarningBrush}"
+									   FontSize="20"/>
+						<TextBlock Classes="SectionHeader"
+								   Text="Gemini AI Configuration"
+								   Foreground="{DynamicResource AppWarningBrush}"/>
+					</StackPanel>
+					<TextBlock Text="Configure your native Gemini AI settings for intelligent features."
+							   FontSize="13"
+							   Foreground="{DynamicResource AppSecondaryTextBrush}"
+							   TextWrapping="Wrap"/>
 
-                    <StackPanel Spacing="4">
-                        <TextBlock Classes="Label" Text="API Key"/>
-                        <TextBox Text="{Binding AiApiKey}"
-                                 PasswordChar="*"
-                                 PlaceholderText="Enter your Gemini API Key..."/>
-                    </StackPanel>
+					<StackPanel Spacing="4">
+						<TextBlock Classes="Label" Text="API Key"/>
+						<TextBox Text="{Binding AiApiKey}"
+								 PasswordChar="*"
+								 PlaceholderText="Enter your Gemini API Key..."/>
+					</StackPanel>
 
-                    <StackPanel Spacing="4">
-                        <TextBlock Classes="Label" Text="Select Model"/>
-                        <ComboBox ItemsSource="{Binding AiModelOptions}"
-                                  SelectedItem="{Binding AiModel}"
-                                  IsEnabled="{Binding HasApiKey}"
-                                  HorizontalAlignment="Stretch"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-            
-            <!-- Vault Security Card -->
-            <Border Classes="Card">
-                <StackPanel Spacing="16">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <ic:SymbolIcon Symbol="ShieldLock"
-                                       Foreground="{DynamicResource AppAccentBrush}"
-                                       FontSize="20"/>
-                        <TextBlock Classes="SectionHeader"
-                                   Text="Vault Security"
-                                   Foreground="{DynamicResource AppAccentBrush}"/>
-                    </StackPanel>
-                    <TextBlock Text="Set a master password for your encrypted notes. This password is required to create or view Vault items."
-                               FontSize="13"
-                               Foreground="{DynamicResource AppSecondaryTextBrush}"
-                               TextWrapping="Wrap"/>
+					<StackPanel Spacing="4">
+						<TextBlock Classes="Label" Text="Select Model"/>
+						<ComboBox ItemsSource="{Binding AiModelOptions}"
+								  SelectedItem="{Binding AiModel}"
+								  IsEnabled="{Binding HasApiKey}"
+								  HorizontalAlignment="Stretch"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
 
-                    <StackPanel Spacing="4">
-                        <TextBlock Classes="Label" Text="Master Password"/>
-                        <TextBox Text="{Binding VaultPassword}"
-                                 PasswordChar="*"
-                                 PlaceholderText="Enter vault master password..."/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
+			<!-- FFmpeg Card -->
+			<Border Classes="Card">
+				<StackPanel Spacing="16">
+					<StackPanel Orientation="Horizontal" Spacing="10">
+						<ic:SymbolIcon Symbol="Video"
+									   Foreground="{DynamicResource AppSuccessBrush}"
+									   FontSize="20"/>
+						<TextBlock Classes="SectionHeader"
+								   Text="FFmpeg (Screen Recorder)"
+								   Foreground="{DynamicResource AppSuccessBrush}"/>
+					</StackPanel>
+					<TextBlock Text="FFmpeg is required for the Screen Recorder feature to capture and encode video."
+							   FontSize="13"
+							   Foreground="{DynamicResource AppSecondaryTextBrush}"
+							   TextWrapping="Wrap"/>
 
-            <!-- Screen Capture Hotkey Card -->
-            <Border Classes="Card">
-                <StackPanel Spacing="16">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <ic:SymbolIcon Symbol="Keyboard"
-                                       Foreground="{DynamicResource AppAccentBrush}"
-                                       FontSize="20"/>
-                        <TextBlock Classes="SectionHeader"
-                                   Text="Screen Capture Shortcut"
-                                   Foreground="{DynamicResource AppAccentBrush}"/>
-                    </StackPanel>
-                    <TextBlock Text="Choose Print Screen, or a supported combo such as Ctrl+Shift+Key, Ctrl+Alt+Shift+Key, or Alt+Shift+Key. On macOS, use Cmd instead of Ctrl."
-                               FontSize="13"
-                               Foreground="{DynamicResource AppSecondaryTextBrush}"
-                               TextWrapping="Wrap"/>
+					<!-- Installed state -->
+					<Border CornerRadius="8" Padding="14" IsVisible="{Binding IsFfmpegInstalled}"
+							Background="#1a2e1a" BorderBrush="#2a4a2a" BorderThickness="1">
+						<Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+							<ic:SymbolIcon Grid.Column="0" Symbol="CheckmarkCircle"
+										   Foreground="{DynamicResource AppSuccessBrush}"
+										   FontSize="22" VerticalAlignment="Center"/>
+							<StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+								<TextBlock Text="FFmpeg is installed" FontSize="13" FontWeight="SemiBold"
+										   Foreground="{DynamicResource AppSuccessBrush}"/>
+								<TextBlock Text="{Binding FfmpegVersion}" FontSize="12"
+										   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+							</StackPanel>
+							<Button Grid.Column="2" Command="{Binding CheckFfmpegCommand}"
+									IsEnabled="{Binding !IsCheckingFfmpeg}"
+									VerticalAlignment="Center">
+								<StackPanel Orientation="Horizontal" Spacing="6">
+									<ic:SymbolIcon Symbol="ArrowSync" FontSize="14"/>
+									<TextBlock Text="Re-check"   IsVisible="{Binding !IsCheckingFfmpeg}"/>
+									<TextBlock Text="Checking…" IsVisible="{Binding IsCheckingFfmpeg}"/>
+								</StackPanel>
+							</Button>
+						</Grid>
+					</Border>
 
-                            <StackPanel Spacing="4">
-                                <TextBlock Classes="Label" Text="Shortcut Key"/>
-                                <TextBox x:Name="ScreenCaptureShortcutBox"
-                                         Text="{Binding ScreenCaptureShortcut, Mode=TwoWay}"
-                                         IsReadOnly="True"
-                                         PlaceholderText="Press the shortcut here"
-                                         HorizontalAlignment="Stretch"
-                                         GotFocus="ScreenCaptureShortcutBox_GotFocus"
-                                         LostFocus="ScreenCaptureShortcutBox_LostFocus"/>
-                                <TextBlock Text="Click the field and press a key combination."
-                                           FontSize="12"
-                                           Foreground="{DynamicResource AppSecondaryTextBrush}"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
+					<!-- Not installed state -->
+					<Border CornerRadius="8" Padding="14" IsVisible="{Binding !IsFfmpegInstalled}"
+							Background="#2e1a1a" BorderBrush="#4a2a2a" BorderThickness="1">
+						<Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+							<ic:SymbolIcon Grid.Column="0" Symbol="DismissCircle"
+										   Foreground="{DynamicResource AppDangerBrush}"
+										   FontSize="22" VerticalAlignment="Center"/>
+							<StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+								<TextBlock Text="FFmpeg not found" FontSize="13" FontWeight="SemiBold"
+										   Foreground="{DynamicResource AppDangerBrush}"/>
+								<TextBlock Text="Install FFmpeg and add it to your system PATH."
+										   FontSize="12"
+										   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+							</StackPanel>
+							<Button Grid.Column="2" Command="{Binding CheckFfmpegCommand}"
+									IsEnabled="{Binding !IsCheckingFfmpeg}"
+									VerticalAlignment="Center">
+								<StackPanel Orientation="Horizontal" Spacing="6">
+									<ic:SymbolIcon Symbol="ArrowSync" FontSize="14"/>
+									<TextBlock Text="Re-check"   IsVisible="{Binding !IsCheckingFfmpeg}"/>
+									<TextBlock Text="Checking…" IsVisible="{Binding IsCheckingFfmpeg}"/>
+								</StackPanel>
+							</Button>
+						</Grid>
+					</Border>
 
-                    <!-- Desktop Robot Hotkey Card -->
-                    <Border Classes="Card">
-                        <StackPanel Spacing="16">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <ic:SymbolIcon Symbol="AutoFit"
-                                               Foreground="{DynamicResource AppAccentBrush}"
-                                               FontSize="20"/>
-                                <TextBlock Classes="SectionHeader"
-                                           Text="Desktop Robot Shortcut"
-                                           Foreground="{DynamicResource AppAccentBrush}"/>
-                            </StackPanel>
-                            <TextBlock Text="Configure the keyboard shortcut to trigger the Desktop Robot. Supported combinations: Alt+key, Win+key, Alt+Shift+key, Ctrl+Shift+key, Ctrl+Alt+key, Ctrl+Alt+Shift+key."
-                                       FontSize="13"
-                                       Foreground="{DynamicResource AppSecondaryTextBrush}"
-                                       TextWrapping="Wrap"/>
+					<Button Command="{Binding OpenFfmpegDownloadCommand}"
+							IsVisible="{Binding !IsFfmpegInstalled}"
+							Classes="Primary">
+						<StackPanel Orientation="Horizontal" Spacing="8">
+							<ic:SymbolIcon Symbol="Open"/>
+							<TextBlock Text="Download FFmpeg"/>
+						</StackPanel>
+					</Button>
+				</StackPanel>
+			</Border>
 
-                            <StackPanel Spacing="4">
-                                <TextBlock Classes="Label" Text="Shortcut Key"/>
-                                <TextBox x:Name="DesktopRobotShortcutBox"
-                                         Text="{Binding DesktopRobotShortcut, Mode=TwoWay}"
-                                         IsReadOnly="True"
-                                         PlaceholderText="Press the shortcut here"
-                                         HorizontalAlignment="Stretch"
-                                         GotFocus="DesktopRobotShortcutBox_GotFocus"
-                                         LostFocus="DesktopRobotShortcutBox_LostFocus"/>
-                                <TextBlock Text="Click the field and press a key combination."
-                                           FontSize="12"
-                                           Foreground="{DynamicResource AppSecondaryTextBrush}"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
+			<!-- Vault Security Card -->
+			<Border Classes="Card">
+				<StackPanel Spacing="16">
+					<StackPanel Orientation="Horizontal" Spacing="10">
+						<ic:SymbolIcon Symbol="ShieldLock"
+									   Foreground="{DynamicResource AppAccentBrush}"
+									   FontSize="20"/>
+						<TextBlock Classes="SectionHeader"
+								   Text="Vault Security"
+								   Foreground="{DynamicResource AppAccentBrush}"/>
+					</StackPanel>
+					<TextBlock Text="Set a master password for your encrypted notes. This password is required to create or view Vault items."
+							   FontSize="13"
+							   Foreground="{DynamicResource AppSecondaryTextBrush}"
+							   TextWrapping="Wrap"/>
 
-                    <!-- FFmpeg Card -->
-                    <Border Classes="Card">
-                <StackPanel Spacing="16">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <ic:SymbolIcon Symbol="Video"
-                                       Foreground="{DynamicResource AppSuccessBrush}"
-                                       FontSize="20"/>
-                        <TextBlock Classes="SectionHeader"
-                                   Text="FFmpeg (Screen Recorder)"
-                                   Foreground="{DynamicResource AppSuccessBrush}"/>
-                    </StackPanel>
-                    <TextBlock Text="FFmpeg is required for the Screen Recorder feature to capture and encode video."
-                               FontSize="13"
-                               Foreground="{DynamicResource AppSecondaryTextBrush}"
-                               TextWrapping="Wrap"/>
+					<StackPanel Spacing="4">
+						<TextBlock Classes="Label" Text="Master Password"/>
+						<TextBox Text="{Binding VaultPassword}"
+								 PasswordChar="*"
+								 PlaceholderText="Enter vault master password..."/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
 
-                    <!-- Installed state -->
-                    <Border CornerRadius="8" Padding="14" IsVisible="{Binding IsFfmpegInstalled}"
-                            Background="#1a2e1a" BorderBrush="#2a4a2a" BorderThickness="1">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                            <ic:SymbolIcon Grid.Column="0" Symbol="CheckmarkCircle"
-                                           Foreground="{DynamicResource AppSuccessBrush}"
-                                           FontSize="22" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="FFmpeg is installed" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource AppSuccessBrush}"/>
-                                <TextBlock Text="{Binding FfmpegVersion}" FontSize="12"
-                                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
-                            </StackPanel>
-                            <Button Grid.Column="2" Command="{Binding CheckFfmpegCommand}"
-                                    IsEnabled="{Binding !IsCheckingFfmpeg}"
-                                    VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <ic:SymbolIcon Symbol="ArrowSync" FontSize="14"/>
-                                    <TextBlock Text="Re-check"   IsVisible="{Binding !IsCheckingFfmpeg}"/>
-                                    <TextBlock Text="Checking…" IsVisible="{Binding IsCheckingFfmpeg}"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-                    </Border>
+			<!-- Screen Capture Hotkey Card -->
+			<Border Classes="Card">
+				<StackPanel Spacing="16">
+					<StackPanel Orientation="Horizontal" Spacing="10">
+						<ic:SymbolIcon Symbol="Keyboard"
+									   Foreground="{DynamicResource AppAccentBrush}"
+									   FontSize="20"/>
+						<TextBlock Classes="SectionHeader"
+								   Text="Screen Capture Shortcut"
+								   Foreground="{DynamicResource AppAccentBrush}"/>
+					</StackPanel>
+					<TextBlock Text="Choose Print Screen, or a supported combo such as Ctrl+Shift+Key, Ctrl+Alt+Shift+Key, or Alt+Shift+Key. On macOS, use Cmd instead of Ctrl."
+							   FontSize="13"
+							   Foreground="{DynamicResource AppSecondaryTextBrush}"
+							   TextWrapping="Wrap"/>
 
-                    <!-- Not installed state -->
-                    <Border CornerRadius="8" Padding="14" IsVisible="{Binding !IsFfmpegInstalled}"
-                            Background="#2e1a1a" BorderBrush="#4a2a2a" BorderThickness="1">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                            <ic:SymbolIcon Grid.Column="0" Symbol="DismissCircle"
-                                           Foreground="{DynamicResource AppDangerBrush}"
-                                           FontSize="22" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="FFmpeg not found" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource AppDangerBrush}"/>
-                                <TextBlock Text="Install FFmpeg and add it to your system PATH."
-                                           FontSize="12"
-                                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
-                            </StackPanel>
-                            <Button Grid.Column="2" Command="{Binding CheckFfmpegCommand}"
-                                    IsEnabled="{Binding !IsCheckingFfmpeg}"
-                                    VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <ic:SymbolIcon Symbol="ArrowSync" FontSize="14"/>
-                                    <TextBlock Text="Re-check"   IsVisible="{Binding !IsCheckingFfmpeg}"/>
-                                    <TextBlock Text="Checking…" IsVisible="{Binding IsCheckingFfmpeg}"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-                    </Border>
+					<StackPanel Spacing="4">
+						<TextBlock Classes="Label" Text="Shortcut Key"/>
+						<TextBox x:Name="ScreenCaptureShortcutBox"
+								 Text="{Binding ScreenCaptureShortcut, Mode=TwoWay}"
+								 IsReadOnly="True"
+								 PlaceholderText="Press the shortcut here"
+								 HorizontalAlignment="Stretch"/>
+						<TextBlock Text="Click the field and press a key combination."
+								   FontSize="12"
+								   Foreground="{DynamicResource AppSecondaryTextBrush}"
+								   TextWrapping="Wrap"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
 
-                    <Button Command="{Binding OpenFfmpegDownloadCommand}"
-                            IsVisible="{Binding !IsFfmpegInstalled}"
-                            Classes="Primary">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ic:SymbolIcon Symbol="Open"/>
-                            <TextBlock Text="Download FFmpeg"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </Border>
+			<!-- Desktop Robot Hotkey Card -->
+			<Border Classes="Card">
+				<StackPanel Spacing="16">
+					<StackPanel Orientation="Horizontal" Spacing="10">
+						<ic:SymbolIcon Symbol="AutoFit"
+									   Foreground="{DynamicResource AppAccentBrush}"
+									   FontSize="20"/>
+						<TextBlock Classes="SectionHeader"
+								   Text="Desktop Robot Shortcut"
+								   Foreground="{DynamicResource AppAccentBrush}"/>
+					</StackPanel>
+					<TextBlock Text="Configure the keyboard shortcut to trigger the Desktop Robot. Supported combinations: Alt+key, Win+key, Alt+Shift+key, Ctrl+Shift+key, Ctrl+Alt+key, Ctrl+Alt+Shift+key."
+							   FontSize="13"
+							   Foreground="{DynamicResource AppSecondaryTextBrush}"
+							   TextWrapping="Wrap"/>
 
-            <TextBlock Text="Settings are saved automatically upon change."
-                       FontSize="12"
-                       FontStyle="Italic"
-                       Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+					<StackPanel Spacing="4">
+						<TextBlock Classes="Label" Text="Shortcut Key"/>
+						<TextBox x:Name="DesktopRobotShortcutBox"
+								 Text="{Binding DesktopRobotShortcut, Mode=TwoWay}"
+								 IsReadOnly="True"
+								 PlaceholderText="Press the shortcut here"
+								 HorizontalAlignment="Stretch"/>
+						<TextBlock Text="Click the field and press a key combination."
+								   FontSize="12"
+								   Foreground="{DynamicResource AppSecondaryTextBrush}"
+								   TextWrapping="Wrap"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
 
-        </StackPanel>
-    </ScrollViewer>
+			<!-- Startup Configuration Card -->
+			<Border Classes="Card">
+				<StackPanel Spacing="16">
+					<StackPanel Orientation="Horizontal" Spacing="10">
+						<ic:SymbolIcon Symbol="Checkmark"
+									   Foreground="{DynamicResource AppAccentBrush}"
+									   FontSize="20"/>
+						<TextBlock Classes="SectionHeader"
+								   Text="Startup Configuration"
+								   Foreground="{DynamicResource AppAccentBrush}"/>
+					</StackPanel>
+					<TextBlock Text="Configure CrsterCommand to start automatically when you log in. The app will run hidden in the system tray."
+							   FontSize="13"
+							   Foreground="{DynamicResource AppSecondaryTextBrush}"
+							   TextWrapping="Wrap"/>
+
+					<StackPanel Spacing="12">
+						<Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+							<StackPanel Grid.Column="0" Spacing="4">
+								<TextBlock Classes="Label" Text="Start on Login"/>
+								<TextBlock Text="Automatically launch CrsterCommand when you log in"
+										   FontSize="12"
+										   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+							</StackPanel>
+							<CheckBox Grid.Column="1"
+									  IsChecked="{Binding StartOnStartup}"
+									  IsEnabled="{Binding !IsConfiguringStartup}"
+									  VerticalAlignment="Center"/>
+						</Grid>
+
+						<!-- Error Message Display -->
+							<Border CornerRadius="8" Padding="12" IsVisible="{Binding HasStartupError}"
+									Background="#2e1a1a" BorderBrush="#8b3a3a" BorderThickness="1">
+								<Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+									<ic:SymbolIcon Grid.Column="0" Symbol="ErrorCircle"
+												   Foreground="{DynamicResource AppDangerBrush}"
+												   FontSize="20" VerticalAlignment="Top" Margin="0,2,0,0"/>
+									<StackPanel Grid.Column="1" Spacing="4">
+										<TextBlock Text="Startup Configuration Error" FontSize="12" FontWeight="SemiBold"
+												   Foreground="{DynamicResource AppDangerBrush}"/>
+										<TextBlock Text="{Binding StartupErrorMessage}" FontSize="11"
+												   Foreground="{DynamicResource AppSecondaryTextBrush}"
+												   TextWrapping="Wrap"/>
+									</StackPanel>
+								</Grid>
+							</Border>
+						</StackPanel>
+				</StackPanel>
+			</Border>
+
+
+
+			<TextBlock Text="Settings are saved automatically upon change."
+					   FontSize="12"
+					   FontStyle="Italic"
+					   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+
+		</StackPanel>
+	</ScrollViewer>
 
 </UserControl>

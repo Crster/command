@@ -13,18 +13,15 @@ public class ImageService
 {
     public Image CreateScreenCapture()
     {
-        var captureWatch = Stopwatch.StartNew();
         var screenSize = GetFullscreenSize();
 
         if (TryCaptureNative(screenSize, out var nativeCapture))
         {
-            Debug.WriteLine($"[ImageService] capture completed in {captureWatch.ElapsedMilliseconds} ms via native capture");
             return nativeCapture!;
         }
 
         if (TryCaptureWithFfmpeg(screenSize, out var ffmpegCapture))
         {
-            Debug.WriteLine($"[ImageService] capture completed in {captureWatch.ElapsedMilliseconds} ms via ffmpeg pipe");
             return ffmpegCapture!;
         }
 

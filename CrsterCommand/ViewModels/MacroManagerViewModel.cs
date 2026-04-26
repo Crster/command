@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using Avalonia.Input;
-using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using Avalonia.Media.Imaging;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CrsterCommand.Models;
@@ -15,6 +19,7 @@ using Google.GenAI;
 using System.Threading;
 using SharpHook;
 using SharpHook.Data;
+using System.IO;
 
 namespace CrsterCommand.ViewModels;
 
@@ -23,6 +28,7 @@ public class MacroManagerViewModel : ViewModelBase
     private readonly StorageService _storageService;
     private readonly ImageService _imageService;
     private readonly AIService _aiService;
+    private readonly FileAttachmentService _fileAttachmentService;
 
     public ObservableCollection<MacroAiAppItem> AiApps { get; } = new();
     public ObservableCollection<string> AiModelOptions { get; } = new();
@@ -30,7 +36,10 @@ public class MacroManagerViewModel : ViewModelBase
     public IRelayCommand<MacroAiAppItem?> ToggleExpandCommand { get; }
     public IAsyncRelayCommand<MacroAiAppItem?> SendCommand { get; }
     public IAsyncRelayCommand<MacroAiAppItem?> CopyAnswerCommand { get; }
+    public IAsyncRelayCommand<MacroAiAppItem?> DownloadResponseFileCommand { get; }
     public IRelayCommand<MacroAiAppItem?> DeleteAiAppCommand { get; }
+    public IAsyncRelayCommand<MacroAiAppItem?> UploadFileCommand { get; }
+    public IAsyncRelayCommand<MacroAiAppItem?> RemoveFileCommand { get; }
     public IRelayCommand ToggleRobotCommand { get; }
 
     private CancellationTokenSource? _robotCts;
@@ -47,16 +56,21 @@ public class MacroManagerViewModel : ViewModelBase
         _storageService = storageService;
         _aiService = new AIService(storageService);
         _imageService = new ImageService();
+        _fileAttachmentService = new FileAttachmentService();
 
         ToggleExpandCommand = new RelayCommand<MacroAiAppItem?>(ToggleExpand);
         SendCommand = new AsyncRelayCommand<MacroAiAppItem?>(SendAsync);
         CopyAnswerCommand = new AsyncRelayCommand<MacroAiAppItem?>(CopyAnswerAsync);
+        DownloadResponseFileCommand = new AsyncRelayCommand<MacroAiAppItem?>(DownloadResponseFileAsync);
         DeleteAiAppCommand = new RelayCommand<MacroAiAppItem?>(DeleteAiApp);
+        UploadFileCommand = new AsyncRelayCommand<MacroAiAppItem?>(UploadFileAsync);
+        RemoveFileCommand = new AsyncRelayCommand<MacroAiAppItem?>(RemoveAttachmentAsync);
         ToggleRobotCommand = new RelayCommand(() => ToggleRobot());
 
         LoadModelOptions();
         LoadAll();
-        _ = FetchModelsAsync();
+        // Fetch models immediately on a background thread without awaiting
+        _ = Task.Run(() => FetchModelsAsync());
     }
 
     // Use base ViewModelBase.GetMainWindowAsync to obtain the main window.
@@ -234,7 +248,7 @@ public class MacroManagerViewModel : ViewModelBase
             .OrderByDescending(x => x.LastModified);
 
         foreach (var item in items)
-            AiApps.Add(new MacroAiAppItem(item, fallbackModel, SaveModelOverride));
+            AiApps.Add(new MacroAiAppItem(item, fallbackModel, _ => { }));
     }
 
     public void AddSystemPrompt(string systemPrompt, string? selectedModel = null)
@@ -252,7 +266,7 @@ public class MacroManagerViewModel : ViewModelBase
         };
 
         _storageService.GetAiMacroApps().Insert(model);
-        AiApps.Insert(0, new MacroAiAppItem(model, model.Model ?? "gemini-2.5-flash", SaveModelOverride));
+        AiApps.Insert(0, new MacroAiAppItem(model, model.Model ?? "gemini-2.5-flash", _ => { }));
     }
 
     private void ToggleExpand(MacroAiAppItem? item)
@@ -263,11 +277,24 @@ public class MacroManagerViewModel : ViewModelBase
         var isExpanding = !item.IsExpanded;
         if (isExpanding)
         {
-            item.UserInput = "";
-            item.AiAnswer = "";
+            // Clear session when expanding to a new macro
+            ClearMacroSession(item);
+        }
+        else
+        {
+            // Clear session when collapsing
+            ClearMacroSession(item);
         }
 
         item.IsExpanded = isExpanding;
+    }
+
+    private void ClearMacroSession(MacroAiAppItem item)
+    {
+        item.UserInput = "";
+        item.AiAnswer = "";
+        item.ResponseFile = null;
+        item.ChatHistory.Clear();
     }
 
     private async Task SendAsync(MacroAiAppItem? item)
@@ -276,8 +303,28 @@ public class MacroManagerViewModel : ViewModelBase
             return;
 
         item.IsBusy = true;
-        var answer = await _aiService.RunMacroPromptAsync(item.SystemPrompt, item.UserInput, item.SelectedModel);
-        item.AiAnswer = answer;
+        item.AiAnswer = "";
+        item.ResponseFile = null;
+
+        // Store user message in history
+        var userMessage = item.UserInput;
+        item.ChatHistory.Add(("user", userMessage));
+
+        // Only allow a single attachment per send: use the single Attachment if present
+        var attachmentsList = item.Attachment is not null
+            ? new System.Collections.Generic.List<FileAttachment> { item.Attachment }
+            : new System.Collections.Generic.List<FileAttachment>();
+        var responseData = await _aiService.RunMacroPromptAsync(item.SystemPrompt, item.ChatHistory, item.SelectedModel, attachmentsList);
+        item.AiAnswer = responseData.TextContent;
+        item.ResponseFile = responseData.FileContent;
+
+        // Store AI response in history (only store actual content, not file download messages)
+        if (!string.IsNullOrWhiteSpace(responseData.TextContent) && !responseData.TextContent.StartsWith("📥"))
+        {
+            item.ChatHistory.Add(("assistant", responseData.TextContent));
+        }
+
+        item.UserInput = "";
         item.IsBusy = false;
 
         var record = _storageService.GetAiMacroApps().FindById(item.Id);
@@ -289,21 +336,151 @@ public class MacroManagerViewModel : ViewModelBase
         record.LastAiAnswer = "";
         record.Model = item.SelectedModel;
         record.LastModified = DateTime.Now;
+
+        // Clear attached file after sending (only association cleared; file not deleted)
+        if (item.Attachment is not null)
+            item.Attachment = null;
+
+        if (record.Attachment is not null)
+            record.Attachment = null;
+
         _storageService.GetAiMacroApps().Update(record);
     }
 
-    private void SaveModelOverride(MacroAiAppItem item)
+    private async Task UploadFileAsync(MacroAiAppItem? item)
     {
-        if (string.IsNullOrWhiteSpace(item.SelectedModel))
+        if (item is null)
             return;
+
+        try
+        {
+            var mainWindow = await GetMainWindowAsync();
+            if (mainWindow == null)
+                return;
+
+            var topLevel = TopLevel.GetTopLevel(mainWindow);
+            if (topLevel == null)
+                return;
+
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Select file to upload (Images, PDF, Audio)",
+                AllowMultiple = false
+            });
+
+            if (files.Count == 0)
+                return;
+            var filePath = files[0].Path.LocalPath;
+            var attachment = await _fileAttachmentService.AddFileAsync(filePath);
+
+            if (attachment is not null)
+            {
+                // Only a single attachment is supported now
+                item.Attachment = attachment;
+
+                var record = _storageService.GetAiMacroApps().FindById(item.Id);
+                if (record is not null)
+                {
+                    record.Attachment = attachment;
+                    record.LastModified = DateTime.Now;
+                    _storageService.GetAiMacroApps().Update(record);
+                }
+            }
+        }
+        catch
+        {
+            // Show error to user if needed
+        }
+    }
+
+    // Remove single attachment from an item
+    private async Task RemoveAttachmentAsync(MacroAiAppItem? item)
+    {
+        if (item is null || item.Attachment is null)
+            return;
+
+        var attachment = item.Attachment;
+        item.Attachment = null;
+        await _fileAttachmentService.RemoveFileAsync(attachment);
 
         var record = _storageService.GetAiMacroApps().FindById(item.Id);
-        if (record is null)
+        if (record is not null)
+        {
+            record.Attachment = null;
+            record.LastModified = DateTime.Now;
+            _storageService.GetAiMacroApps().Update(record);
+        }
+    }
+
+    public async Task AttachFilesFromPasteAsync(MacroAiAppItem item, List<IStorageFile> files)
+    {
+        if (item is null || files.Count == 0)
             return;
 
-        record.Model = item.SelectedModel;
-        record.LastModified = DateTime.Now;
-        _storageService.GetAiMacroApps().Update(record);
+        try
+        {
+            // Only accept the first file as the single attachment
+            var file = files[0];
+            var filePath = file.Path.LocalPath;
+
+            var attachment = await _fileAttachmentService.AddFileAsync(filePath);
+
+            if (attachment is not null)
+            {
+                item.Attachment = attachment;
+
+                var record = _storageService.GetAiMacroApps().FindById(item.Id);
+                if (record is not null)
+                {
+                    record.Attachment = attachment;
+                    record.LastModified = DateTime.Now;
+                    _storageService.GetAiMacroApps().Update(record);
+                }
+            }
+        }
+        catch
+        {
+            // Silently handle error; files may not be valid
+        }
+    }
+
+    public async Task AttachImageFromPasteAsync(MacroAiAppItem item, IImage bitmap)
+    {
+        if (item is null || bitmap is null)
+            return;
+
+        try
+        {
+            // Save bitmap to temporary file
+            string tempDir = Path.Combine(Path.GetTempPath(), "CrsterCommand");
+            if (!Directory.Exists(tempDir)) 
+                Directory.CreateDirectory(tempDir);
+
+            var tempPath = Path.Combine(tempDir, $"pasted_image_{DateTime.Now:yyyyMMdd_HHmmss}.png");
+
+            if (bitmap is Bitmap bitmapImpl)
+            {
+                bitmapImpl.Save(tempPath);
+
+                var attachment = await _fileAttachmentService.AddFileAsync(tempPath);
+                if (attachment is not null)
+                {
+                    item.Attachment = attachment;
+
+                    var record = _storageService.GetAiMacroApps().FindById(item.Id);
+                    if (record is not null)
+                    {
+                        record.Attachment = attachment;
+                        record.LastModified = DateTime.Now;
+                        _storageService.GetAiMacroApps().Update(record);
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Silently handle error
+        }
     }
 
     private void DeleteAiApp(MacroAiAppItem? item)
@@ -361,6 +538,69 @@ public class MacroManagerViewModel : ViewModelBase
         }
     }
 
+    private async Task DownloadResponseFileAsync(MacroAiAppItem? item)
+    {
+        if (item is null || item.ResponseFile is null)
+            return;
+
+        try
+        {
+            var mainWindow = await GetMainWindowAsync();
+            if (mainWindow == null)
+                return;
+
+            var topLevel = TopLevel.GetTopLevel(mainWindow);
+            if (topLevel == null)
+                return;
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Save Response File",
+                SuggestedFileName = item.ResponseFile.FileName
+            });
+
+            if (file != null)
+            {
+                var filePath = file.Path.LocalPath;
+                await System.IO.File.WriteAllBytesAsync(filePath, item.ResponseFile.Data);
+            }
+        }
+        catch
+        {
+            // Silently handle error
+        }
+    }
+
+    public void ClearAllSessions()
+    {
+        foreach (var item in AiApps)
+        {
+            ClearMacroSession(item);
+        }
+    }
+
+    public async void CleanupAttachments()
+    {
+        foreach (var item in AiApps)
+        {
+            if (item.Attachment is not null)
+            {
+                // Remove the file from disk
+                await _fileAttachmentService.RemoveFileAsync(item.Attachment);
+                item.Attachment = null;
+
+                // Clear the attachment from the database record as well
+                var record = _storageService.GetAiMacroApps().FindById(item.Id);
+                if (record is not null)
+                {
+                    record.Attachment = null;
+                    record.LastModified = DateTime.Now;
+                    _storageService.GetAiMacroApps().Update(record);
+                }
+            }
+        }
+    }
+
     private int GetPlatformScrollAmount(Random rnd)
     {
         // Platform-specific scroll amounts based on SharpHook documentation:
@@ -402,9 +642,20 @@ public class MacroAiAppItem : ObservableObject
     private bool _isExpanded;
     private bool _isBusy;
     private string? _selectedModel;
+    private AiResponseFile? _responseFile;
     private readonly Action<MacroAiAppItem> _onModelChanged;
 
+    // Chat history for this macro session
+    public List<(string role, string content)> ChatHistory { get; } = new();
+
     public Guid Id { get; }
+    // Single attachment for UI to match model change
+    private FileAttachment? _attachment;
+    public FileAttachment? Attachment
+    {
+        get => _attachment;
+        set => SetProperty(ref _attachment, value);
+    }
 
     public string SystemPrompt
     {
@@ -439,11 +690,13 @@ public class MacroAiAppItem : ObservableObject
     public string? SelectedModel
     {
         get => _selectedModel;
-        set
-        {
-            if (SetProperty(ref _selectedModel, value))
-                _onModelChanged(this);
-        }
+        set => SetProperty(ref _selectedModel, value);
+    }
+
+    public AiResponseFile? ResponseFile
+    {
+        get => _responseFile;
+        set => SetProperty(ref _responseFile, value);
     }
 
     public MacroAiAppItem(AiMacroApp model, string fallbackModel, Action<MacroAiAppItem> onModelChanged)
@@ -454,5 +707,8 @@ public class MacroAiAppItem : ObservableObject
         _aiAnswer = "";
         _selectedModel = string.IsNullOrWhiteSpace(model.Model) ? fallbackModel : model.Model;
         _onModelChanged = onModelChanged;
+
+        // Load single attachment from model
+        Attachment = model.Attachment;
     }
 }

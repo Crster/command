@@ -124,6 +124,20 @@ public class StorageService : IDisposable
         SaveSettings(_settings);
     }
 
+    public bool GetStartOnStartup() => _settings.StartOnStartup;
+    public void SetStartOnStartup(bool value)
+    {
+        _settings.StartOnStartup = value;
+        SaveSettings(_settings);
+    }
+
+    public bool GetStartHidden() => _settings.StartHidden;
+    public void SetStartHidden(bool value)
+    {
+        _settings.StartHidden = value;
+        SaveSettings(_settings);
+    }
+
     public ILiteCollection<TodoItem> GetTodos() => _db!.GetCollection<TodoItem>("todos");
     public ILiteCollection<Reminder> GetReminders() => _db!.GetCollection<Reminder>("reminders");
     public ILiteCollection<MemoryNote> GetMemoryNotes() => _db!.GetCollection<MemoryNote>("notes");

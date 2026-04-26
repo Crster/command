@@ -1,8 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:CrsterCommand.ViewModels"
+             xmlns:models="using:CrsterCommand.Models"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:views="using:CrsterCommand.Views"
+             xmlns:conv="using:CrsterCommand.Converters"
              x:Class="CrsterCommand.Views.MacroManagerView"
              x:DataType="vm:MacroManagerViewModel">
 
@@ -87,6 +89,25 @@
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Opacity" Value="1"/>
         </Style>
+        <Style Selector="Button.AttachIndicator">
+            <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="MinWidth" Value="28"/>
+            <Setter Property="MinHeight" Value="28"/>
+            <Setter Property="MaxWidth" Value="28"/>
+            <Setter Property="MaxHeight" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.AttachIndicator:pointerover">
+            <Setter Property="Opacity" Value="0.95"/>
+        </Style>
 
         <Style Selector="Button.DeleteIconButton">
             <Setter Property="Background" Value="Transparent"/>
@@ -143,6 +164,11 @@
         </Style>
     </UserControl.Styles>
 
+    <UserControl.Resources>
+        <conv:NullToBoolConverter x:Key="NullToBool" />
+        <conv:FileAttachmentToTooltipConverter x:Key="AttachmentTooltip" />
+    </UserControl.Resources>
+
     <ScrollViewer Background="Transparent">
         <StackPanel Margin="32" Spacing="20">
 
@@ -186,7 +212,8 @@
                     <DataTemplate x:DataType="vm:MacroAiAppItem">
                         <Border Classes="Card AiAppCard"
                                 Classes.expanded="{Binding IsExpanded}"
-                                Padding="14">
+                                Padding="14"
+                                Margin="0,2,0,2">
                             <StackPanel Spacing="12">
                                 <!-- System Prompt Header -->
                                 <Button Classes="CardHeaderButton"
@@ -210,6 +237,7 @@
 
                                 <!-- Expanded Content -->
                                 <StackPanel Spacing="10" IsVisible="{Binding IsExpanded}">
+
                                     <Border CornerRadius="8"
                                             Classes="ChatComposer"
                                             Padding="10"
@@ -229,29 +257,64 @@
                                                      MinHeight="54"
                                                      VerticalContentAlignment="Top"/>
 
-                                            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
-                                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                                    <Button Grid.Column="2"
-                                                            Classes="DeleteIconButton"
-                                                            Width="30"
-                                                            Height="30"
-                                                            Padding="0"
-                                                            Command="{Binding $parent[UserControl].((vm:MacroManagerViewModel)DataContext).DeleteAiAppCommand}"
-                                                            CommandParameter="{Binding}"
-                                                            VerticalAlignment="Center">
-                                                        <ic:SymbolIcon Symbol="Delete" FontSize="14" Foreground="{DynamicResource AppDangerBrush}"/>
-                                                    </Button>
+                                            <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="8" VerticalAlignment="Center">
+                                                <Button Grid.Column="0"
+                                                        Classes="DeleteIconButton"
+                                                        Width="30"
+                                                        Height="30"
+                                                        Padding="0"
+                                                        Command="{Binding $parent[UserControl].((vm:MacroManagerViewModel)DataContext).DeleteAiAppCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        VerticalAlignment="Center">
+                                                    <ic:SymbolIcon Symbol="Delete" FontSize="14" Foreground="{DynamicResource AppDangerBrush}"/>
+                                                </Button>
+
+                                                <!-- Model display with brain icon (read-only) -->
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                                     <ic:SymbolIcon Symbol="BrainCircuit" FontSize="14"/>
-                                                    <TextBlock Text="Model" FontSize="12" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding SelectedModel}" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource AppAccentBrush}" FontWeight="SemiBold"/>
                                                 </StackPanel>
 
-                                                <ComboBox Grid.Column="1"
-                                                          MinWidth="170"
-                                                          ItemsSource="{Binding $parent[UserControl].((vm:MacroManagerViewModel)DataContext).AiModelOptions}"
-                                                          SelectedItem="{Binding SelectedModel}"
-                                                          VerticalAlignment="Center"/>
+                                                <!-- Spacer -->
+                                                <Border Grid.Column="2"/>
 
+                                                <!-- Attachment indicator shown only when an attachment exists -->
                                                 <Button Grid.Column="3"
+                                                        Classes="AttachIndicator"
+                                                        Width="28"
+                                                        Height="28"
+                                                        MinWidth="28"
+                                                        MinHeight="28"
+                                                        MaxWidth="28"
+                                                        MaxHeight="28"
+                                                        Padding="0"
+                                                        CornerRadius="14"
+                                                        ToolTip.Tip="{Binding Attachment, Converter={StaticResource AttachmentTooltip}}"
+                                                        IsVisible="{Binding Attachment, Converter={StaticResource NullToBool}}"
+                                                        Command="{Binding $parent[UserControl].((vm:MacroManagerViewModel)DataContext).RemoveFileCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        HorizontalContentAlignment="Center"
+                                                        VerticalContentAlignment="Center">
+                                                    <ic:SymbolIcon Symbol="Attach" FontSize="12"/>
+                                                </Button>
+
+                                                <Button Grid.Column="4"
+                                                        Classes="SendIconButton"
+                                                        Width="30"
+                                                        Height="30"
+                                                        Padding="0"
+                                                        CornerRadius="15"
+                                                        ToolTip.Tip="Download AI response file"
+                                                        Command="{Binding $parent[UserControl].((vm:MacroManagerViewModel)DataContext).DownloadResponseFileCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsVisible="{Binding ResponseFile, Converter={StaticResource NullToBool}}"
+                                                        VerticalAlignment="Center">
+                                                    <ic:SymbolIcon Symbol="CloudArrowDown" FontSize="14"/>
+                                                </Button>
+
+                                                <Button Grid.Column="5"
                                                         Classes="SendIconButton"
                                                         Width="30"
                                                         Height="30"
@@ -261,7 +324,10 @@
                                                         CommandParameter="{Binding}"
                                                         IsEnabled="{Binding !IsBusy}"
                                                         VerticalAlignment="Center">
-                                                    <ic:SymbolIcon Symbol="Send" FontSize="14"/>
+                                                    <Panel>
+                                                        <ic:SymbolIcon Symbol="Send" FontSize="14" IsVisible="{Binding !IsBusy}"/>
+                                                        <ic:SymbolIcon Symbol="Timer" FontSize="14" IsVisible="{Binding IsBusy}"/>
+                                                    </Panel>
                                                 </Button>
                                             </Grid>
                                         </Grid>

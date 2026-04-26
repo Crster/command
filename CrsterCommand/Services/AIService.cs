@@ -20,7 +20,7 @@ public class AIService
         _storageService = storageService;
     }
 
-    public async Task<string> RunMacroPromptAsync(string systemPrompt, string userInput, string? modelOverride = null)
+    public async Task<AiResponseData> RunMacroPromptAsync(string systemPrompt, List<(string role, string content)> chatHistory, string? modelOverride = null, List<FileAttachment>? attachments = null)
     {
         var apiKey = _storageService.GetAiApiKey();
         var modelName = string.IsNullOrWhiteSpace(modelOverride)
@@ -28,40 +28,152 @@ public class AIService
             : modelOverride;
 
         if (string.IsNullOrWhiteSpace(apiKey))
-            return "Please provide a valid Gemini API Key in the Settings page.";
+            return new AiResponseData { TextContent = "Please provide a valid Gemini API Key in the Settings page." };
 
         if (string.IsNullOrWhiteSpace(systemPrompt))
-            return "System prompt is required.";
+            return new AiResponseData { TextContent = "System prompt is required." };
 
-        if (string.IsNullOrWhiteSpace(userInput))
-            return "User input is required.";
+        if (chatHistory == null || chatHistory.Count == 0)
+            return new AiResponseData { TextContent = "User input is required." };
 
         try
         {
             var client = new Client(apiKey: apiKey);
-            var composedPrompt =
-                $"System instruction:\n{systemPrompt}\n\n" +
-                $"User input:\n{userInput}\n\n" +
-                "Return only the direct answer unless the user asks for explanation.";
+
+            // Build the contents list with chat history
+            var contents = new List<Content>();
+
+            // Add all previous messages from chat history
+            foreach (var (role, content) in chatHistory)
+            {
+                var parts = new List<Part> { new Part { Text = content } };
+                contents.Add(new Content
+                {
+                    Role = role == "assistant" ? "model" : role,
+                    Parts = parts
+                });
+            }
+
+            // For the latest user message, add attachments if provided
+            if (contents.Count > 0)
+            {
+                var lastContent = contents[contents.Count - 1];
+                if (lastContent?.Role == "user" && attachments != null && attachments.Count > 0)
+                {
+                    foreach (var attachment in attachments)
+                    {
+                        try
+                        {
+                            if (System.IO.File.Exists(attachment.FilePath))
+                            {
+                                var fileData = await System.IO.File.ReadAllBytesAsync(attachment.FilePath);
+                                if (lastContent.Parts != null)
+                                {
+                                    lastContent.Parts.Add(new Part
+                                    {
+                                        InlineData = new Blob
+                                        {
+                                            MimeType = attachment.MimeType,
+                                            Data = fileData
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+
+            // Add system prompt to the beginning if it's not already there
+            var contentsList = new List<Content>();
+            if (!string.IsNullOrWhiteSpace(systemPrompt))
+            {
+                contentsList.Add(new Content
+                {
+                    Role = "user",
+                    Parts = new List<Part> { new Part { Text = $"System instruction:\n{systemPrompt}" } }
+                });
+                contentsList.Add(new Content
+                {
+                    Role = "model",
+                    Parts = new List<Part> { new Part { Text = "Understood. I will follow these instructions." } }
+                });
+            }
+
+            contentsList.AddRange(contents);
 
             var response = await client.Models.GenerateContentAsync(
                 model: modelName,
-                contents: new List<Content>
-                {
-                    new Content
-                    {
-                        Role = "user",
-                        Parts = new List<Part> { new Part { Text = composedPrompt } }
-                    }
-                }
+                contents: contentsList
             );
 
-            return response.Text?.Trim() ?? "No response available.";
+            var textContent = response.Text?.Trim();
+            var fileContent = ExtractFileFromResponse(response);
+
+            // If there's a file but no text, show a helpful message
+            if (string.IsNullOrWhiteSpace(textContent) && fileContent != null)
+            {
+                textContent = $"📥 File ready to download: {fileContent.FileName}\n\nClick the download button to save this file.";
+            }
+            else if (string.IsNullOrWhiteSpace(textContent))
+            {
+                textContent = "No response available.";
+            }
+
+            return new AiResponseData
+            {
+                TextContent = textContent,
+                FileContent = fileContent
+            };
         }
         catch (Exception ex)
         {
-            return "AI Error: " + ex.Message;
+            return new AiResponseData { TextContent = "AI Error: " + ex.Message };
         }
+    }
+
+    private AiResponseFile? ExtractFileFromResponse(GenerateContentResponse response)
+    {
+        if (response?.Parts == null || response.Parts.Count == 0)
+            return null;
+
+        foreach (var part in response.Parts)
+        {
+            if (part.InlineData != null && part.InlineData.Data != null && part.InlineData.Data.Length > 0)
+            {
+                var mimeType = part.InlineData.MimeType ?? "application/octet-stream";
+                var fileName = GenerateFileName(mimeType);
+                return new AiResponseFile
+                {
+                    FileName = fileName,
+                    Data = part.InlineData.Data,
+                    MimeType = mimeType
+                };
+            }
+        }
+
+        return null;
+    }
+
+    private string GenerateFileName(string mimeType)
+    {
+        var extension = mimeType switch
+        {
+            "image/png" => ".png",
+            "image/jpeg" => ".jpg",
+            "image/webp" => ".webp",
+            "application/pdf" => ".pdf",
+            "text/plain" => ".txt",
+            "text/markdown" => ".md",
+            "application/json" => ".json",
+            "text/csv" => ".csv",
+            "audio/mpeg" => ".mp3",
+            "audio/wav" => ".wav",
+            _ => ".bin"
+        };
+
+        return $"ai_response_{DateTime.Now:yyyyMMdd_HHmmss}{extension}";
     }
 
     public async Task<string> GenerateNoteDescriptionAsync(BaseNoteItem item, Stream? fileStream = null)

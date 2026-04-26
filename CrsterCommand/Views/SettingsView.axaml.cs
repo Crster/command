@@ -23,6 +23,20 @@ public partial class SettingsView : UserControl
     private void SettingsView_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         Console.WriteLine("[SettingsView] Loaded - pausing hotkey services");
+
+        // Wire up event handlers for shortcut textboxes
+        if (this.FindControl<TextBox>("ScreenCaptureShortcutBox") is TextBox screenCaptureBox)
+        {
+            screenCaptureBox.GotFocus += ScreenCaptureShortcutBox_GotFocus;
+            screenCaptureBox.LostFocus += ScreenCaptureShortcutBox_LostFocus;
+        }
+
+        if (this.FindControl<TextBox>("DesktopRobotShortcutBox") is TextBox desktopRobotBox)
+        {
+            desktopRobotBox.GotFocus += DesktopRobotShortcutBox_GotFocus;
+            desktopRobotBox.LostFocus += DesktopRobotShortcutBox_LostFocus;
+        }
+
         var app = global::Avalonia.Application.Current as global::CrsterCommand.App;
         app?.HotkeyService?.Pause();
         app?.DesktopRobotHotkeyService?.Pause();
@@ -34,6 +48,19 @@ public partial class SettingsView : UserControl
         if (_editingShortcut || _editingDesktopRobotShortcut)
         {
             EndEditing();
+        }
+
+        // Unregister event handlers
+        if (this.FindControl<TextBox>("ScreenCaptureShortcutBox") is TextBox screenCaptureBox)
+        {
+            screenCaptureBox.GotFocus -= ScreenCaptureShortcutBox_GotFocus;
+            screenCaptureBox.LostFocus -= ScreenCaptureShortcutBox_LostFocus;
+        }
+
+        if (this.FindControl<TextBox>("DesktopRobotShortcutBox") is TextBox desktopRobotBox)
+        {
+            desktopRobotBox.GotFocus -= DesktopRobotShortcutBox_GotFocus;
+            desktopRobotBox.LostFocus -= DesktopRobotShortcutBox_LostFocus;
         }
 
         var app = global::Avalonia.Application.Current as global::CrsterCommand.App;

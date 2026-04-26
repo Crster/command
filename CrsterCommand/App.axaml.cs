@@ -35,12 +35,23 @@ public partial class App : Application
 
             var mainViewModel = new MainViewModel(storageService);
 
-            desktop.MainWindow = new MainWindow
+            var mainWindow = new MainWindow
             {
                 DataContext = mainViewModel,
             };
 
-            appViewModel.AttachMainWindow(desktop.MainWindow);
+            desktop.MainWindow = mainWindow;
+
+            appViewModel.AttachMainWindow(mainWindow);
+
+            // If started with --startup-hidden flag, hide the window
+            if (Program.IsStartHidden)
+            {
+                mainWindow.WindowState = Avalonia.Controls.WindowState.Minimized;
+                mainWindow.ShowInTaskbar = false;
+                mainWindow.Hide();
+                Console.WriteLine("[App] Starting hidden due to startup flag");
+            }
 
             _hotkeyService = new ScreenCaptureHotkeyService(storageService, mainViewModel.ScreenCaptureViewModel);
             _hotkeyService.Start();
@@ -85,10 +96,42 @@ public partial class App : Application
                     Console.WriteLine($"[App] Error disposing GlobalHookManager: {ex.Message}");
                 }
 
+                // Clean up startup configuration if app was uninstalled
+                try
+                {
+                    CleanupStartupConfigurationOnUninstall();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[App] Error cleaning up startup: {ex.Message}");
+                }
+
                 Console.WriteLine("[App] All services disposed successfully");
             };
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static void CleanupStartupConfigurationOnUninstall()
+    {
+        try
+        {
+            // Check if app executable exists - if not, app is being uninstalled
+            var currentExePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+            // For uninstall scenario, always try to clean up startup entries
+            // This ensures no orphaned registry/file entries remain after uninstall
+            if (StartupService.IsStartupEnabled())
+            {
+                Console.WriteLine("[App] Detected startup configuration, attempting cleanup...");
+                StartupService.DisableStartup();
+                Console.WriteLine("[App] Startup configuration cleaned up");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[App] Cleanup attempt (non-critical): {ex.Message}");
+        }
     }
 }

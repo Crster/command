@@ -11,6 +11,8 @@ public class UserSettings
      public string? VaultPassword { get; set; }
      public string ScreenCaptureShortcut { get; set; } = GetDefaultScreenCaptureShortcut();
      public string DesktopRobotShortcut { get; set; } = GetDefaultDesktopRobotShortcut();
+     public bool StartOnStartup { get; set; } = false;
+     public bool StartHidden { get; set; } = true;
 
      private static string GetDefaultScreenCaptureShortcut()
      {

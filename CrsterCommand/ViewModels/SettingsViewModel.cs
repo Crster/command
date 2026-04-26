@@ -106,6 +106,18 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isCheckingFfmpeg;
 
+    [ObservableProperty]
+    private bool _startOnStartup;
+
+    [ObservableProperty]
+    private bool _isConfiguringStartup;
+
+    [ObservableProperty]
+    private string _startupErrorMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasStartupError;
+
     public bool HasApiKey => !string.IsNullOrEmpty(AiApiKey);
 
     public SettingsViewModel(StorageService storageService)
@@ -117,6 +129,7 @@ public partial class SettingsViewModel : ViewModelBase
         _vaultPassword = _storageService.GetVaultPassword();
         _screenCaptureShortcut = _storageService.GetScreenCaptureShortcut();
         _desktopRobotShortcut = _storageService.GetDesktopRobotShortcut();
+        _startOnStartup = _storageService.GetStartOnStartup();
 
         if (!string.IsNullOrEmpty(_aiApiKey))
         {
@@ -148,6 +161,12 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnAiModelChanged(string? value)
     {
         if (value != null) _storageService.SetAiModel(value);
+    }
+
+    partial void OnStartOnStartupChanged(bool value)
+    {
+        _storageService.SetStartOnStartup(value);
+        _ = Task.Run(async () => await ConfigureStartupAsync(value));
     }
 
     [RelayCommand]
@@ -273,6 +292,67 @@ public partial class SettingsViewModel : ViewModelBase
             var newDir = folder[0].Path.LocalPath;
             DbPath = System.IO.Path.Combine(newDir, "toolkit.db");
             _storageService.ChangeDatabasePath(DbPath);
+        }
+    }
+
+    private async Task ConfigureStartupAsync(bool enable)
+    {
+        IsConfiguringStartup = true;
+        HasStartupError = false;
+        StartupErrorMessage = string.Empty;
+
+        try
+        {
+            string operation = enable ? "enable" : "disable";
+            Console.WriteLine($"[SettingsViewModel] Attempting to {operation} startup...");
+
+            if (enable)
+            {
+                var result = await Task.Run(() => StartupService.EnableStartup());
+                if (!result)
+                {
+                    var errorMsg = "Failed to enable startup. Please check that you have permission to modify system settings. " +
+                                 "You may need to run the app with administrator privileges or check your system's registry permissions.";
+                    StartupErrorMessage = errorMsg;
+                    HasStartupError = true;
+                    StartOnStartup = false;
+                    System.Diagnostics.Debug.WriteLine($"[SettingsViewModel] {errorMsg}");
+                }
+                else
+                {
+                    Console.WriteLine("[SettingsViewModel] Startup enabled successfully");
+                }
+            }
+            else
+            {
+                var result = await Task.Run(() => StartupService.DisableStartup());
+                if (!result)
+                {
+                    var errorMsg = "Failed to disable startup. Please check that you have permission to modify system settings. " +
+                                 "You may need to run the app with administrator privileges or check your system's file permissions.";
+                    StartupErrorMessage = errorMsg;
+                    HasStartupError = true;
+                    StartOnStartup = true;
+                    System.Diagnostics.Debug.WriteLine($"[SettingsViewModel] {errorMsg}");
+                }
+                else
+                {
+                    Console.WriteLine("[SettingsViewModel] Startup disabled successfully");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var errorMsg = $"Unexpected error while configuring startup: {ex.Message}. " +
+                          "If this persists, try running the app with administrator privileges.";
+            StartupErrorMessage = errorMsg;
+            HasStartupError = true;
+            StartOnStartup = !StartOnStartup;
+            System.Diagnostics.Debug.WriteLine($"[SettingsViewModel] {errorMsg}");
+        }
+        finally
+        {
+            IsConfiguringStartup = false;
         }
     }
 }
