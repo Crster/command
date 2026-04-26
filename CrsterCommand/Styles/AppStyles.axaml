@@ -26,13 +26,23 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="Button.Primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.Primary:pointerover">
         <Setter Property="Opacity" Value="0.9"/>
     </Style>
     <Style Selector="Button.Primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AppAccentBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.Primary:pressed">
         <Setter Property="Opacity" Value="0.8"/>
         <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+    <Style Selector="Button.Primary:disabled">
+        <Setter Property="Opacity" Value="0.5"/>
+        <Setter Property="Cursor" Value="No"/>
     </Style>
 
     <Style Selector="Button.Secondary">
@@ -41,13 +51,23 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="Button.Secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AppSecondaryAccentBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.Secondary:pointerover">
         <Setter Property="Opacity" Value="0.9"/>
     </Style>
     <Style Selector="Button.Secondary:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AppSecondaryAccentBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.Secondary:pressed">
         <Setter Property="Opacity" Value="0.8"/>
         <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+    <Style Selector="Button.Secondary:disabled">
+        <Setter Property="Opacity" Value="0.5"/>
+        <Setter Property="Cursor" Value="No"/>
     </Style>
 
     <Style Selector="Button.InputZone">
@@ -57,15 +77,23 @@
         <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
         <Setter Property="CornerRadius" Value="12"/>
     </Style>
-    <Style Selector="Button.InputZone:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AppInputBackgroundBrush}"/>
+    <Style Selector="Button.InputZone:pointerover">
         <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource AppInputBackgroundBrush}"/>
     </Style>
     <Style Selector="Button.InputZone:pressed">
         <Setter Property="RenderTransform" Value="scale(0.99)"/>
     </Style>
+    <Style Selector="Button.InputZone:disabled">
+        <Setter Property="Opacity" Value="0.5"/>
+        <Setter Property="Cursor" Value="No"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AppInputBorderBrush}"/>
+    </Style>
     <Style Selector="Button.InputZone ic|SymbolIcon">
         <Setter Property="Foreground" Value="{DynamicResource AppAccentBrush}"/>
+    </Style>
+    <Style Selector="Button.InputZone:disabled ic|SymbolIcon">
+        <Setter Property="Foreground" Value="{DynamicResource AppSecondaryTextBrush}"/>
     </Style>
 
     <Style Selector="Button.Success">
@@ -74,13 +102,23 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="Button.Success:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AppSuccessBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.Success:pointerover">
         <Setter Property="Opacity" Value="0.9"/>
     </Style>
     <Style Selector="Button.Success:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AppSuccessBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.Success:pressed">
         <Setter Property="Opacity" Value="0.8"/>
         <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+    <Style Selector="Button.Success:disabled">
+        <Setter Property="Opacity" Value="0.5"/>
+        <Setter Property="Cursor" Value="No"/>
     </Style>
 
     <Style Selector="Button.Danger">
@@ -89,13 +127,49 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="Button.Danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AppDangerBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.Danger:pointerover">
         <Setter Property="Opacity" Value="0.9"/>
     </Style>
     <Style Selector="Button.Danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AppDangerBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.Danger:pressed">
         <Setter Property="Opacity" Value="0.8"/>
         <Setter Property="RenderTransform" Value="scale(0.98)"/>
+    </Style>
+    <Style Selector="Button.Danger:disabled">
+        <Setter Property="Opacity" Value="0.5"/>
+        <Setter Property="Cursor" Value="No"/>
+    </Style>
+
+    <Style Selector="Button.CardHeaderButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
+        <Setter Property="Padding" Value="0,8"/>
+    </Style>
+    <Style Selector="Button.CardHeaderButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.CardHeaderButton:pointerover">
+        <Setter Property="Background" Value="{DynamicResource AppSidebarHoverItemBrush}"/>
+    </Style>
+    <Style Selector="Button.CardHeaderButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.CardHeaderButton:pressed">
+        <Setter Property="Background" Value="{DynamicResource AppSidebarActiveItemBrush}"/>
+    </Style>
+    <Style Selector="Button.CardHeaderButton:disabled">
+        <Setter Property="Opacity" Value="0.5"/>
+        <Setter Property="Cursor" Value="No"/>
     </Style>
 
     <!-- ═══════════════════════════════════════
@@ -145,6 +219,21 @@
         <Setter Property="Foreground" Value="{DynamicResource AppPrimaryTextBrush}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector="NumericUpDown:error">
+        <Setter Property="BorderBrush" Value="{DynamicResource AppDangerBrush}"/>
+        <Setter Property="BorderThickness" Value="1.5"/>
+    </Style>
+    <Style Selector="NumericUpDown:invalid">
+        <Setter Property="BorderBrush" Value="{DynamicResource AppDangerBrush}"/>
+        <Setter Property="BorderThickness" Value="1.5"/>
+    </Style>
+    <Style Selector="NumericUpDown:focus:error">
+        <Setter Property="BorderBrush" Value="{DynamicResource AppDangerBrush}"/>
+    </Style>
+
+    <Style Selector="NumericUpDown.NoSpinner">
+        <Setter Property="ShowButtonSpinner" Value="False"/>
     </Style>
 
     <!-- ═══════════════════════════════════════

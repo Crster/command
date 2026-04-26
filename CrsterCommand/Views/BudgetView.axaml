@@ -1,0 +1,330 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CrsterCommand.ViewModels"
+             xmlns:models="using:CrsterCommand.Models"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:conv="using:CrsterCommand.Converters"
+             x:Class="CrsterCommand.Views.BudgetView"
+             x:DataType="vm:BudgetViewModel">
+
+    <UserControl.Resources>
+        <conv:BoolToChevronConverter x:Key="BoolToChevron"/>
+        <conv:BudgetTransactionTypeToBrushConverter x:Key="TransactionTypeBrush"/>
+        <conv:BudgetWeekRowBackgroundConverter x:Key="WeekRowBackground"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Border.MetricCard">
+            <Setter Property="Background"      Value="{DynamicResource AppCardBrush}"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource AppCardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="12"/>
+            <Setter Property="Padding"         Value="16,14"/>
+        </Style>
+        <Style Selector="Border.LedgerRow">
+            <Setter Property="Padding"         Value="14,10"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush"     Value="{DynamicResource AppCardBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.LedgerRow:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AppSidebarHoverItemBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer Background="Transparent">
+        <StackPanel Margin="32" Spacing="24">
+
+            <!-- ── Header ──────────────────────────────────────────────── -->
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="PageTitle"    Text="Budgeting"/>
+                    <TextBlock Classes="PageSubtitle" Text="Track income, expenses and savings"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="{Binding LastSnapshotLabel}"
+                               Foreground="{DynamicResource AppSecondaryTextBrush}"
+                               FontSize="12" VerticalAlignment="Center"/>
+                    <Button Classes="Primary" Command="{Binding RecalculateCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:SymbolIcon Symbol="ArrowSync"/>
+                            <TextBlock Text="Recalculate"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- ── Weekly Metrics ─────────────────────────────────────── -->
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="14">
+
+                <!-- Upcoming Due -->
+                <Border Classes="MetricCard">
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:SymbolIcon Symbol="CalendarClock" FontSize="18"
+                                           Foreground="{DynamicResource AppWarningBrush}"/>
+                            <TextBlock Classes="Label" Text="Upcoming Due"
+                                       Foreground="{DynamicResource AppWarningBrush}"/>
+                        </StackPanel>
+                        <TextBlock FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppPrimaryTextBrush}"
+                                   Text="{Binding UpcomingDueAmount, StringFormat={}{0:C}}"/>
+                        <TextBlock Classes="Label" Text="Tomorrow to end of next month"
+                                   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Upcoming Income -->
+                <Border Grid.Column="1" Classes="MetricCard">
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:SymbolIcon Symbol="ArrowUpRight" FontSize="18"
+                                           Foreground="{DynamicResource AppSuccessBrush}"/>
+                            <TextBlock Classes="Label" Text="Upcoming Income"
+                                       Foreground="{DynamicResource AppSuccessBrush}"/>
+                        </StackPanel>
+                        <TextBlock FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppPrimaryTextBrush}"
+                                   Text="{Binding UpcomingIncome, StringFormat={}{0:C}}"/>
+                        <TextBlock Classes="Label" Text="Tomorrow to end of next month"
+                                   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Target Savings -->
+                <Border Grid.Column="2" Classes="MetricCard">
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:SymbolIcon Symbol="Savings" FontSize="18"
+                                           Foreground="{DynamicResource AppSecondaryAccentBrush}"/>
+                            <TextBlock Classes="Label" Text="Target Savings"
+                                       Foreground="{DynamicResource AppSecondaryAccentBrush}"/>
+                        </StackPanel>
+                        <TextBlock FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppPrimaryTextBrush}"
+                                   Text="{Binding TargetSavings, StringFormat={}{0:C}}"/>
+                        <TextBlock Classes="Label" Text="Fixed reserve"
+                                   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Spendable -->
+                <Border Grid.Column="3" Classes="MetricCard">
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:SymbolIcon Symbol="Wallet" FontSize="18"
+                                           Foreground="{DynamicResource AppAccentBrush}"/>
+                            <TextBlock Classes="Label" Text="Spendable"
+                                       Foreground="{DynamicResource AppAccentBrush}"/>
+                        </StackPanel>
+                        <TextBlock FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppPrimaryTextBrush}"
+                                   Text="{Binding SpendableThisWeek, StringFormat={}{0:C}}"/>
+                        <TextBlock Classes="Label" Text="This week (buffered)"
+                                   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                    </StackPanel>
+                </Border>
+
+            </Grid>
+
+            <!-- ── Add Transaction (Collapsible) ─────────────────────── -->
+            <Border Classes="Card">
+                <StackPanel Spacing="0">
+                    <!-- Collapsible Header -->
+                    <Button Classes="CardHeaderButton"
+                            Command="{Binding ToggleAddFormCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,2">
+                            <ic:SymbolIcon Symbol="Add" FontSize="20"
+                                           Foreground="{DynamicResource AppAccentBrush}"/>
+                            <TextBlock Classes="SectionHeader" Text="Add Transaction"
+                                       Foreground="{DynamicResource AppAccentBrush}"/>
+                            <ic:SymbolIcon Symbol="{Binding IsAddFormExpanded, Converter={StaticResource BoolToChevron}}"
+                                           FontSize="18"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"
+                                           HorizontalAlignment="Right" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Expandable Form Content -->
+                    <StackPanel Spacing="12" IsVisible="{Binding IsAddFormExpanded}" Margin="0,16,0,0">
+
+                        <!-- Row 1: Description + Amount + Type + Add -->
+                        <Grid ColumnDefinitions="*,150,110,Auto" ColumnSpacing="10">
+                            <StackPanel Spacing="4">
+                                <TextBlock FontSize="11" Classes="Label"
+                                           Text="Description"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                <TextBox Text="{Binding NewDescription}"
+                                         PlaceholderText="Description"
+                                         Background="{DynamicResource AppInputBackgroundBrush}"
+                                         BorderBrush="{DynamicResource AppInputBorderBrush}"
+                                         CornerRadius="8"
+                                         Padding="10,8"
+                                         BorderThickness="1"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <TextBlock FontSize="11" Classes="Label"
+                                           Text="Amount"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                <TextBox Text="{Binding NewAmountText}"
+                                         PlaceholderText="0.00"
+                                         Background="{DynamicResource AppInputBackgroundBrush}"
+                                         BorderBrush="{DynamicResource AppInputBorderBrush}"
+                                         CornerRadius="8"
+                                         Padding="10,8"
+                                         BorderThickness="1"
+                                         FontSize="14"
+                                         FontWeight="SemiBold"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Spacing="4">
+                                <TextBlock FontSize="11" Classes="Label"
+                                           Text="Type"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                <ComboBox ItemsSource="{Binding TransactionTypes}"
+                                          SelectedItem="{Binding NewType}"
+                                          Background="{DynamicResource AppInputBackgroundBrush}"
+                                          BorderBrush="{DynamicResource AppInputBorderBrush}"
+                                          CornerRadius="8"
+                                          Padding="8"
+                                          BorderThickness="1"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="3" Classes="Primary"
+                                    Command="{Binding AddTransactionCommand}"
+                                    VerticalAlignment="Center"
+                                    Padding="12,8"
+                                    Margin="0,20,0,0">
+                                <ic:SymbolIcon Symbol="Add" FontSize="18"/>
+                            </Button>
+                        </Grid>
+
+                        <!-- Row 2: Due Date + Recurring -->
+                        <Grid ColumnDefinitions="150,Auto,*" ColumnSpacing="10">
+                            <StackPanel Spacing="4">
+                                <TextBlock FontSize="11" Classes="Label"
+                                           Text="Due Date"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                <CalendarDatePicker SelectedDate="{Binding NewDueDate}"
+                                                    Background="{DynamicResource AppInputBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource AppInputBorderBrush}"
+                                                    CornerRadius="8"
+                                                    Padding="8"
+                                                    BorderThickness="1"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                <TextBlock FontSize="11" Classes="Label"
+                                           Text="Recurring"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                <CheckBox IsChecked="{Binding NewIsRecurring}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Spacing="4" IsVisible="{Binding NewIsRecurring}">
+                                <TextBlock FontSize="11" Classes="Label"
+                                           Text="Frequency"
+                                           Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                <ComboBox ItemsSource="{Binding Frequencies}"
+                                          SelectedItem="{Binding NewFrequency}"
+                                          Background="{DynamicResource AppInputBackgroundBrush}"
+                                          BorderBrush="{DynamicResource AppInputBorderBrush}"
+                                          CornerRadius="8"
+                                          Padding="8"
+                                          BorderThickness="1"/>
+                            </StackPanel>
+                        </Grid>
+
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ── History Ledger ─────────────────────────────────────── -->
+            <Border Classes="Card">
+                <StackPanel Spacing="0">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10" Margin="0,0,0,12">
+                        <ic:SymbolIcon Symbol="History" FontSize="20"
+                                       Foreground="{DynamicResource AppSecondaryAccentBrush}"
+                                       VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Classes="SectionHeader"
+                                   Text="{Binding HistoryMonthLabel}"
+                                   Foreground="{DynamicResource AppSecondaryAccentBrush}"
+                                   VerticalAlignment="Center"/>
+                        <Button Grid.Column="2" Classes="InputZone"
+                                Width="36" Height="32" Padding="0"
+                                Command="{Binding PreviousMonthCommand}">
+                            <ic:SymbolIcon Symbol="ChevronLeft" FontSize="16"/>
+                        </Button>
+                        <Button Grid.Column="3" Classes="InputZone"
+                                Width="36" Height="32" Padding="0"
+                                Command="{Binding NextMonthCommand}">
+                            <ic:SymbolIcon Symbol="ChevronRight" FontSize="16"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Column headers -->
+                    <Grid ColumnDefinitions="*,90,110,100,60" ColumnSpacing="10" Margin="14,0,0,8">
+                        <TextBlock Classes="Label" Text="Description"/>
+                        <TextBlock Grid.Column="1" Classes="Label" Text="Type"   TextAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Classes="Label" Text="Amount" TextAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Classes="Label" Text="Due"    TextAlignment="Right"/>
+                        <TextBlock Grid.Column="4" Classes="Label" Text="Action" TextAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Transaction rows -->
+                    <ItemsControl ItemsSource="{Binding MonthTransactions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:BudgetTransaction">
+                                <Border Classes="LedgerRow"
+                                        Background="{Binding DueDate, Converter={StaticResource WeekRowBackground}}">
+                                    <Grid ColumnDefinitions="*,90,110,100,60" ColumnSpacing="10" Margin="14,0,0,0">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Description}"
+                                                       Foreground="{DynamicResource AppPrimaryTextBrush}"
+                                                       FontSize="13" VerticalAlignment="Center"/>
+                                            <Border CornerRadius="4" Padding="5,2"
+                                                    Background="{DynamicResource AppSidebarActiveItemBrush}"
+                                                    IsVisible="{Binding IsRecurring}">
+                                                <TextBlock Text="recurring" FontSize="10"
+                                                           Foreground="{DynamicResource AppAccentBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding Type}"
+                                                   Foreground="{Binding Type, Converter={StaticResource TransactionTypeBrush}}"
+                                                   TextAlignment="Center" FontSize="12"
+                                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding Amount, StringFormat={}{0:C}}"
+                                                   Foreground="{Binding Type, Converter={StaticResource TransactionTypeBrush}}"
+                                                   TextAlignment="Right"
+                                                   FontWeight="SemiBold" FontSize="13"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3"
+                                                   Text="{Binding DueDate, StringFormat={}{0:MMM d}}"
+                                                   TextAlignment="Right" FontSize="12"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource AppSecondaryTextBrush}"/>
+                                        <Button Grid.Column="4" Width="40" Height="32"
+                                                Classes="InputZone"
+                                                VerticalAlignment="Center"
+                                                HorizontalAlignment="Center"
+                                                Padding="0"
+                                                Command="{Binding $parent[ItemsControl].DataContext.DeleteTransactionCommand}"
+                                                CommandParameter="{Binding}">
+                                            <ic:SymbolIcon Symbol="Delete" FontSize="16"
+                                                           Foreground="{DynamicResource AppDangerBrush}"/>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

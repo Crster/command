@@ -28,6 +28,13 @@
 - **Semantic Search**: AI-powered search using **local embeddings** (`ElBruno.LocalEmbeddings`) — finds notes by meaning, not just keywords.
 - **Debounced Live Search**: Results update automatically as you type, with smart cancellation to avoid redundant lookups.
 
+### 💰 Budget Planner
+- **Transaction Tracking**: Add income, expense, and reserve entries with amount, due date, and description.
+- **Recurring Transactions**: Mark entries as recurring with daily, weekly, bi-weekly, monthly, quarterly, or yearly frequency.
+- **Snapshot-Based Recalculation**: Persisted budget snapshots let you recompute balances incrementally and keep an audit trail.
+- **Spendable Forecast**: Dashboard cards show upcoming due amounts, upcoming income, target savings, and buffered weekly spendable balance.
+- **Monthly Ledger View**: Navigate month-by-month history and manage transactions directly from the ledger.
+
 ### 🔒 Security & Privacy
 - **Encrypted API Key Storage**: Your Gemini API key is protected with **AES-256 encryption**, derived from a device-unique key.
 - **Vault Password**: An optional vault password adds a second layer of protection to your stored secrets.
@@ -117,9 +124,9 @@ Open the **Settings** view inside the app to configure:
 
 ```
 CrsterCommand/
-├── Models/          # Data structures and entities (AiMacroApp, NoteModels, UserSettings, …)
-├── ViewModels/      # MVVM logic and state management (CommunityToolkit.Mvvm)
-├── Views/           # XAML UI components (Avalonia)
+├── Models/          # Data structures and entities (AiMacroApp, NoteModels, BudgetModels, UserSettings, …)
+├── ViewModels/      # MVVM logic and state management (CommunityToolkit.Mvvm, including BudgetViewModel)
+├── Views/           # XAML UI components (Avalonia, including BudgetView)
 ├── Windows/         # Overlay and dialog windows (CaptureOverlay, RecordingOverlay, Dialogs)
 ├── Services/        # Core business logic
 │   ├── AIService              # Gemini API integration, chat history, file attachments

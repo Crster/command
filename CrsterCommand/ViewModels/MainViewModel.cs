@@ -37,6 +37,7 @@ public partial class MainViewModel : ViewModelBase
         NavigationItems.Add(new NavigationItem("Capture", Symbol.Camera, ScreenCaptureViewModel));
         NavigationItems.Add(new NavigationItem("Recorder", Symbol.Video, new ScreenRecorderViewModel()));
         NavigationItems.Add(new NavigationItem("Macros", Symbol.Flash, MacroManagerViewModel));
+        NavigationItems.Add(new NavigationItem("Budgeting", Symbol.Money, new BudgetViewModel(_storageService)));
         NavigationItems.Add(new NavigationItem("Settings", Symbol.Settings, new SettingsViewModel(_storageService)));
 
         // Register callback to navigate to Capture view when screen capture completes

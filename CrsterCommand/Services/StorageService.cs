@@ -144,7 +144,9 @@ public class StorageService : IDisposable
     public ILiteCollection<VaultItem> GetVaultItems() => _db!.GetCollection<VaultItem>("vault");
     public ILiteCollection<FileItem> GetFileItems() => _db!.GetCollection<FileItem>("files");
     public ILiteCollection<AiMacroApp> GetAiMacroApps() => _db!.GetCollection<AiMacroApp>("ai_macro_apps");
-    
+    public ILiteCollection<BudgetTransaction> GetBudgetTransactions() => _db!.GetCollection<BudgetTransaction>("budget_transactions");
+    public ILiteCollection<BudgetSnapshot> GetBudgetSnapshots() => _db!.GetCollection<BudgetSnapshot>("budget_snapshots");
+
     public ILiteStorage<string> GetFileStorage() => _db!.FileStorage;
 
     public void UploadFile(string id, string fileName, Stream stream)
