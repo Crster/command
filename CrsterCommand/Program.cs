@@ -8,7 +8,7 @@ namespace CrsterCommand;
 
 sealed class Program
 {
-    private static bool _startHidden = true;
+    private static bool _startHidden = false;
 
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -17,10 +17,10 @@ sealed class Program
     public static void Main(string[] args)
     {
         // Check for startup-hidden flag
-        //if (args.Length > 0 && args[0] == "--startup-hidden")
-        //{
-        //    _startHidden = true;
-        //}
+        if (args.Length > 0 && args[0] == "--startup-hidden")
+        {
+            _startHidden = true;
+        }
 
         UpdateManager.Initialize();
         BuildAvaloniaApp()
